@@ -1,0 +1,15 @@
+# IntelliJ project files 
+*.iml
+.idea/
+
+# eclipse project file
+.settings/
+.classpath
+.project
+
+#vscode project file
+.vscode
+
+target
+.factorypath
+.vscode/settings.json
