@@ -34,7 +34,7 @@ public class OrderItem extends BaseEntity {
     @OneToOne(targetEntity = Product.class)
     private Product product;
 
-    private Integer totalQuantity;
+    private Integer quantity;
 
     private BigDecimal unitValue;
 
