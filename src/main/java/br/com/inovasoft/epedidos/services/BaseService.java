@@ -6,14 +6,14 @@ import javax.transaction.Transactional;
 import java.util.List;
 
 public abstract class BaseService<E extends BaseEntity> {
-   
+
 	protected int limitPerPage = 25;
-	   
-    public List<E> listAll() {
+
+	public List<E> listAll() {
 		return E.listAll();
 	}
-    
-    public List<E> listAllIncludeExclusions() {
+
+	public List<E> listAllIncludeExclusions() {
 		return E.listAll();
 	}
 
@@ -26,10 +26,10 @@ public abstract class BaseService<E extends BaseEntity> {
 	public void hardDelete(Long id) {
 		E.deleteById(id);
 	}
-    
-    @Transactional
+
+	@Transactional
 	public void softDelete(Long id) {
-		E.update("set deletedOn = now() where id = 1?", id);
+		E.update("set deletedOn = now() where id = ?1", id);
 	}
 
 }
