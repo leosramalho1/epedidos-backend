@@ -64,7 +64,7 @@ public class CompanyService extends BaseService<Company> {
                 companySystem.getEmailAdmin(), companySystem.getId());
         if (countUser == 0) {
             UserPortal newUSer = new UserPortal();
-            newUSer.setSystem(companySystem);
+            newUSer.setSystemId(companySystem.getId());
             newUSer.setEmail(companySystem.getEmailAdmin());
             newUSer.setName("Admin");
             newUSer.setPassword("123456");

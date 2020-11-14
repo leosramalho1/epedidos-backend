@@ -1,11 +1,14 @@
 package br.com.inovasoft.epedidos.services;
 
+import java.math.BigDecimal;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
 import br.com.inovasoft.epedidos.mappers.ProductMapper;
+import br.com.inovasoft.epedidos.models.dtos.OrderItemDto;
 import br.com.inovasoft.epedidos.models.dtos.PaginationDataResponse;
 import br.com.inovasoft.epedidos.models.dtos.ProductDto;
 import br.com.inovasoft.epedidos.models.entities.Product;
@@ -29,6 +32,15 @@ public class ProductService extends BaseService<Product> {
         List<Product> dataList = listProducts.page(Page.of(page - 1, limitPerPage)).list();
 
         return new PaginationDataResponse(mapper.toDto(dataList), limitPerPage, (int) Product.count());
+    }
+
+    public List<OrderItemDto> listProductsToGrid() {
+        PanacheQuery<Product> listProducts = Product.find(
+                "select p from Product p where p.systemId = ?1 and p.deletedOn is null order by p.name",
+                tokenService.getSystemId());
+
+        return listProducts.list().stream().map(item -> new OrderItemDto(item.getId(), item.getName(), BigDecimal.ONE))
+                .collect(Collectors.toList());
     }
 
     public PaginationDataResponse listProductsBySystemKey(String systemKey, int page) {

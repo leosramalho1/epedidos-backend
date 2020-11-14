@@ -2,6 +2,7 @@ package br.com.inovasoft.epedidos.controllers;
 
 import java.lang.reflect.InvocationTargetException;
 
+import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
@@ -42,24 +43,24 @@ public class OrderResources {
     @GET
     @Path("/{id}")
     @RolesAllowed(JwtRoles.USER_BACKOFFICE)
-    public Response getById(@PathParam("id") Long OrderId) {
-        return Response.status(Response.Status.OK).entity(service.findDtoById(OrderId)).build();
+    public Response getById(@PathParam("id") Long orderId) {
+        return Response.status(Response.Status.OK).entity(service.findDtoById(orderId)).build();
     }
 
     @POST
     @RolesAllowed(JwtRoles.USER_BACKOFFICE)
     @Transactional
-    public Response save(@Valid OrderDto OrderDto) {
-        return Response.status(Response.Status.CREATED).entity(service.saveDto(OrderDto)).build();
+    public Response save(@Valid OrderDto orderDto) {
+        return Response.status(Response.Status.CREATED).entity(service.saveDto(orderDto)).build();
     }
 
     @PUT
     @Path("/{id}")
     @RolesAllowed(JwtRoles.USER_BACKOFFICE)
     @Transactional
-    public Response change(@PathParam("id") Long idOrder, @Valid OrderDto Order)
+    public Response change(@PathParam("id") Long idOrder, @Valid OrderDto order)
             throws IllegalAccessException, InvocationTargetException {
-        return Response.status(Response.Status.OK).entity(service.update(idOrder, Order)).build();
+        return Response.status(Response.Status.OK).entity(service.update(idOrder, order)).build();
     }
 
     @DELETE

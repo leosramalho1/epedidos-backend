@@ -12,9 +12,10 @@ import lombok.Data;
 public class OrderDto {
 
     private Long id;
+    private List<Long> idCustomers;
     private Long idCustomer;
-    private Long nameCustomer;
-    private String createdDate;
+    private String nameCustomer;
+    private String createdOn;
     private OrderEnum status;
     private List<OrderItemDto> itens;
 }

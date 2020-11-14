@@ -40,6 +40,13 @@ public class CustomerResources {
     }
 
     @GET
+    @RolesAllowed(JwtRoles.USER_BACKOFFICE)
+    @Path("/select")
+    public Response listActive() {
+        return Response.status(Response.Status.OK).entity(service.listActive()).build();
+    }
+
+    @GET
     @Path("/{id}")
     @RolesAllowed(JwtRoles.USER_BACKOFFICE)
     public Response getById(@PathParam("id") Long CustomerId) {

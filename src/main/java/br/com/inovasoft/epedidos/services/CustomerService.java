@@ -31,6 +31,16 @@ public class CustomerService extends BaseService<Customer> {
         return new PaginationDataResponse(mapper.toDto(dataList), limitPerPage, (int) Customer.count());
     }
 
+    public List<CustomerDto> listActive() {
+
+        List<Customer> dataList = Customer
+                .find("select p from Customer p where p.systemId = ?1 and p.deletedOn is null order by p.name",
+                        tokenService.getSystemId())
+                .list();
+
+        return mapper.toDto(dataList);
+    }
+
     public PaginationDataResponse listCustomersBySystemKey(String systemKey, int page) {
         PanacheQuery<Customer> listCustomers = Customer.find(
                 "select p from Customer p, CompanySystem c where p.systemId = c.id and c.systemKey = ?1 and p.deletedOn is null",

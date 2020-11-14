@@ -1,13 +1,26 @@
 package br.com.inovasoft.epedidos.models.entities;
 
+import java.math.BigDecimal;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Index;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.SequenceGenerator;
+import javax.persistence.Table;
+import javax.validation.constraints.NotNull;
+
 import br.com.inovasoft.epedidos.models.BaseEntity;
+import br.com.inovasoft.epedidos.models.enums.OrderEnum;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-
-import javax.persistence.*;
-import javax.validation.constraints.NotNull;
-import java.math.BigDecimal;
 
 @Data
 @Entity
@@ -44,4 +57,8 @@ public class Order extends BaseEntity {
     @Column(name = "valor_liquido_total")
     private BigDecimal totalLiquidProducts;
 
+    @NotNull
+    @Column(name = "situacao")
+    @Enumerated(EnumType.STRING)
+    private OrderEnum status;
 }

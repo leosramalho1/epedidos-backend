@@ -1,15 +1,30 @@
 package br.com.inovasoft.epedidos.models.entities;
 
-import br.com.inovasoft.epedidos.models.BaseEntity;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-
-import javax.persistence.*;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Index;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.SequenceGenerator;
+import javax.persistence.Table;
+import javax.persistence.Transient;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import br.com.inovasoft.epedidos.models.BaseEntity;
+import br.com.inovasoft.epedidos.models.enums.RoleEnum;
+import br.com.inovasoft.epedidos.models.enums.StatusEnum;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
 @Data
 @Entity
@@ -26,10 +41,8 @@ public class UserPortal extends BaseEntity {
 	private Long id;
 
 	@JsonIgnore
-	@NotNull(message = "Store is required")
-	@JoinColumn(name = "sistema_id")
-	@ManyToOne(targetEntity = CompanySystem.class)
-	private CompanySystem system;
+	@Column(name = "sistema_id")
+	private Long systemId;
 
 	@NotBlank(message = "Name is required")
 	@Column(name = "nome")
@@ -43,17 +56,25 @@ public class UserPortal extends BaseEntity {
 	@NotBlank(message = "E-mail is required")
 	private String email;
 
+	@Column(name = "situacao")
+	@Enumerated(EnumType.STRING)
+	private StatusEnum status;
+
+	@Column(name = "perfil")
+	@Enumerated(EnumType.STRING)
+	private RoleEnum role;
+
 	@Transient
 	private String confirmPassword;
 
 	@Transient
 	private String token;
 
-	public UserPortal(String name, String password, String email, CompanySystem system) {
+	public UserPortal(String name, String password, String email, Long systemId) {
 		this.name = name;
 		this.password = password;
 		this.email = email;
-		this.system = system;
+		this.systemId = systemId;
 	}
 
 }

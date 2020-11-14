@@ -40,6 +40,13 @@ public class ProductResources {
     }
 
     @GET
+    @RolesAllowed(JwtRoles.USER_BACKOFFICE)
+    @Path("/grid")
+    public Response listToGrid() {
+        return Response.status(Response.Status.OK).entity(service.listProductsToGrid()).build();
+    }
+
+    @GET
     @Path("/{id}")
     @RolesAllowed(JwtRoles.USER_BACKOFFICE)
     public Response getById(@PathParam("id") Long productId) {
