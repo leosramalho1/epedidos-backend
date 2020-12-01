@@ -1,0 +1,181 @@
+package br.com.inovasoft.epedidos.services;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+import javax.transaction.Transactional;
+
+import br.com.inovasoft.epedidos.mappers.PurchaseItemMapper;
+import br.com.inovasoft.epedidos.mappers.PurchaseMapper;
+import br.com.inovasoft.epedidos.models.dtos.PaginationDataResponse;
+import br.com.inovasoft.epedidos.models.dtos.PurchaseDto;
+import br.com.inovasoft.epedidos.models.dtos.PurchaseGroupDto;
+import br.com.inovasoft.epedidos.models.dtos.PurchaseItemDto;
+import br.com.inovasoft.epedidos.models.entities.OrderItem;
+import br.com.inovasoft.epedidos.models.entities.Purchase;
+import br.com.inovasoft.epedidos.models.entities.PurchaseItem;
+import br.com.inovasoft.epedidos.models.entities.Supplier;
+import br.com.inovasoft.epedidos.models.entities.UserPortal;
+import br.com.inovasoft.epedidos.models.enums.OrderEnum;
+import br.com.inovasoft.epedidos.security.TokenService;
+import io.quarkus.hibernate.orm.panache.PanacheQuery;
+import io.quarkus.panache.common.Page;
+
+@ApplicationScoped
+public class PurchaseService extends BaseService<Purchase> {
+
+    @Inject
+    TokenService tokenService;
+
+    @Inject
+    PurchaseMapper mapper;
+
+    @Inject
+    PurchaseItemMapper PurchaseItemmapper;
+
+    public PaginationDataResponse listAll(int page) {
+        PanacheQuery<Purchase> listPurchases = Purchase.find(
+                "select p from Purchase p where p.systemId = ?1 and p.deletedOn is null", tokenService.getSystemId());
+
+        List<Purchase> dataList = listPurchases.page(Page.of(page - 1, limitPerPage)).list();
+
+        return new PaginationDataResponse(mapper.toDto(dataList), limitPerPage, (int) Purchase.count());
+    }
+
+    public PaginationDataResponse listPurchasesBySystemKey(String systemKey, int page) {
+        PanacheQuery<Purchase> listPurchases = Purchase.find(
+                "select p from Purchase p, CompanySystem c where p.systemId = c.id and c.systemKey = ?1 and p.deletedOn is null",
+                systemKey);
+
+        List<Purchase> dataList = listPurchases.page(Page.of(page - 1, limitPerPage)).list();
+
+        return new PaginationDataResponse(mapper.toDto(dataList), limitPerPage, (int) Purchase.count());
+    }
+
+    public Purchase findById(Long id) {
+        return Purchase.find("select p from Purchase p where p.id = ?1 and p.systemId = ?2 and p.deletedOn is null", id,
+                tokenService.getSystemId()).firstResult();
+    }
+
+    public PurchaseGroupDto getLastPurchaseByIdBuyer(Long buyerId) {
+        LocalDate yesterday = LocalDate.now().minusDays(1);
+
+        List<OrderItem> ordersItems = OrderItem.list(
+                "select oi from Orderitem oi where oi.order.status=?1 and oi.product.buyerId=?2 and oi.order.createdOn >= ?3 order by oi.product.id",
+                OrderEnum.OPEN, buyerId, yesterday);
+
+        List<PurchaseItem> purchaseItems = PurchaseItem.list(
+                "select pi from PurchaseItem pi where pi.purchase.status=?1 and pi.purchase.buyer.id=?2 and pi.purchase.createdOn > ?3 order by oi.product.id",
+                OrderEnum.OPEN, buyerId, yesterday);
+
+        return mountPurchaseGroup(buyerId, yesterday, ordersItems, purchaseItems);
+    }
+
+    private PurchaseGroupDto mountPurchaseGroup(Long buyerId, LocalDate refDate, List<OrderItem> ordersItems,
+            List<PurchaseItem> purchaseItems) {
+        UserPortal buyer = UserPortal.findById(buyerId);
+        PurchaseGroupDto purchaseGroup = new PurchaseGroupDto();
+        purchaseGroup.setIdBuyer(buyerId);
+        purchaseGroup.setNameBuyer(buyer.getName());
+        purchaseGroup.setDateRef(DateTimeFormatter.ofPattern("dd/MM/yyyy").format(refDate));
+
+        Map<Long, PurchaseItemDto> map = new HashMap<>();
+
+        if (ordersItems != null && !ordersItems.isEmpty()) {
+            for (OrderItem item : ordersItems) {
+                PurchaseItemDto purchaseItemDto = map.get(item.getProduct().getId());
+                if (purchaseItemDto == null) {
+                    purchaseItemDto = new PurchaseItemDto();
+                    purchaseItemDto.setIdProduct(item.getProduct().getId());
+                    purchaseItemDto.setNameProduct(item.getProduct().getName());
+                    purchaseItemDto.setQuantity(item.getQuantity());
+                    purchaseItemDto.setUnitValue(BigDecimal.ZERO);
+                    purchaseItemDto.setTotalValue(BigDecimal.ZERO);
+                    purchaseItemDto.setPackageType(item.getProduct().getPackageType());
+                    map.put(item.getProduct().getId(), purchaseItemDto);
+                } else {
+                    purchaseItemDto.setQuantity(item.getQuantity() + purchaseItemDto.getQuantity());
+                }
+            }
+        }
+
+        if (purchaseItems != null && !purchaseItems.isEmpty()) {
+            for (PurchaseItem item : purchaseItems) {
+                PurchaseItemDto purchaseItemDto = map.get(item.getProduct().getId());
+                purchaseItemDto.setQuantity(purchaseItemDto.getQuantity() - item.getQuantity());
+            }
+
+        }
+
+        List<PurchaseItemDto> items = new ArrayList<>(map.values());
+        purchaseGroup.setItens(items);
+
+        items.stream().sorted(Comparator.comparing(PurchaseItemDto::getNameProduct, Comparator.naturalOrder()))
+                .collect(Collectors.toList());
+
+        return purchaseGroup;
+    }
+
+    public PurchaseDto findDtoById(Long id) {
+        Purchase entity = findById(id);
+
+        PurchaseDto purchase = mapper.toDto(entity);
+
+        purchase.setItens(PurchaseItemmapper
+                .toDto(PurchaseItem.list("purchase.id = ?1 Purchase by product.name", purchase.getId())));
+
+        return purchase;
+    }
+
+    @Transactional
+    public PurchaseDto saveDto(PurchaseDto dto) {
+        Purchase entity = mapper.toEntity(dto);
+        entity.setBuyer(UserPortal.findById(dto.getIdBuyer()));
+        entity.setSupplier(Supplier.findById(dto.getIdSupplier()));
+        entity.setSystemId(tokenService.getSystemId());
+        entity.setTotalValueProducts(BigDecimal.ZERO);
+        super.save(entity);
+
+        List<PurchaseItem> itens = PurchaseItemmapper.toEntity(dto.getItens());
+        for (PurchaseItem item : itens) {
+            item.setPurchase(entity);
+            PurchaseItem.persist(item);
+        }
+
+        return mapper.toDto(entity);
+    }
+
+    @Transactional
+    public PurchaseDto update(Long id, PurchaseDto dto) {
+        Purchase entity = Purchase.findById(id);
+
+        mapper.updateEntityFromDto(dto, entity);
+
+        Purchase.persist(entity);
+
+        PurchaseItem.delete("Purchase.id=?1", id);
+        List<PurchaseItem> itens = PurchaseItemmapper.toEntity(dto.getItens());
+        for (PurchaseItem item : itens) {
+            item.setId(null);
+            item.setPurchase(entity);
+            PurchaseItem.persist(item);
+        }
+
+        return mapper.toDto(entity);
+    }
+
+    @Transactional
+    public void delete(Long id) {
+        Purchase.update("set deletedOn = now() where id = ?1 and systemId = ?2", id, tokenService.getSystemId());
+    }
+
+}

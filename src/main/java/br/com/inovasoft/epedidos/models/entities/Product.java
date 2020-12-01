@@ -38,6 +38,9 @@ public class Product extends BaseEntity {
         @Column(name = "peso")
         private BigDecimal weidth;
 
+        @Column(name = "id_comprador")
+        private Long buyerId;
+
         @Column(name = "responsavel_compra")
         private String buyerName;
 

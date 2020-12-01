@@ -2,6 +2,7 @@ package br.com.inovasoft.epedidos.services;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -10,8 +11,9 @@ import javax.transaction.Transactional;
 import org.apache.commons.beanutils.BeanUtils;
 
 import br.com.inovasoft.epedidos.models.dtos.PaginationDataResponse;
-import br.com.inovasoft.epedidos.models.entities.CompanySystem;
+import br.com.inovasoft.epedidos.models.dtos.SuggestionDto;
 import br.com.inovasoft.epedidos.models.entities.UserPortal;
+import br.com.inovasoft.epedidos.models.enums.RoleEnum;
 import br.com.inovasoft.epedidos.security.TokenService;
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import io.quarkus.panache.common.Page;
@@ -30,6 +32,15 @@ public class UserService extends BaseService<UserPortal> {
 
 		return new PaginationDataResponse(dataList, limitPerPage,
 				(int) UserPortal.count("systemId  = ?1 and deletedOn is null", tokenService.getSystemId()));
+	}
+
+	public List<SuggestionDto> getSuggestions(String query) {
+		List<UserPortal> dataList = UserPortal.list(
+				"systemId = ?1 and upper(name) like ?2 and role = ?3 and deletedOn is null", tokenService.getSystemId(),
+				query.toUpperCase() + "%", RoleEnum.BUYER);
+
+		return dataList.stream().map(item -> new SuggestionDto(item.getId(), item.getName()))
+				.collect(Collectors.toList());
 	}
 
 	@Transactional

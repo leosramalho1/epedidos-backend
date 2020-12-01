@@ -12,6 +12,7 @@ import br.com.inovasoft.epedidos.mappers.OrderItemMapper;
 import br.com.inovasoft.epedidos.mappers.OrderMapper;
 import br.com.inovasoft.epedidos.models.dtos.OrderDto;
 import br.com.inovasoft.epedidos.models.dtos.PaginationDataResponse;
+import br.com.inovasoft.epedidos.models.dtos.PurchaseDto;
 import br.com.inovasoft.epedidos.models.entities.Customer;
 import br.com.inovasoft.epedidos.models.entities.Order;
 import br.com.inovasoft.epedidos.models.entities.OrderItem;
@@ -53,6 +54,14 @@ public class OrderService extends BaseService<Order> {
     public Order findById(Long id) {
         return Order.find("select p from Order p where p.id = ?1 and p.systemId = ?2 and p.deletedOn is null", id,
                 tokenService.getSystemId()).firstResult();
+    }
+
+    public PurchaseDto getLastPurchaseByIdBuyer(Long buyerId) {
+
+        // Group order bybuy and yesterday date
+
+        // Decriase the purchase realized
+        return null;
     }
 
     public OrderDto findDtoById(Long id) {

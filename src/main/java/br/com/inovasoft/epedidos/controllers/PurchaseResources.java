@@ -21,18 +21,18 @@ import javax.ws.rs.core.Response;
 
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 
-import br.com.inovasoft.epedidos.models.dtos.OrderDto;
+import br.com.inovasoft.epedidos.models.dtos.PurchaseDto;
 import br.com.inovasoft.epedidos.security.jwt.JwtRoles;
-import br.com.inovasoft.epedidos.services.OrderService;
+import br.com.inovasoft.epedidos.services.PurchaseService;
 
-@Path("/orders")
+@Path("/purchase")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
-@Tag(name = "Orders")
-public class OrderResources {
+@Tag(name = "Purchase")
+public class PurchaseResources {
 
     @Inject
-    OrderService service;
+    PurchaseService service;
 
     @GET
     @RolesAllowed(JwtRoles.USER_BACKOFFICE)
@@ -41,26 +41,33 @@ public class OrderResources {
     }
 
     @GET
+    @Path("/purchase/{id}")
+    @RolesAllowed(JwtRoles.USER_BACKOFFICE)
+    public Response getLastPurchaseByIdBuyer(@PathParam("id") Long buyerId) {
+        return Response.status(Response.Status.OK).entity(service.getLastPurchaseByIdBuyer(buyerId)).build();
+    }
+
+    @GET
     @Path("/bu{id}")
     @RolesAllowed(JwtRoles.USER_BACKOFFICE)
-    public Response getById(@PathParam("id") Long orderId) {
-        return Response.status(Response.Status.OK).entity(service.findDtoById(orderId)).build();
+    public Response getById(@PathParam("id") Long PurchaseId) {
+        return Response.status(Response.Status.OK).entity(service.findDtoById(PurchaseId)).build();
     }
 
     @POST
     @RolesAllowed(JwtRoles.USER_BACKOFFICE)
     @Transactional
-    public Response save(@Valid OrderDto orderDto) {
-        return Response.status(Response.Status.CREATED).entity(service.saveDto(orderDto)).build();
+    public Response save(@Valid PurchaseDto PurchaseDto) {
+        return Response.status(Response.Status.CREATED).entity(service.saveDto(PurchaseDto)).build();
     }
 
     @PUT
     @Path("/{id}")
     @RolesAllowed(JwtRoles.USER_BACKOFFICE)
     @Transactional
-    public Response change(@PathParam("id") Long idOrder, @Valid OrderDto order)
+    public Response change(@PathParam("id") Long idPurchase, @Valid PurchaseDto Purchase)
             throws IllegalAccessException, InvocationTargetException {
-        return Response.status(Response.Status.OK).entity(service.update(idOrder, order)).build();
+        return Response.status(Response.Status.OK).entity(service.update(idPurchase, Purchase)).build();
     }
 
     @DELETE
