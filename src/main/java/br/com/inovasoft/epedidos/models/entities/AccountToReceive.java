@@ -53,7 +53,7 @@ public class AccountToReceive extends BaseEntity {
     @Column(name = "valor_pago")
     private BigDecimal ReceiveValue;
 
-    @Column(name = "data_vencimento")
+    @Column(name = "data_recebimento")
     private LocalDate ReceiveDate;
 
     @NotNull(message = "Status is required")

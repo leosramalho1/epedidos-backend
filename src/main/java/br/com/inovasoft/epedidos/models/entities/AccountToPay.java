@@ -53,7 +53,7 @@ public class AccountToPay extends BaseEntity {
     @Column(name = "valor_pago")
     private BigDecimal payValue;
 
-    @Column(name = "data_vencimento")
+    @Column(name = "data_pagamento")
     private LocalDate payDate;
 
     @NotNull(message = "Status is required")
