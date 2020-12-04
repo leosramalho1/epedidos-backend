@@ -41,9 +41,6 @@ public class Product extends BaseEntity {
         @Column(name = "id_comprador")
         private Long buyerId;
 
-        @Column(name = "responsavel_compra")
-        private String buyerName;
-
         @Column(name = "tipo_embalagem")
         private String packageType;
 

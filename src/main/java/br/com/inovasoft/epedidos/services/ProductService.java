@@ -12,7 +12,9 @@ import br.com.inovasoft.epedidos.models.dtos.OrderItemDto;
 import br.com.inovasoft.epedidos.models.dtos.PaginationDataResponse;
 import br.com.inovasoft.epedidos.models.dtos.ProductDto;
 import br.com.inovasoft.epedidos.models.entities.Product;
+import br.com.inovasoft.epedidos.models.entities.UserPortal;
 import br.com.inovasoft.epedidos.security.TokenService;
+import br.com.inovasoft.epedidos.util.SuggestionUtil;
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import io.quarkus.panache.common.Page;
 
@@ -67,12 +69,19 @@ public class ProductService extends BaseService<Product> {
     }
 
     public ProductDto findDtoById(Long id) {
-        return mapper.toDto(findById(id));
+        Product entity = findById(id);
+        ProductDto result = mapper.toDto(entity);
+        if (entity.getBuyerId() != null) {
+            UserPortal buyer = UserPortal.findById(entity.getBuyerId());
+            result.setBuyerCodeName(SuggestionUtil.build(buyer.getId(), buyer.getName()));
+        }
+        return result;
     }
 
     public ProductDto saveDto(ProductDto dto) {
         Product entity = mapper.toEntity(dto);
-
+        if (dto.getBuyerCodeName() != null)
+            entity.setBuyerId(SuggestionUtil.extractId(dto.getBuyerCodeName()));
         entity.setSystemId(tokenService.getSystemId());
 
         super.save(entity);
@@ -84,6 +93,8 @@ public class ProductService extends BaseService<Product> {
         Product entity = findById(id);
 
         mapper.updateEntityFromDto(dto, entity);
+        if (dto.getBuyerCodeName() != null)
+            entity.setBuyerId(SuggestionUtil.extractId(dto.getBuyerCodeName()));
 
         entity.persist();
 

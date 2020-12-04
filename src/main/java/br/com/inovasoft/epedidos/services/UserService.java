@@ -10,6 +10,7 @@ import javax.transaction.Transactional;
 
 import org.apache.commons.beanutils.BeanUtils;
 
+import br.com.inovasoft.epedidos.models.dtos.OptionDto;
 import br.com.inovasoft.epedidos.models.dtos.PaginationDataResponse;
 import br.com.inovasoft.epedidos.models.dtos.SuggestionDto;
 import br.com.inovasoft.epedidos.models.entities.UserPortal;
@@ -41,6 +42,13 @@ public class UserService extends BaseService<UserPortal> {
 
 		return dataList.stream().map(item -> new SuggestionDto(item.getId(), item.getName()))
 				.collect(Collectors.toList());
+	}
+
+	public List<OptionDto> getListAllOptions() {
+		List<UserPortal> dataList = UserPortal.list("systemId = ?1 and  role = ?2 and deletedOn is null order by name",
+				tokenService.getSystemId(), RoleEnum.BUYER);
+
+		return dataList.stream().map(item -> new OptionDto(item.getId(), item.getName())).collect(Collectors.toList());
 	}
 
 	@Transactional

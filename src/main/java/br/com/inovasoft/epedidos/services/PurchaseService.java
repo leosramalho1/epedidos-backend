@@ -66,16 +66,16 @@ public class PurchaseService extends BaseService<Purchase> {
                 tokenService.getSystemId()).firstResult();
     }
 
-    public PurchaseGroupDto getLastPurchaseByIdBuyer(Long buyerId) {
+    public PurchaseGroupDto getOpenOrderAndGroupByIdBuyer(Long buyerId) {
         LocalDate yesterday = LocalDate.now().minusDays(1);
 
         List<OrderItem> ordersItems = OrderItem.list(
-                "select oi from Orderitem oi where oi.order.status=?1 and oi.product.buyerId=?2 and oi.order.createdOn >= ?3 order by oi.product.id",
-                OrderEnum.OPEN, buyerId, yesterday);
+                "select oi from OrderItem oi where oi.order.status=?1 and oi.product.buyerId=?2 and oi.order.createdOn <= ?3 and oi.order.deletedOn is null order by oi.product.id",
+                OrderEnum.OPEN, buyerId, yesterday.atTime(23, 59, 59));
 
         List<PurchaseItem> purchaseItems = PurchaseItem.list(
-                "select pi from PurchaseItem pi where pi.purchase.status=?1 and pi.purchase.buyer.id=?2 and pi.purchase.createdOn > ?3 order by oi.product.id",
-                OrderEnum.OPEN, buyerId, yesterday);
+                "select pi from PurchaseItem pi where pi.purchase.status=?1 and pi.purchase.buyer.id=?2 and pi.purchase.createdOn <= ?3 order by pi.product.id",
+                OrderEnum.OPEN, buyerId, yesterday.atTime(23, 59, 59));
 
         return mountPurchaseGroup(buyerId, yesterday, ordersItems, purchaseItems);
     }

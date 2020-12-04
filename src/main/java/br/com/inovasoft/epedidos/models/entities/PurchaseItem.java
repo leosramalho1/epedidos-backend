@@ -25,7 +25,7 @@ public class PurchaseItem extends BaseEntity {
 
     @NotNull(message = "Order is required")
     @JoinColumn(name = "compra_id")
-    @ManyToOne(targetEntity = Order.class)
+    @ManyToOne(targetEntity = Purchase.class)
     private Purchase purchase;
 
     @NotNull(message = "Product is required")

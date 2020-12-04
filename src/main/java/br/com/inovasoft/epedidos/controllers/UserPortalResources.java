@@ -60,6 +60,13 @@ public class UserPortalResources {
     }
 
     @GET
+    @Path("buyers/select-options")
+    @RolesAllowed(JwtRoles.USER_BACKOFFICE)
+    public Response buyerOptions() {
+        return Response.status(Response.Status.OK).entity(service.getListAllOptions()).build();
+    }
+
+    @GET
     @Path("{id}")
     @RolesAllowed(JwtRoles.USER_BACKOFFICE)
     public Response getById(@PathParam("id") Long id) {

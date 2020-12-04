@@ -41,10 +41,10 @@ public class PurchaseResources {
     }
 
     @GET
-    @Path("/purchase/{id}")
+    @Path("/group/{id}")
     @RolesAllowed(JwtRoles.USER_BACKOFFICE)
-    public Response getLastPurchaseByIdBuyer(@PathParam("id") Long buyerId) {
-        return Response.status(Response.Status.OK).entity(service.getLastPurchaseByIdBuyer(buyerId)).build();
+    public Response getOpenOrderAndGroupByIdBuyer(@PathParam("id") Long buyerId) {
+        return Response.status(Response.Status.OK).entity(service.getOpenOrderAndGroupByIdBuyer(buyerId)).build();
     }
 
     @GET

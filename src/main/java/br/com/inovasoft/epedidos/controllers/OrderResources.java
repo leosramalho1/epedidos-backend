@@ -41,7 +41,7 @@ public class OrderResources {
     }
 
     @GET
-    @Path("/bu{id}")
+    @Path("/{id}")
     @RolesAllowed(JwtRoles.USER_BACKOFFICE)
     public Response getById(@PathParam("id") Long orderId) {
         return Response.status(Response.Status.OK).entity(service.findDtoById(orderId)).build();
