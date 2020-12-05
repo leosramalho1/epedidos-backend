@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+import br.com.inovasoft.epedidos.models.enums.OrderEnum;
 import lombok.Data;
 
 @Data
@@ -15,6 +16,8 @@ public class PurchaseDto {
     private String nameBuyer;
     private Long idSupplier;
     private String nameSupplier;
+    private String codeNameSupplier;
     private String dateRef;
+    private OrderEnum status;
     private List<PurchaseItemDto> itens;
 }

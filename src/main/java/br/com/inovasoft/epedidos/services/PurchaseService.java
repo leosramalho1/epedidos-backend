@@ -21,12 +21,14 @@ import br.com.inovasoft.epedidos.models.dtos.PurchaseDto;
 import br.com.inovasoft.epedidos.models.dtos.PurchaseGroupDto;
 import br.com.inovasoft.epedidos.models.dtos.PurchaseItemDto;
 import br.com.inovasoft.epedidos.models.entities.OrderItem;
+import br.com.inovasoft.epedidos.models.entities.Product;
 import br.com.inovasoft.epedidos.models.entities.Purchase;
 import br.com.inovasoft.epedidos.models.entities.PurchaseItem;
 import br.com.inovasoft.epedidos.models.entities.Supplier;
 import br.com.inovasoft.epedidos.models.entities.UserPortal;
 import br.com.inovasoft.epedidos.models.enums.OrderEnum;
 import br.com.inovasoft.epedidos.security.TokenService;
+import br.com.inovasoft.epedidos.util.SuggestionUtil;
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import io.quarkus.panache.common.Page;
 
@@ -78,6 +80,18 @@ public class PurchaseService extends BaseService<Purchase> {
                 OrderEnum.OPEN, buyerId, yesterday.atTime(23, 59, 59));
 
         return mountPurchaseGroup(buyerId, yesterday, ordersItems, purchaseItems);
+    }
+
+    public PurchaseDto getProductsToBuy(Long buyerId) {
+        List<Product> products = Product.list("buyerId=?1 order by name", buyerId);
+
+        List<PurchaseItemDto> items = products.stream()
+                .map(product -> new PurchaseItemDto(product.getId(), product.getName(), 0))
+                .collect(Collectors.toList());
+
+        PurchaseDto result = new PurchaseDto();
+        result.setItens(items);
+        return result;
     }
 
     private PurchaseGroupDto mountPurchaseGroup(Long buyerId, LocalDate refDate, List<OrderItem> ordersItems,
@@ -140,7 +154,7 @@ public class PurchaseService extends BaseService<Purchase> {
     public PurchaseDto saveDto(PurchaseDto dto) {
         Purchase entity = mapper.toEntity(dto);
         entity.setBuyer(UserPortal.findById(dto.getIdBuyer()));
-        entity.setSupplier(Supplier.findById(dto.getIdSupplier()));
+        entity.setSupplier(Supplier.findById(SuggestionUtil.extractId(dto.getCodeNameSupplier())));
         entity.setSystemId(tokenService.getSystemId());
         entity.setTotalValueProducts(BigDecimal.ZERO);
         super.save(entity);

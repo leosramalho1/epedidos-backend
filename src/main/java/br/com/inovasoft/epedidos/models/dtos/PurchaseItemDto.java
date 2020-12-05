@@ -16,4 +16,14 @@ public class PurchaseItemDto {
     private BigDecimal unitValue;
     private BigDecimal totalValue;
     private String packageType;
+
+    public PurchaseItemDto() {
+
+    }
+
+    public PurchaseItemDto(Long idProduct, String nameProduct, Integer quantity) {
+        this.idProduct = idProduct;
+        this.nameProduct = nameProduct;
+        this.quantity = quantity;
+    }
 }

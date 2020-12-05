@@ -48,7 +48,14 @@ public class PurchaseResources {
     }
 
     @GET
-    @Path("/bu{id}")
+    @Path("/products/{id}")
+    @RolesAllowed(JwtRoles.USER_BACKOFFICE)
+    public Response getProductsToBuy(@PathParam("id") Long buyerId) {
+        return Response.status(Response.Status.OK).entity(service.getProductsToBuy(buyerId)).build();
+    }
+
+    @GET
+    @Path("/{id}")
     @RolesAllowed(JwtRoles.USER_BACKOFFICE)
     public Response getById(@PathParam("id") Long PurchaseId) {
         return Response.status(Response.Status.OK).entity(service.findDtoById(PurchaseId)).build();
