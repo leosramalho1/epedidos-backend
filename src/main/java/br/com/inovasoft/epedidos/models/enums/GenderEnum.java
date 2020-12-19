@@ -9,6 +9,6 @@ public enum GenderEnum {
     
     M("Male"), F("Female");
 
-    private String description;
+    private final String description;
 
 }

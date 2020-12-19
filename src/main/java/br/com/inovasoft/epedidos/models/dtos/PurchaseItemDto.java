@@ -1,10 +1,10 @@
 package br.com.inovasoft.epedidos.models.dtos;
 
-import java.math.BigDecimal;
-
+import br.com.inovasoft.epedidos.models.enums.PackageTypeEnum;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-
 import lombok.Data;
+
+import java.math.BigDecimal;
 
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -15,7 +15,7 @@ public class PurchaseItemDto {
     private Integer quantity;
     private BigDecimal unitValue;
     private BigDecimal totalValue;
-    private String packageType;
+    private PackageTypeEnum packageType;
 
     public PurchaseItemDto() {
 

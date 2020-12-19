@@ -1,13 +1,5 @@
 package br.com.inovasoft.epedidos.services;
 
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-import javax.transaction.Transactional;
-
 import br.com.inovasoft.epedidos.mappers.OrderItemMapper;
 import br.com.inovasoft.epedidos.mappers.OrderMapper;
 import br.com.inovasoft.epedidos.models.dtos.OrderDto;
@@ -19,6 +11,13 @@ import br.com.inovasoft.epedidos.models.entities.OrderItem;
 import br.com.inovasoft.epedidos.security.TokenService;
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import io.quarkus.panache.common.Page;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+import javax.transaction.Transactional;
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
 @ApplicationScoped
 public class OrderService extends BaseService<Order> {
@@ -32,23 +31,23 @@ public class OrderService extends BaseService<Order> {
     @Inject
     OrderItemMapper orderItemmapper;
 
-    public PaginationDataResponse listAll(int page) {
+    public PaginationDataResponse<OrderDto> listAll(int page) {
         PanacheQuery<Order> listOrders = Order.find(
                 "select p from Order p where p.systemId = ?1 and p.deletedOn is null", tokenService.getSystemId());
 
         List<Order> dataList = listOrders.page(Page.of(page - 1, limitPerPage)).list();
 
-        return new PaginationDataResponse(mapper.toDto(dataList), limitPerPage, (int) Order.count());
+        return new PaginationDataResponse<>(mapper.toDto(dataList), limitPerPage, (int) Order.count());
     }
 
-    public PaginationDataResponse listOrdersBySystemKey(String systemKey, int page) {
+    public PaginationDataResponse<OrderDto> listOrdersBySystemKey(String systemKey, int page) {
         PanacheQuery<Order> listOrders = Order.find(
                 "select p from Order p, CompanySystem c where p.systemId = c.id and c.systemKey = ?1 and p.deletedOn is null",
                 systemKey);
 
         List<Order> dataList = listOrders.page(Page.of(page - 1, limitPerPage)).list();
 
-        return new PaginationDataResponse(mapper.toDto(dataList), limitPerPage, (int) Order.count());
+        return new PaginationDataResponse<>(mapper.toDto(dataList), limitPerPage, (int) Order.count());
     }
 
     public Order findById(Long id) {

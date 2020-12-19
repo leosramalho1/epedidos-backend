@@ -1,35 +1,24 @@
 package br.com.inovasoft.epedidos.controllers;
 
-import java.lang.reflect.InvocationTargetException;
-
-import javax.annotation.security.PermitAll;
-import javax.annotation.security.RolesAllowed;
-import javax.inject.Inject;
-import javax.transaction.Transactional;
-import javax.validation.Valid;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-
-import org.eclipse.microprofile.jwt.JsonWebToken;
-import org.eclipse.microprofile.openapi.annotations.Operation;
-import org.eclipse.microprofile.openapi.annotations.tags.Tag;
-
 import br.com.inovasoft.epedidos.models.entities.Company;
 import br.com.inovasoft.epedidos.models.entities.CompanySystem;
 import br.com.inovasoft.epedidos.models.entities.UserPortal;
 import br.com.inovasoft.epedidos.security.TokenService;
 import br.com.inovasoft.epedidos.security.jwt.JwtRoles;
 import br.com.inovasoft.epedidos.services.UserService;
+import org.eclipse.microprofile.jwt.JsonWebToken;
+import org.eclipse.microprofile.openapi.annotations.Operation;
+import org.eclipse.microprofile.openapi.annotations.tags.Tag;
+
+import javax.annotation.security.PermitAll;
+import javax.annotation.security.RolesAllowed;
+import javax.inject.Inject;
+import javax.transaction.Transactional;
+import javax.validation.Valid;
+import javax.ws.rs.*;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import java.lang.reflect.InvocationTargetException;
 
 @Path("/users")
 @Consumes(MediaType.APPLICATION_JSON)
@@ -172,9 +161,6 @@ public class UserPortalResources {
         if (!existingUser.getPassword().equals(user.getPassword())) {
             throw new WebApplicationException(Response.status(403).entity("Usuário ou senha inválido!").build());
         }
-        if (!existingUser.getPassword().equals(user.getPassword())) {
-            throw new WebApplicationException(Response.status(403).entity("Usuário ou senha inválido!").build());
-        }
 
         CompanySystem system = CompanySystem.findById(existingUser.getSystemId());
 
@@ -185,7 +171,7 @@ public class UserPortalResources {
         }
 
         Company company = system.getCompany();
-        existingUser.setToken(tokenService.generateBackofficeToken(existingUser.getEmail(), user.getPassword(),
+        existingUser.setToken(tokenService.generateBackofficeToken(existingUser.getEmail(), user.getName(),
                 company.getId(), system.getSystemKey()));
 
         return existingUser;

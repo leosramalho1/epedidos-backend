@@ -1,12 +1,5 @@
 package br.com.inovasoft.epedidos.services;
 
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-
 import br.com.inovasoft.epedidos.mappers.ProductMapper;
 import br.com.inovasoft.epedidos.models.dtos.OrderItemDto;
 import br.com.inovasoft.epedidos.models.dtos.PaginationDataResponse;
@@ -17,6 +10,13 @@ import br.com.inovasoft.epedidos.security.TokenService;
 import br.com.inovasoft.epedidos.util.SuggestionUtil;
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import io.quarkus.panache.common.Page;
+import org.apache.commons.lang3.StringUtils;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class ProductService extends BaseService<Product> {
@@ -80,7 +80,7 @@ public class ProductService extends BaseService<Product> {
 
     public ProductDto saveDto(ProductDto dto) {
         Product entity = mapper.toEntity(dto);
-        if (dto.getBuyerCodeName() != null)
+        if (StringUtils.isNotBlank(dto.getBuyerCodeName()))
             entity.setBuyerId(SuggestionUtil.extractId(dto.getBuyerCodeName()));
         entity.setSystemId(tokenService.getSystemId());
 
@@ -93,7 +93,7 @@ public class ProductService extends BaseService<Product> {
         Product entity = findById(id);
 
         mapper.updateEntityFromDto(dto, entity);
-        if (dto.getBuyerCodeName() != null)
+        if (StringUtils.isNotBlank(dto.getBuyerCodeName()))
             entity.setBuyerId(SuggestionUtil.extractId(dto.getBuyerCodeName()));
 
         entity.persist();

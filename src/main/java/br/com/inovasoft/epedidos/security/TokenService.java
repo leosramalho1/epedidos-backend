@@ -95,8 +95,8 @@ public class TokenService {
         return claim;
     }
 
-    public Long getJwtClaimAsLong(String claimName) {
-        return ((JsonNumber) getJwtClaim(claimName)).longValue();
+    public String getUserEmail() {
+        return (String) getJwtClaim(Claims.upn.name());
     }
 
 }

@@ -1,36 +1,26 @@
 package br.com.inovasoft.epedidos.services;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-import javax.transaction.Transactional;
-
 import br.com.inovasoft.epedidos.mappers.PurchaseItemMapper;
 import br.com.inovasoft.epedidos.mappers.PurchaseMapper;
 import br.com.inovasoft.epedidos.models.dtos.PaginationDataResponse;
 import br.com.inovasoft.epedidos.models.dtos.PurchaseDto;
 import br.com.inovasoft.epedidos.models.dtos.PurchaseGroupDto;
 import br.com.inovasoft.epedidos.models.dtos.PurchaseItemDto;
-import br.com.inovasoft.epedidos.models.entities.OrderItem;
-import br.com.inovasoft.epedidos.models.entities.Product;
-import br.com.inovasoft.epedidos.models.entities.Purchase;
-import br.com.inovasoft.epedidos.models.entities.PurchaseItem;
-import br.com.inovasoft.epedidos.models.entities.Supplier;
-import br.com.inovasoft.epedidos.models.entities.UserPortal;
+import br.com.inovasoft.epedidos.models.entities.*;
 import br.com.inovasoft.epedidos.models.enums.OrderEnum;
 import br.com.inovasoft.epedidos.security.TokenService;
 import br.com.inovasoft.epedidos.util.SuggestionUtil;
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import io.quarkus.panache.common.Page;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+import javax.transaction.Transactional;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class PurchaseService extends BaseService<Purchase> {
@@ -69,14 +59,18 @@ public class PurchaseService extends BaseService<Purchase> {
     }
 
     public PurchaseGroupDto getOpenOrderAndGroupByIdBuyer(Long buyerId) {
-        LocalDate yesterday = LocalDate.now().minusDays(1);
+        LocalDate yesterday = LocalDate.now().minusDays(-10);
 
         List<OrderItem> ordersItems = OrderItem.list(
-                "select oi from OrderItem oi where oi.order.status=?1 and oi.product.buyerId=?2 and oi.order.createdOn <= ?3 and oi.order.deletedOn is null order by oi.product.id",
+                "select oi from OrderItem oi where oi.order.status=?1 " +
+                        "and oi.product.buyerId= ?2 and oi.order.createdOn <= ?3 " +
+                        "and oi.order.deletedOn is null order by oi.product.id",
                 OrderEnum.OPEN, buyerId, yesterday.atTime(23, 59, 59));
 
         List<PurchaseItem> purchaseItems = PurchaseItem.list(
-                "select pi from PurchaseItem pi where pi.purchase.status=?1 and pi.purchase.buyer.id=?2 and pi.purchase.createdOn <= ?3 order by pi.product.id",
+                "select pi from PurchaseItem pi where pi.purchase.status=?1 " +
+                        "and pi.purchase.buyer.id=?2 and pi.purchase.createdOn <= ?3 " +
+                        "order by pi.product.id",
                 OrderEnum.OPEN, buyerId, yesterday.atTime(23, 59, 59));
 
         return mountPurchaseGroup(buyerId, yesterday, ordersItems, purchaseItems);
