@@ -13,7 +13,6 @@ import javax.validation.constraints.NotNull;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
 @Table(name = "cliente_endereco", indexes = {
-        @Index(name = "cliente_endereco_index_endereco_principal", columnList = "cliente_id, endereco_principal", unique = true),
         @Index(name = "cliente_endereco_index_endereco", columnList = "endereco_id"),
         @Index(name = "cliente_endereco_index_cliente", columnList = "cliente_id") })
 public class CustomerAddress extends BaseEntity {
@@ -25,10 +24,12 @@ public class CustomerAddress extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "customer-address-sequence")
     private Long id;
 
+    @NotNull
     @ManyToOne(targetEntity = Address.class)
     @JoinColumn(name = "endereco_id")
     private Address address;
 
+    @NotNull
     @ManyToOne(targetEntity = Customer.class)
     @JoinColumn(name = "cliente_id")
     private Customer customer;

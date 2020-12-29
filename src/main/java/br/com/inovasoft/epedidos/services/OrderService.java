@@ -3,11 +3,13 @@ package br.com.inovasoft.epedidos.services;
 import br.com.inovasoft.epedidos.mappers.OrderItemMapper;
 import br.com.inovasoft.epedidos.mappers.OrderMapper;
 import br.com.inovasoft.epedidos.models.dtos.OrderDto;
+import br.com.inovasoft.epedidos.models.dtos.OrderItemDto;
 import br.com.inovasoft.epedidos.models.dtos.PaginationDataResponse;
 import br.com.inovasoft.epedidos.models.dtos.PurchaseDto;
 import br.com.inovasoft.epedidos.models.entities.Customer;
 import br.com.inovasoft.epedidos.models.entities.Order;
 import br.com.inovasoft.epedidos.models.entities.OrderItem;
+import br.com.inovasoft.epedidos.models.enums.OrderEnum;
 import br.com.inovasoft.epedidos.security.TokenService;
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import io.quarkus.panache.common.Page;
@@ -29,7 +31,7 @@ public class OrderService extends BaseService<Order> {
     OrderMapper mapper;
 
     @Inject
-    OrderItemMapper orderItemmapper;
+    OrderItemMapper orderItemMapper;
 
     public PaginationDataResponse<OrderDto> listAll(int page) {
         PanacheQuery<Order> listOrders = Order.find(
@@ -48,6 +50,19 @@ public class OrderService extends BaseService<Order> {
         List<Order> dataList = listOrders.page(Page.of(page - 1, limitPerPage)).list();
 
         return new PaginationDataResponse<>(mapper.toDto(dataList), limitPerPage, (int) Order.count());
+    }
+
+    public PaginationDataResponse<OrderItemDto> listOrderItemByProductAndCustomer(Long idProduct, Long customerId) {
+
+        PanacheQuery<OrderItem> listOrders = OrderItem.find(
+                "select i from OrderItem i, Order o " +
+                        "where o.id = i.order.id and i.product.id = ?1 and o.customer.id = ?2" +
+                        "and o.systemId = ?3 and o.status = ?4",
+                idProduct, customerId, tokenService.getSystemId(), OrderEnum.OPEN);
+
+        List<OrderItem> dataList = listOrders.list();
+
+        return new PaginationDataResponse<>(orderItemMapper.toDto(dataList), limitPerPage, (int) Order.count());
     }
 
     public Order findById(Long id) {
@@ -70,7 +85,7 @@ public class OrderService extends BaseService<Order> {
         order.setIdCustomers(new ArrayList<>());
         order.getIdCustomers().add(entity.getCustomer().getId());
 
-        order.setItens(orderItemmapper.toDto(OrderItem.list("order.id = ?1 order by product.name", order.getId())));
+        order.setItens(orderItemMapper.toDto(OrderItem.list("order.id = ?1 order by product.name", order.getId())));
 
         return order;
     }
@@ -85,9 +100,12 @@ public class OrderService extends BaseService<Order> {
         entity.setTotalValueProducts(BigDecimal.ZERO);
         super.save(entity);
 
-        List<OrderItem> itens = orderItemmapper.toEntity(dto.getItens());
+        List<OrderItem> itens = orderItemMapper.toEntity(dto.getItens());
         for (OrderItem item : itens) {
             item.setOrder(entity);
+            if(item.getProduct() != null) {
+                item.setWeidth(item.getProduct().getWeidth());
+            }
             OrderItem.persist(item);
         }
 
@@ -103,7 +121,7 @@ public class OrderService extends BaseService<Order> {
         Order.persist(entity);
 
         OrderItem.delete("order.id=?1", id);
-        List<OrderItem> itens = orderItemmapper.toEntity(dto.getItens());
+        List<OrderItem> itens = orderItemMapper.toEntity(dto.getItens());
         for (OrderItem item : itens) {
             item.setId(null);
             item.setOrder(entity);

@@ -2,6 +2,7 @@ package br.com.inovasoft.epedidos.security;
 
 import br.com.inovasoft.epedidos.security.jwt.JwtCustomClaims;
 import br.com.inovasoft.epedidos.security.jwt.JwtRoles;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.jwt.Claims;
 import org.eclipse.microprofile.jwt.JsonWebToken;
@@ -14,6 +15,7 @@ import java.util.Arrays;
 import java.util.UUID;
 
 @Slf4j
+@Getter
 @RequestScoped
 public class TokenService {
 

@@ -3,10 +3,10 @@ package br.com.inovasoft.epedidos.controllers;
 import br.com.inovasoft.epedidos.models.entities.Company;
 import br.com.inovasoft.epedidos.models.entities.CompanySystem;
 import br.com.inovasoft.epedidos.models.entities.UserPortal;
+import br.com.inovasoft.epedidos.models.enums.StatusEnum;
 import br.com.inovasoft.epedidos.security.TokenService;
 import br.com.inovasoft.epedidos.security.jwt.JwtRoles;
 import br.com.inovasoft.epedidos.services.UserService;
-import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 
@@ -32,8 +32,6 @@ public class UserPortalResources {
     @Inject
     TokenService tokenService;
 
-    @Inject
-    JsonWebToken jwt;
 
     @GET
     @RolesAllowed(JwtRoles.USER_BACKOFFICE)
@@ -74,10 +72,7 @@ public class UserPortalResources {
         if (user.getConfirmPassword() == null) {
             throw new WebApplicationException(Response.status(400).entity("Confirmação senha é obrigatório").build());
         }
-        if (!user.getConfirmPassword().equals(user.getPassword())) {
-            throw new WebApplicationException(
-                    Response.status(400).entity("Confirmação senha deve ser igual a senha.").build());
-        }
+
         return Response.status(Response.Status.OK).entity(service.update(iduser, user)).build();
     }
 
@@ -86,6 +81,10 @@ public class UserPortalResources {
     @Transactional
     public Response save(@Valid UserPortal user) {
 
+        if (!user.getConfirmPassword().equals(user.getPassword())) {
+            throw new WebApplicationException(
+                    Response.status(400).entity("Confirmação senha deve ser igual a senha.").build());
+        }
         service.save(user);
         return Response.status(Response.Status.CREATED).entity(user).build();
     }
@@ -100,11 +99,8 @@ public class UserPortalResources {
         if (user.getConfirmPassword() == null) {
             throw new WebApplicationException(Response.status(400).entity("Confirmação senha é obrigatório").build());
         }
-        if (!user.getConfirmPassword().equals(user.getPassword())) {
-            throw new WebApplicationException(
-                    Response.status(400).entity("Confirmação senha deve ser igual a senha.").build());
-        }
-        service.changePassword(jwt.getSubject(), user.getPassword());
+
+        service.changePassword(user);
 
         return Response.status(Response.Status.CREATED).build();
 
@@ -160,6 +156,9 @@ public class UserPortalResources {
         }
         if (!existingUser.getPassword().equals(user.getPassword())) {
             throw new WebApplicationException(Response.status(403).entity("Usuário ou senha inválido!").build());
+        }
+        if(existingUser.getStatus() != StatusEnum.ACTIVE){
+            throw new WebApplicationException(Response.status(403).entity("O usuário não está habilitado no sistema, entre em contato com o administrador.").build());
         }
 
         CompanySystem system = CompanySystem.findById(existingUser.getSystemId());

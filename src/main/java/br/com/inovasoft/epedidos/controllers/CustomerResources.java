@@ -1,28 +1,22 @@
 package br.com.inovasoft.epedidos.controllers;
 
-import java.lang.reflect.InvocationTargetException;
+import br.com.inovasoft.epedidos.models.dtos.CustomerAddressDto;
+import br.com.inovasoft.epedidos.models.dtos.CustomerDto;
+import br.com.inovasoft.epedidos.security.TokenService;
+import br.com.inovasoft.epedidos.security.jwt.JwtRoles;
+import br.com.inovasoft.epedidos.services.CustomerAddressService;
+import br.com.inovasoft.epedidos.services.CustomerService;
+import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 
 import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-
-import org.eclipse.microprofile.openapi.annotations.tags.Tag;
-
-import br.com.inovasoft.epedidos.models.dtos.CustomerDto;
-import br.com.inovasoft.epedidos.security.jwt.JwtRoles;
-import br.com.inovasoft.epedidos.services.CustomerService;
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
 
 @Path("/customers")
 @Consumes(MediaType.APPLICATION_JSON)
@@ -31,7 +25,13 @@ import br.com.inovasoft.epedidos.services.CustomerService;
 public class CustomerResources {
 
     @Inject
+    TokenService tokenService;
+
+    @Inject
     CustomerService service;
+
+    @Inject
+    CustomerAddressService customerAddressService;
 
     @GET
     @RolesAllowed(JwtRoles.USER_BACKOFFICE)
@@ -76,6 +76,39 @@ public class CustomerResources {
     public Response delete(@PathParam("id") Long id) {
         service.delete(id);
         return Response.status(Response.Status.NO_CONTENT).build();
+    }
+
+    @GET
+    @Path("/{id}/addresses")
+    @RolesAllowed(JwtRoles.USER_BACKOFFICE)
+    public List<CustomerAddressDto> getCustomerAddress(@PathParam("id") Long id) {
+        return customerAddressService.findAddressesDtoById(id, tokenService.getSystemId());
+    }
+
+    @POST
+    @Path("/{id}/addresses")
+    @RolesAllowed(JwtRoles.USER_BACKOFFICE)
+    @Transactional
+    public CustomerAddressDto postCustomerAddress(@PathParam("id") Long idCustomer,
+                                                  CustomerAddressDto customerAddressDto) {
+        return customerAddressService.saveDto(idCustomer, customerAddressDto);
+    }
+
+    @PUT
+    @Path("/{id}/addresses")
+    @RolesAllowed(JwtRoles.USER_BACKOFFICE)
+    @Transactional
+    public CustomerAddressDto putCustomerAddress(@PathParam("id") Long idCustomer,
+                                                 CustomerAddressDto customerAddressDto) {
+        return customerAddressService.updateDto(idCustomer, customerAddressDto);
+    }
+
+    @DELETE
+    @Path("/{id}/addresses/{idAddress}")
+    @RolesAllowed(JwtRoles.USER_BACKOFFICE)
+    @Transactional
+    public void deleteCustomerAddress(@PathParam("id") Long id, @PathParam("idAddress") Long idAddress) {
+        customerAddressService.softDelete(idAddress, id);
     }
 
 }

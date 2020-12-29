@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
+import java.util.Objects;
 
 @Data
 @Entity
@@ -36,8 +37,22 @@ public class OrderItem extends BaseEntity {
 
     private Integer quantity;
 
+    @Column(name = "quantidade_adiquirida")
+    private Integer realizedAmount;
+
     private BigDecimal unitValue;
 
     private BigDecimal totalValue;
+
+    @Column(name = "peso")
+    private BigDecimal weidth;
+
+    public BigDecimal getWeidth() {
+        if(!Objects.isNull(weidth)) {
+            return weidth;
+        } else {
+            return Objects.isNull(product) ? null : product.getWeidth();
+        }
+    }
 
 }

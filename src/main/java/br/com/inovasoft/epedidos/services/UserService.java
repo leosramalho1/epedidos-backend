@@ -1,15 +1,5 @@
 package br.com.inovasoft.epedidos.services;
 
-import java.lang.reflect.InvocationTargetException;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-import javax.transaction.Transactional;
-
-import org.apache.commons.beanutils.BeanUtils;
-
 import br.com.inovasoft.epedidos.models.dtos.OptionDto;
 import br.com.inovasoft.epedidos.models.dtos.PaginationDataResponse;
 import br.com.inovasoft.epedidos.models.dtos.SuggestionDto;
@@ -18,6 +8,16 @@ import br.com.inovasoft.epedidos.models.enums.RoleEnum;
 import br.com.inovasoft.epedidos.security.TokenService;
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import io.quarkus.panache.common.Page;
+import org.apache.commons.beanutils.BeanUtils;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+import javax.transaction.Transactional;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Response;
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class UserService extends BaseService<UserPortal> {
@@ -52,15 +52,16 @@ public class UserService extends BaseService<UserPortal> {
 	}
 
 	@Transactional
-	public void changePassword(String email, String newPassword) {
-		UserPortal userBase = UserPortal.find("email", email).firstResult();
-		userBase.setPassword(newPassword);
+	public void changePassword(UserPortal userPortal) {
+		checkPassword(userPortal);
+		UserPortal userBase = UserPortal.find("email", tokenService.getJsonWebToken().getSubject()).firstResult();
+		userBase.setPassword(userPortal.getPassword());
 		userBase.persist();
 	}
 
 	@Transactional
 	public void save(UserPortal entity) {
-
+		checkPassword(entity);
 		entity.setSystemId(tokenService.getSystemId());
 
 		UserPortal.persist(entity);
@@ -68,6 +69,7 @@ public class UserService extends BaseService<UserPortal> {
 
 	@Transactional
 	public UserPortal update(Long id, UserPortal dto) {
+		checkPassword(dto);
 		UserPortal entity = UserPortal.findById(id);
 
 		try {
@@ -85,4 +87,10 @@ public class UserService extends BaseService<UserPortal> {
 		return entity;
 	}
 
+	public void checkPassword(UserPortal userPortal) {
+		if (!userPortal.getConfirmPassword().equals(userPortal.getPassword())) {
+			throw new WebApplicationException(
+					Response.status(400).entity("Confirmação senha deve ser igual a senha.").build());
+		}
+	}
 }

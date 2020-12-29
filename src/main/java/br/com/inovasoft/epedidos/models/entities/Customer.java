@@ -1,27 +1,18 @@
 package br.com.inovasoft.epedidos.models.entities;
 
-import java.math.BigDecimal;
+import br.com.inovasoft.epedidos.models.BaseEntity;
+import br.com.inovasoft.epedidos.models.enums.StatusEnum;
+import br.com.inovasoft.epedidos.util.FormatUtil;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Index;
-import javax.persistence.SequenceGenerator;
-import javax.persistence.Table;
+import javax.persistence.*;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-
-import br.com.inovasoft.epedidos.models.BaseEntity;
-import br.com.inovasoft.epedidos.models.enums.StatusEnum;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+import java.math.BigDecimal;
 
 @Data
 @Entity
@@ -75,5 +66,12 @@ public class Customer extends BaseEntity {
 
     @Column(name = "cobranca_valor")
     private BigDecimal payValue;
+
+    @PrePersist
+    @PreUpdate
+    public void formatValues() {
+        this.cpfCnpj = FormatUtil.onlyNumbers(this.cpfCnpj);
+        this.phone = FormatUtil.onlyNumbers(this.phone);
+    }
 
 }

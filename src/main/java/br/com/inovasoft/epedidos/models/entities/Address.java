@@ -1,15 +1,16 @@
 package br.com.inovasoft.epedidos.models.entities;
 
 import br.com.inovasoft.epedidos.models.BaseEntity;
-import br.com.inovasoft.epedidos.models.entities.references.City;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Response;
 
 @Data
 @Entity
@@ -33,22 +34,27 @@ public class Address extends BaseEntity {
     @Column(name = "numero")
     private String number;
 
-    @NotBlank
     @Column(name = "complemento")
     private String complement;
 
     @NotBlank
     @Column(name = "bairro")
-    private String neighborhood;
+    private String district;
 
     @NotNull
     @ManyToOne(targetEntity = City.class)
     @JoinColumn(name = "cidade_id")
     private City city;
 
-    @NotBlank
-    @Size(max = 8)
+    @NotNull
     @Column(name = "cep")
-    private Integer zipCode;
+    private String zipcode;
+
+    @PrePersist
+    public void validate() {
+        if (StringUtils.length(zipcode) != 8) {
+            throw new WebApplicationException(Response.status(403).entity("CEP inválido!").build());
+        }
+    }
 
 }

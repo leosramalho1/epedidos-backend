@@ -1,10 +1,5 @@
 package br.com.inovasoft.epedidos.services;
 
-import java.util.List;
-
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-
 import br.com.inovasoft.epedidos.mappers.CustomerMapper;
 import br.com.inovasoft.epedidos.models.dtos.CustomerDto;
 import br.com.inovasoft.epedidos.models.dtos.PaginationDataResponse;
@@ -12,6 +7,10 @@ import br.com.inovasoft.epedidos.models.entities.Customer;
 import br.com.inovasoft.epedidos.security.TokenService;
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import io.quarkus.panache.common.Page;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+import java.util.List;
 
 @ApplicationScoped
 public class CustomerService extends BaseService<Customer> {
@@ -41,14 +40,14 @@ public class CustomerService extends BaseService<Customer> {
         return mapper.toDto(dataList);
     }
 
-    public PaginationDataResponse listCustomersBySystemKey(String systemKey, int page) {
+    public PaginationDataResponse<CustomerDto> listCustomersBySystemKey(String systemKey, int page) {
         PanacheQuery<Customer> listCustomers = Customer.find(
                 "select p from Customer p, CompanySystem c where p.systemId = c.id and c.systemKey = ?1 and p.deletedOn is null",
                 systemKey);
 
         List<Customer> dataList = listCustomers.page(Page.of(page - 1, limitPerPage)).list();
 
-        return new PaginationDataResponse(mapper.toDto(dataList), limitPerPage, (int) Customer.count());
+        return new PaginationDataResponse<>(mapper.toDto(dataList), limitPerPage, (int) Customer.count());
     }
 
     public Customer findById(Long id) {

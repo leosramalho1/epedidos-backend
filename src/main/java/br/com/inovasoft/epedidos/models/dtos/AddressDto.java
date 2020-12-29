@@ -9,10 +9,9 @@ public class AddressDto {
     private String street;
     private String number;
     private String complement;
-    private String neighborhood;
+    private String district;
+    private CityDto city;
     private Long idCity;
-    private String cityName;
-    private String stateName;
-    private String zipCode;
+    private String zipcode;
 
 }
