@@ -53,6 +53,11 @@ public class Customer extends BaseEntity {
     @Column(name = "telefone")
     private String phone;
 
+    @Size(max = 20)
+    @NotBlank(message = "Password is required")
+    @Column(name = "senha")
+    private String password;
+
     @NotNull(message = "Status is required")
     @Column(name = "situacao")
     @Enumerated(EnumType.STRING)

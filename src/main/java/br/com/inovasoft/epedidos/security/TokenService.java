@@ -36,6 +36,10 @@ public class TokenService {
         return generateToken(email, username, systemId, systemKey, JwtRoles.USER_BACKOFFICE);
     }
 
+    public String generateAppCustomerToken(String cpfcnpj, String username, Long systemId, String systemKey) {
+        return generateToken(cpfcnpj, username, systemId, systemKey, JwtRoles.USER_APP_CUSTOMER);
+    }
+
     public boolean validateToken(String token) {
         return TokenUtil.validateToken(token);
     }
