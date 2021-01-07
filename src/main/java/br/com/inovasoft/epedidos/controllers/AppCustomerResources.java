@@ -8,6 +8,7 @@ import br.com.inovasoft.epedidos.models.entities.UserPortal;
 import br.com.inovasoft.epedidos.models.enums.StatusEnum;
 import br.com.inovasoft.epedidos.security.TokenService;
 import br.com.inovasoft.epedidos.security.jwt.JwtRoles;
+import br.com.inovasoft.epedidos.services.CustomerService;
 import br.com.inovasoft.epedidos.services.UserService;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
@@ -29,7 +30,7 @@ import java.lang.reflect.InvocationTargetException;
 public class AppCustomerResources {
 
     @Inject
-    UserService service;
+    CustomerService service;
 
     @Inject
     TokenService tokenService;
@@ -41,54 +42,13 @@ public class AppCustomerResources {
         return Response.status(Response.Status.OK).entity(service.listAll(page)).build();
     }
 
-    @GET
-    @Path("buyers/suggestion")
-    @RolesAllowed(JwtRoles.USER_APP_CUSTOMER)
-    public Response buyerSuggestion(@QueryParam("query") String query) {
-        return Response.status(Response.Status.OK).entity(service.getSuggestions(query)).build();
-    }
-
-    @GET
-    @Path("buyers/select-options")
-    @RolesAllowed(JwtRoles.USER_APP_CUSTOMER)
-    public Response buyerOptions() {
-        return Response.status(Response.Status.OK).entity(service.getListAllOptions()).build();
-    }
+    
 
     @GET
     @Path("{id}")
     @RolesAllowed(JwtRoles.USER_APP_CUSTOMER)
     public Response getById(@PathParam("id") Long id) {
         return Response.status(Response.Status.OK).entity(UserPortal.findById(id)).build();
-    }
-
-    @PUT
-    @Path("/{id}")
-    @RolesAllowed(JwtRoles.USER_APP_CUSTOMER)
-    @Transactional
-    public Response change(@PathParam("id") Long iduser, @Valid UserPortal user)
-            throws IllegalAccessException, InvocationTargetException {
-        if (user.getPassword() == null) {
-            throw new WebApplicationException(Response.status(400).entity("Nova senha é obrigatório").build());
-        }
-        if (user.getConfirmPassword() == null) {
-            throw new WebApplicationException(Response.status(400).entity("Confirmação senha é obrigatório").build());
-        }
-
-        return Response.status(Response.Status.OK).entity(service.update(iduser, user)).build();
-    }
-
-    @POST
-    @RolesAllowed(JwtRoles.USER_APP_CUSTOMER)
-    @Transactional
-    public Response save(@Valid UserPortal user) {
-
-        if (!user.getConfirmPassword().equals(user.getPassword())) {
-            throw new WebApplicationException(
-                    Response.status(400).entity("Confirmação senha deve ser igual a senha.").build());
-        }
-        service.save(user);
-        return Response.status(Response.Status.CREATED).entity(user).build();
     }
 
     @PUT
@@ -102,7 +62,7 @@ public class AppCustomerResources {
             throw new WebApplicationException(Response.status(400).entity("Confirmação senha é obrigatório").build());
         }
 
-        service.changePassword(user);
+        service.changePassword(user.getPassword(), user.getConfirmPassword());
 
         return Response.status(Response.Status.CREATED).build();
 

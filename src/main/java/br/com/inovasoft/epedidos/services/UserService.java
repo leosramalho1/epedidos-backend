@@ -59,6 +59,10 @@ public class UserService extends BaseService<UserPortal> {
 		userBase.persist();
 	}
 
+	
+
+	
+
 	@Transactional
 	public void save(UserPortal entity) {
 		checkPassword(entity);

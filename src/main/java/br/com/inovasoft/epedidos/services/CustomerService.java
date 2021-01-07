@@ -1,16 +1,21 @@
 package br.com.inovasoft.epedidos.services;
 
+import java.util.List;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+import javax.transaction.Transactional;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Response;
+
 import br.com.inovasoft.epedidos.mappers.CustomerMapper;
 import br.com.inovasoft.epedidos.models.dtos.CustomerDto;
 import br.com.inovasoft.epedidos.models.dtos.PaginationDataResponse;
 import br.com.inovasoft.epedidos.models.entities.Customer;
+import br.com.inovasoft.epedidos.models.entities.UserPortal;
 import br.com.inovasoft.epedidos.security.TokenService;
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import io.quarkus.panache.common.Page;
-
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-import java.util.List;
 
 @ApplicationScoped
 public class CustomerService extends BaseService<Customer> {
@@ -83,4 +88,16 @@ public class CustomerService extends BaseService<Customer> {
         Customer.update("set deletedOn = now() where id = ?1 and systemId = ?2", id, tokenService.getSystemId());
     }
 
+
+
+	@Transactional
+	public void changePassword(String pass, String confirmPass) {
+		if (!pass.equals(confirmPass)) {
+			throw new WebApplicationException(
+					Response.status(400).entity("Confirmação senha deve ser igual a senha.").build());
+		}
+		Customer customer = Customer.find("cpfCnpj", tokenService.getJsonWebToken().getSubject()).firstResult();
+		customer.setPassword(pass);
+		customer.persist();
+	}
 }
