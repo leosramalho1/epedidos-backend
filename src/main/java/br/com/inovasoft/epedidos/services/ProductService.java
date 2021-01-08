@@ -45,6 +45,8 @@ public class ProductService extends BaseService<Product> {
                 .collect(Collectors.toList());
     }
 
+    
+
     public PaginationDataResponse listProductsBySystemKey(String systemKey, int page) {
         PanacheQuery<Product> listProducts = Product.find(
                 "select p from Product p, CompanySystem c where p.systemId = c.id and c.systemKey = ?1 and p.deletedOn is null",

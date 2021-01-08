@@ -136,4 +136,11 @@ public class OrderService extends BaseService<Order> {
         Order.update("set deletedOn = now() where id = ?1 and systemId = ?2", id, tokenService.getSystemId());
     }
 
+	public List<OrderDto> listAllByCustomer() {
+        PanacheQuery<Order> listOrders = Order.find(
+            "select p from Order p where p.systemId = ?1 and p.customer.cpfCnpj=?2 and p.deletedOn is null", tokenService.getSystemId(),tokenService.getJsonWebToken().getSubject());
+
+		return mapper.toDto(listOrders.list());
+	}
+
 }

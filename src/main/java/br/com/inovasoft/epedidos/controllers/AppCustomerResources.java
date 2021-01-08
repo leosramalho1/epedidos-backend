@@ -9,6 +9,8 @@ import br.com.inovasoft.epedidos.models.enums.StatusEnum;
 import br.com.inovasoft.epedidos.security.TokenService;
 import br.com.inovasoft.epedidos.security.jwt.JwtRoles;
 import br.com.inovasoft.epedidos.services.CustomerService;
+import br.com.inovasoft.epedidos.services.OrderService;
+import br.com.inovasoft.epedidos.services.ProductService;
 import br.com.inovasoft.epedidos.services.UserService;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
@@ -35,21 +37,11 @@ public class AppCustomerResources {
     @Inject
     TokenService tokenService;
 
-
-    @GET
-    @RolesAllowed(JwtRoles.USER_APP_CUSTOMER)
-    public Response listAll(@QueryParam("page") int page) {
-        return Response.status(Response.Status.OK).entity(service.listAll(page)).build();
-    }
-
+    @Inject
+    OrderService orderService;
     
-
-    @GET
-    @Path("{id}")
-    @RolesAllowed(JwtRoles.USER_APP_CUSTOMER)
-    public Response getById(@PathParam("id") Long id) {
-        return Response.status(Response.Status.OK).entity(UserPortal.findById(id)).build();
-    }
+    @Inject
+    ProductService productService;
 
     @PUT
     @Path("/changePass")
@@ -68,15 +60,6 @@ public class AppCustomerResources {
 
     }
 
-    @DELETE
-    @Path("{id}")
-    @RolesAllowed(JwtRoles.USER_APP_CUSTOMER)
-    @Transactional
-    public Response delete(@PathParam("id") Long id) {
-        service.softDelete(id);
-        return Response.status(Response.Status.NO_CONTENT).build();
-    }
-
     @POST
     @Path("/validateToken")
     @Operation(operationId = "validateToken")
@@ -91,6 +74,29 @@ public class AppCustomerResources {
         }
         return user;
     }
+
+    @GET
+    @Path("/orders")
+    @RolesAllowed(JwtRoles.USER_APP_CUSTOMER)
+    public Response listOrders() {
+        return Response.status(Response.Status.OK).entity(orderService.listAllByCustomer()).build();
+    }
+
+
+    @GET
+    @Path("/orders/{id}")
+    @RolesAllowed(JwtRoles.USER_APP_CUSTOMER)
+    public Response getOrderById(@PathParam("id") Long id) {
+        return Response.status(Response.Status.OK).entity(orderService.findDtoById(id)).build();
+    }
+
+    @GET
+    @RolesAllowed(JwtRoles.USER_BACKOFFICE)
+    @Path("/products")
+    public Response listToGrid() {
+        return Response.status(Response.Status.OK).entity(productService.listProductsToGrid()).build();
+    }
+
 
     @POST
     @Path("/login")
