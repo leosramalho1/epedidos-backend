@@ -143,11 +143,13 @@ public class OrderService extends BaseService<Order> {
         Order.persist(entity);
 
         OrderItem.delete("order.id=?1", id);
-        List<OrderItem> itens = orderItemMapper.toEntity(dto.getItens());
-        for (OrderItem item : itens) {
-            item.setId(null);
-            item.setOrder(entity);
-            OrderItem.persist(item);
+        if(dto.getItens() != null){
+            List<OrderItem> itens = orderItemMapper.toEntity(dto.getItens());
+            for (OrderItem item : itens) {
+                item.setId(null);
+                item.setOrder(entity);
+                OrderItem.persist(item);
+            }
         }
 
         return mapper.toDto(entity);
@@ -160,7 +162,7 @@ public class OrderService extends BaseService<Order> {
 
 	public List<OrderDto> listAllByCustomer() {
         PanacheQuery<Order> listOrders = Order.find(
-            "select p from Order p where p.systemId = ?1 and p.customer.cpfCnpj=?2 and p.deletedOn is null", tokenService.getSystemId(),tokenService.getJsonWebToken().getSubject());
+            "select p from Order p where p.systemId = ?1 and p.customer.cpfCnpj=?2 and p.deletedOn is null order by p.id desc", tokenService.getSystemId(),tokenService.getJsonWebToken().getSubject());
 
 		return mapper.toDto(listOrders.list());
 	}
