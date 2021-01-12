@@ -1,6 +1,7 @@
 package br.com.inovasoft.epedidos.controllers;
 
 import br.com.inovasoft.epedidos.models.dtos.LoginDto;
+import br.com.inovasoft.epedidos.models.dtos.OrderDto;
 import br.com.inovasoft.epedidos.models.entities.Company;
 import br.com.inovasoft.epedidos.models.entities.CompanySystem;
 import br.com.inovasoft.epedidos.models.entities.Customer;
@@ -90,8 +91,25 @@ public class AppCustomerResources {
         return Response.status(Response.Status.OK).entity(orderService.findDtoById(id)).build();
     }
 
+    @POST
+    @Path("/orders")
+    @RolesAllowed(JwtRoles.USER_APP_CUSTOMER)
+    @Transactional
+    public Response save(@Valid OrderDto orderDto) {
+        return Response.status(Response.Status.CREATED).entity(orderService.saveDtoFromApp(orderDto)).build();
+    }
+
+    @PUT
+    @Path("/orders/{id}")
+    @RolesAllowed(JwtRoles.USER_APP_CUSTOMER)
+    @Transactional
+    public Response change(@PathParam("id") Long idOrder, @Valid OrderDto order)
+            throws IllegalAccessException, InvocationTargetException {
+        return Response.status(Response.Status.OK).entity(orderService.update(idOrder, order)).build();
+    }
+
     @GET
-    @RolesAllowed(JwtRoles.USER_BACKOFFICE)
+    @RolesAllowed(JwtRoles.USER_APP_CUSTOMER)
     @Path("/products")
     public Response listToGrid() {
         return Response.status(Response.Status.OK).entity(productService.listProductsToGrid()).build();

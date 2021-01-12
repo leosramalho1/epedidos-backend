@@ -113,6 +113,28 @@ public class OrderService extends BaseService<Order> {
     }
 
     @Transactional
+    public OrderDto saveDtoFromApp(OrderDto dto) {
+        Order entity = mapper.toEntity(dto);
+        entity.setCustomer(Customer.find("cpfCnpj=?1",tokenService.getJsonWebToken().getSubject()).firstResult());
+        entity.setSystemId(tokenService.getSystemId());
+        entity.setTotalLiquidProducts(BigDecimal.ZERO);
+        entity.setTotalProducts(0);
+        entity.setTotalValueProducts(BigDecimal.ZERO);
+        super.save(entity);
+
+        List<OrderItem> itens = orderItemMapper.toEntity(dto.getItens());
+        for (OrderItem item : itens) {
+            item.setOrder(entity);
+            if(item.getProduct() != null) {
+                item.setWeidth(item.getProduct().getWeidth());
+            }
+            OrderItem.persist(item);
+        }
+
+        return mapper.toDto(entity);
+    }
+
+    @Transactional
     public OrderDto update(Long id, OrderDto dto) {
         Order entity = Order.findById(id);
 
