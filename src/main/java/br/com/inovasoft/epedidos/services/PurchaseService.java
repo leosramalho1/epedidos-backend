@@ -8,10 +8,11 @@ import br.com.inovasoft.epedidos.models.dtos.PurchaseGroupDto;
 import br.com.inovasoft.epedidos.models.dtos.PurchaseItemDto;
 import br.com.inovasoft.epedidos.models.entities.*;
 import br.com.inovasoft.epedidos.models.enums.OrderEnum;
+import br.com.inovasoft.epedidos.models.enums.PackageTypeEnum;
 import br.com.inovasoft.epedidos.security.TokenService;
-import br.com.inovasoft.epedidos.util.SuggestionUtil;
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import io.quarkus.panache.common.Page;
+import org.apache.commons.collections.CollectionUtils;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -108,7 +109,7 @@ public class PurchaseService extends BaseService<Purchase> {
                     purchaseItemDto.setQuantity(item.getQuantity());
                     purchaseItemDto.setUnitValue(BigDecimal.ZERO);
                     purchaseItemDto.setTotalValue(BigDecimal.ZERO);
-                    purchaseItemDto.setPackageType(item.getProduct().getPackageType());
+
                     map.put(item.getProduct().getId(), purchaseItemDto);
                 } else {
                     purchaseItemDto.setQuantity(item.getQuantity() + purchaseItemDto.getQuantity());
@@ -127,8 +128,7 @@ public class PurchaseService extends BaseService<Purchase> {
         List<PurchaseItemDto> items = new ArrayList<>(map.values());
         purchaseGroup.setItens(items);
 
-        items.stream().sorted(Comparator.comparing(PurchaseItemDto::getNameProduct, Comparator.naturalOrder()))
-                .collect(Collectors.toList());
+        items.sort(Comparator.comparing(PurchaseItemDto::getNameProduct, Comparator.naturalOrder()))    ;
 
         return purchaseGroup;
     }
@@ -146,20 +146,44 @@ public class PurchaseService extends BaseService<Purchase> {
 
     @Transactional
     public PurchaseDto saveDto(PurchaseDto dto) {
-        Purchase entity = mapper.toEntity(dto);
-        entity.setBuyer(UserPortal.findById(dto.getIdBuyer()));
-        entity.setSupplier(Supplier.findById(SuggestionUtil.extractId(dto.getCodeNameSupplier())));
-        entity.setSystemId(tokenService.getSystemId());
-        entity.setTotalValueProducts(BigDecimal.ZERO);
-        super.save(entity);
+        Purchase purchase = mapper.toEntity(dto);
+        purchase.setBuyer(UserPortal.findById(dto.getIdBuyer()));
+        purchase.setSupplier(Supplier.findById(dto.getSupplier().getId()));
+        purchase.setSystemId(tokenService.getSystemId());
+        BigDecimal totalValueProducts = dto.getItens().stream().map(PurchaseItemDto::getTotalValue).reduce(BigDecimal.ZERO, BigDecimal::add);
+        purchase.setTotalValueProducts(totalValueProducts);
+        purchase.persist();
 
-        List<PurchaseItem> itens = PurchaseItemmapper.toEntity(dto.getItens());
-        for (PurchaseItem item : itens) {
-            item.setPurchase(entity);
-            PurchaseItem.persist(item);
+        List<PurchaseItem> purchaseItems = PurchaseItemmapper.toEntity(dto.getItens());
+        if(CollectionUtils.isNotEmpty(purchaseItems)) {
+            for (PurchaseItem purchaseItem : purchaseItems) {
+                purchaseItem.setPurchase(purchase);
+                purchaseItem.persist();
+
+                Product product = Product.findById(purchaseItem.getProduct().getId());
+
+                if (product.getPackageType() == PackageTypeEnum.RETURNABLE) {
+                    PackageLoan packageLoan = new PackageLoan();
+                    packageLoan.setSystemId(tokenService.getSystemId());
+                    packageLoan.setSupplier(purchase.getSupplier());
+                    packageLoan.setPurchaseItem(purchaseItem);
+                    packageLoan.setUserChange(tokenService.getUserEmail());
+                    packageLoan.setBorrowedAmount(purchaseItem.getQuantity().longValue());
+                    packageLoan.persist();
+                }
+
+            }
+
+            AccountToPay accountToPay = new AccountToPay();
+            accountToPay.setSystemId(tokenService.getSystemId());
+            accountToPay.setSupplier(purchase.getSupplier());
+            accountToPay.setOriginalValue(totalValueProducts);
+            accountToPay.setDueDate(purchase.getDueDate());
+            accountToPay.persist();
+
         }
 
-        return mapper.toDto(entity);
+        return mapper.toDto(purchase);
     }
 
     @Transactional

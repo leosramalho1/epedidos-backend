@@ -1,14 +1,14 @@
 package br.com.inovasoft.epedidos.services;
 
+import br.com.inovasoft.epedidos.exceptions.IllegalCustomerPayTypeException;
 import br.com.inovasoft.epedidos.mappers.OrderItemMapper;
 import br.com.inovasoft.epedidos.mappers.OrderMapper;
 import br.com.inovasoft.epedidos.models.dtos.OrderDto;
 import br.com.inovasoft.epedidos.models.dtos.OrderItemDto;
 import br.com.inovasoft.epedidos.models.dtos.PaginationDataResponse;
 import br.com.inovasoft.epedidos.models.dtos.PurchaseDto;
-import br.com.inovasoft.epedidos.models.entities.Customer;
-import br.com.inovasoft.epedidos.models.entities.Order;
-import br.com.inovasoft.epedidos.models.entities.OrderItem;
+import br.com.inovasoft.epedidos.models.entities.*;
+import br.com.inovasoft.epedidos.models.enums.CustomerPayTypeEnum;
 import br.com.inovasoft.epedidos.models.enums.OrderEnum;
 import br.com.inovasoft.epedidos.security.TokenService;
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
@@ -17,13 +17,17 @@ import io.quarkus.panache.common.Page;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
+import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @ApplicationScoped
 public class OrderService extends BaseService<Order> {
 
+    public static final BigDecimal ONE_HUNDRED = BigDecimal.valueOf(100);
     @Inject
     TokenService tokenService;
 
@@ -32,6 +36,9 @@ public class OrderService extends BaseService<Order> {
 
     @Inject
     OrderItemMapper orderItemMapper;
+
+    @Inject
+    AccountToReceiveService accountToReceiveService;
 
     public PaginationDataResponse<OrderDto> listAll(int page) {
         PanacheQuery<Order> listOrders = Order.find(
@@ -98,7 +105,7 @@ public class OrderService extends BaseService<Order> {
         entity.setTotalLiquidProducts(BigDecimal.ZERO);
         entity.setTotalProducts(0);
         entity.setTotalValueProducts(BigDecimal.ZERO);
-        super.save(entity);
+        entity.persist();
 
         List<OrderItem> itens = orderItemMapper.toEntity(dto.getItens());
         for (OrderItem item : itens) {
@@ -108,6 +115,13 @@ public class OrderService extends BaseService<Order> {
             }
             OrderItem.persist(item);
         }
+
+        AccountToReceive accountToReceive = accountToReceiveService
+                .buildAccountToReceive(new AccountToReceive(), entity.getCustomer(),
+                        calculateTotalValueProducts(itens, entity.getCustomer()));
+        accountToReceive.persist();
+        entity.setAccountToReceive(accountToReceive);
+        entity.persist();
 
         return mapper.toDto(entity);
     }
@@ -131,6 +145,13 @@ public class OrderService extends BaseService<Order> {
             OrderItem.persist(item);
         }
 
+        AccountToReceive accountToReceive = Optional.ofNullable(entity.getAccountToReceive()).orElse(new AccountToReceive());
+        accountToReceiveService.buildAccountToReceive(accountToReceive, entity.getCustomer(),
+                calculateTotalValueProducts(itens, entity.getCustomer()));
+        accountToReceive.persist();
+
+        entity.setAccountToReceive(accountToReceive);
+        entity.persist();
         return mapper.toDto(entity);
     }
 
@@ -167,4 +188,55 @@ public class OrderService extends BaseService<Order> {
 		return mapper.toDto(listOrders.list());
 	}
 
+
+    public void scheduler(Long buyerId) {
+
+        List<Order> orders = Order.list("status", OrderEnum.OPEN);
+
+        orders.forEach(order -> {
+            List<OrderItem> orderItems = OrderItem.list("order.id", order.getId());
+            @NotNull Customer customer = order.getCustomer();
+            orderItems.forEach(orderItem -> {
+                PackageLoan packageLoan = new PackageLoan();
+                packageLoan.setCustomer(customer);
+                packageLoan.setSystemId(order.getSystemId());
+                packageLoan.setUserChange("system");
+                packageLoan.setOrderItem(orderItem);
+                packageLoan.setRemainingAmount(orderItem.getQuantity().longValue());
+                packageLoan.persist();
+            });
+
+            BigDecimal totalValueProductsRealized = calculateTotalValueProducts(orderItems, customer);
+
+            Integer totalProductsRealized = orderItems.stream().map(OrderItem::getRealizedAmount)
+                    .reduce(0, Integer::sum);
+
+            order.setTotalProductsRealized(totalProductsRealized);
+            order.setTotalValueProductsRealized(totalValueProductsRealized);
+            order.setTotalLiquidProductsRealized(totalValueProductsRealized);
+            order.setStatus(OrderEnum.FINISHED);
+            order.persist();
+        });
+
+        return;
+    }
+
+    private BigDecimal calculateTotalValueProducts(List<OrderItem> orderItems, @NotNull Customer customer) {
+        BigDecimal totalValueProductsRealized;
+
+        if(customer.getPayType() == CustomerPayTypeEnum.V){
+            totalValueProductsRealized = orderItems.stream()
+                    .map(orderItem -> orderItem.getUnitValue().add(customer.getPayValue()).add(orderItem.getUnitShippingCost()))
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+        } else if(customer.getPayType() == CustomerPayTypeEnum.P){
+            BigDecimal payValue = customer.getPayValue().divide(ONE_HUNDRED, 2, RoundingMode.HALF_UP);
+            totalValueProductsRealized = orderItems.stream()
+                    .map(orderItem -> orderItem.getUnitValue().multiply(payValue).add(orderItem.getUnitShippingCost()))
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+        } else {
+            throw new IllegalCustomerPayTypeException();
+        }
+
+        return totalValueProductsRealized;
+    }
 }

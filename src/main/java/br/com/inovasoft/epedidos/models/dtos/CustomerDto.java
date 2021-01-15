@@ -1,5 +1,6 @@
 package br.com.inovasoft.epedidos.models.dtos;
 
+import br.com.inovasoft.epedidos.models.enums.CustomerPayTypeEnum;
 import br.com.inovasoft.epedidos.models.enums.StatusEnum;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
@@ -19,7 +20,7 @@ public class CustomerDto {
     private String phone;
     private String email;
     private StatusEnum status;
-    private String payType;
+    private CustomerPayTypeEnum payType;
     private BigDecimal payValue;
     private List<AddressDto> address = new ArrayList<>();
     private List<CustomerUserDto> users = new ArrayList<>();

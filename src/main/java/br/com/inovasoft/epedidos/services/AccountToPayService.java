@@ -1,55 +1,38 @@
 package br.com.inovasoft.epedidos.services;
 
-import java.util.List;
-
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-
 import br.com.inovasoft.epedidos.mappers.AccountToPayMapper;
 import br.com.inovasoft.epedidos.models.dtos.AccountToPayDto;
 import br.com.inovasoft.epedidos.models.dtos.PaginationDataResponse;
 import br.com.inovasoft.epedidos.models.entities.AccountToPay;
+import br.com.inovasoft.epedidos.models.entities.Supplier;
 import br.com.inovasoft.epedidos.security.TokenService;
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import io.quarkus.panache.common.Page;
+import io.quarkus.panache.common.Parameters;
+import io.quarkus.panache.common.Sort;
+import lombok.NoArgsConstructor;
 
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+import java.util.List;
+
+@NoArgsConstructor
 @ApplicationScoped
-public class AccountToPayService extends BaseService<AccountToPay> {
+public class AccountToPayService extends BillingService<AccountToPay, AccountToPayDto> {
 
     @Inject
-    TokenService tokenService;
-
-    @Inject
-    AccountToPayMapper mapper;
-
-    public PaginationDataResponse listAll(int page) {
-        PanacheQuery<AccountToPay> listAccountToPays = AccountToPay.find(
-                "select p from AccountToPay p where p.systemId = ?1 and p.deletedOn is null",
-                tokenService.getSystemId());
-
-        List<AccountToPay> dataList = listAccountToPays.page(Page.of(page - 1, limitPerPage)).list();
-
-        return new PaginationDataResponse(mapper.toDto(dataList), limitPerPage, (int) AccountToPay.count());
+    AccountToPayService(AccountToPayMapper mapper, TokenService tokenService) {
+        super(mapper, tokenService);
     }
 
-    public List<AccountToPayDto> listActive() {
+    @Override
+    public PaginationDataResponse<AccountToPayDto> queryList(int page, String query, Parameters params) {
+        PanacheQuery<AccountToPay> list = AccountToPay.find(query, Sort.by("dueDate").descending(), params);
 
-        List<AccountToPay> dataList = AccountToPay
-                .find("select p from AccountToPay p where p.systemId = ?1 and p.deletedOn is null order by p.name",
-                        tokenService.getSystemId())
-                .list();
+        List<AccountToPay> dataList = list.page(Page.of(page - 1, limitPerPage)).list();
 
-        return mapper.toDto(dataList);
-    }
-
-    public PaginationDataResponse listAccountToPaysBySystemKey(String systemKey, int page) {
-        PanacheQuery<AccountToPay> listAccountToPays = AccountToPay.find(
-                "select p from AccountToPay p, CompanySystem c where p.systemId = c.id and c.systemKey = ?1 and p.deletedOn is null",
-                systemKey);
-
-        List<AccountToPay> dataList = listAccountToPays.page(Page.of(page - 1, limitPerPage)).list();
-
-        return new PaginationDataResponse(mapper.toDto(dataList), limitPerPage, (int) AccountToPay.count());
+        return new PaginationDataResponse<>(mapper.toDto(dataList), limitPerPage,
+                (int) AccountToPay.count(query, params));
     }
 
     public AccountToPay findById(Long id) {
@@ -65,9 +48,8 @@ public class AccountToPayService extends BaseService<AccountToPay> {
 
     public AccountToPayDto saveDto(AccountToPayDto dto) {
         AccountToPay entity = mapper.toEntity(dto);
-
+        entity.setSupplier(Supplier.findById(dto.getSupplier().getId()));
         entity.setSystemId(tokenService.getSystemId());
-
         super.save(entity);
 
         return mapper.toDto(entity);
@@ -75,9 +57,21 @@ public class AccountToPayService extends BaseService<AccountToPay> {
 
     public AccountToPayDto update(Long id, AccountToPayDto dto) {
         AccountToPay entity = findById(id);
+        entity.setSupplier(Supplier.findById(dto.getSupplier().getId()));
 
         mapper.updateEntityFromDto(dto, entity);
 
+        entity.persist();
+
+        return mapper.toDto(entity);
+    }
+
+    public AccountToPayDto pay(Long id, AccountToPayDto dto) {
+
+        AccountToPay entity = findById(id);
+        mapper.updateEntityFromDto(dto, entity);
+        entity.setSupplier(Supplier.findById(dto.getSupplier().getId()));
+        entity.setSystemId(tokenService.getSystemId());
         entity.persist();
 
         return mapper.toDto(entity);

@@ -1,55 +1,39 @@
 package br.com.inovasoft.epedidos.services;
 
-import java.util.List;
-
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-
 import br.com.inovasoft.epedidos.mappers.AccountToReceiveMapper;
 import br.com.inovasoft.epedidos.models.dtos.AccountToReceiveDto;
 import br.com.inovasoft.epedidos.models.dtos.PaginationDataResponse;
 import br.com.inovasoft.epedidos.models.entities.AccountToReceive;
+import br.com.inovasoft.epedidos.models.entities.Customer;
 import br.com.inovasoft.epedidos.security.TokenService;
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import io.quarkus.panache.common.Page;
+import io.quarkus.panache.common.Parameters;
+import io.quarkus.panache.common.Sort;
+import lombok.NoArgsConstructor;
 
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+import java.math.BigDecimal;
+import java.util.List;
+
+@NoArgsConstructor
 @ApplicationScoped
-public class AccountToReceiveService extends BaseService<AccountToReceive> {
+public class AccountToReceiveService extends BillingService<AccountToReceive, AccountToReceiveDto> {
 
     @Inject
-    TokenService tokenService;
-
-    @Inject
-    AccountToReceiveMapper mapper;
-
-    public PaginationDataResponse listAll(int page) {
-        PanacheQuery<AccountToReceive> listAccountToReceives = AccountToReceive.find(
-                "select p from AccountToReceive p where p.systemId = ?1 and p.deletedOn is null",
-                tokenService.getSystemId());
-
-        List<AccountToReceive> dataList = listAccountToReceives.page(Page.of(page - 1, limitPerPage)).list();
-
-        return new PaginationDataResponse(mapper.toDto(dataList), limitPerPage, (int) AccountToReceive.count());
+    public AccountToReceiveService(AccountToReceiveMapper mapper, TokenService tokenService) {
+        super(mapper, tokenService);
     }
 
-    public List<AccountToReceiveDto> listActive() {
+    @Override
+    public PaginationDataResponse<AccountToReceiveDto> queryList(int page, String query, Parameters params) {
+        PanacheQuery<AccountToReceive> list = AccountToReceive.find(query, Sort.by("dueDate").descending(), params);
 
-        List<AccountToReceive> dataList = AccountToReceive
-                .find("select p from AccountToReceive p where p.systemId = ?1 and p.deletedOn is null order by p.name",
-                        tokenService.getSystemId())
-                .list();
+        List<AccountToReceive> dataList = list.page(Page.of(page - 1, limitPerPage)).list();
 
-        return mapper.toDto(dataList);
-    }
-
-    public PaginationDataResponse listAccountToReceivesBySystemKey(String systemKey, int page) {
-        PanacheQuery<AccountToReceive> listAccountToReceives = AccountToReceive.find(
-                "select p from AccountToReceive p, CompanySystem c where p.systemId = c.id and c.systemKey = ?1 and p.deletedOn is null",
-                systemKey);
-
-        List<AccountToReceive> dataList = listAccountToReceives.page(Page.of(page - 1, limitPerPage)).list();
-
-        return new PaginationDataResponse(mapper.toDto(dataList), limitPerPage, (int) AccountToReceive.count());
+        return new PaginationDataResponse<>(mapper.toDto(dataList), limitPerPage,
+                (int) AccountToReceive.count(query, params));
     }
 
     public AccountToReceive findById(Long id) {
@@ -65,9 +49,8 @@ public class AccountToReceiveService extends BaseService<AccountToReceive> {
 
     public AccountToReceiveDto saveDto(AccountToReceiveDto dto) {
         AccountToReceive entity = mapper.toEntity(dto);
-
+        entity.setCustomer(Customer.findById(dto.getCustomer().getId()));
         entity.setSystemId(tokenService.getSystemId());
-
         super.save(entity);
 
         return mapper.toDto(entity);
@@ -75,9 +58,20 @@ public class AccountToReceiveService extends BaseService<AccountToReceive> {
 
     public AccountToReceiveDto update(Long id, AccountToReceiveDto dto) {
         AccountToReceive entity = findById(id);
-
+        entity.setCustomer(Customer.findById(dto.getCustomer().getId()));
         mapper.updateEntityFromDto(dto, entity);
 
+        entity.persist();
+
+        return mapper.toDto(entity);
+    }
+
+    public AccountToReceiveDto receive(Long id, AccountToReceiveDto dto) {
+
+        AccountToReceive entity = findById(id);
+        mapper.updateEntityFromDto(dto, entity);
+        entity.setCustomer(Customer.findById(dto.getCustomer().getId()));
+        entity.setSystemId(tokenService.getSystemId());
         entity.persist();
 
         return mapper.toDto(entity);
@@ -88,4 +82,12 @@ public class AccountToReceiveService extends BaseService<AccountToReceive> {
                 tokenService.getSystemId());
     }
 
+    public AccountToReceive buildAccountToReceive(AccountToReceive accountToReceive,
+                                                  Customer customer, BigDecimal originalValue){
+
+        accountToReceive.setSystemId(tokenService.getSystemId());
+        accountToReceive.setCustomer(customer);
+        accountToReceive.setOriginalValue(originalValue);
+        return accountToReceive;
+    }
 }

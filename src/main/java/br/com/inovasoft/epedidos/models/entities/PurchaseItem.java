@@ -1,7 +1,6 @@
 package br.com.inovasoft.epedidos.models.entities;
 
 import br.com.inovasoft.epedidos.models.BaseEntity;
-import br.com.inovasoft.epedidos.models.enums.PackageTypeEnum;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -39,8 +38,5 @@ public class PurchaseItem extends BaseEntity {
     private BigDecimal unitValue;
 
     private BigDecimal totalValue;
-
-    @Enumerated(EnumType.STRING)
-    private PackageTypeEnum packageType;
 
 }

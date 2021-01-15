@@ -6,21 +6,24 @@ import lombok.Getter;
 
 import java.util.stream.Stream;
 
-public enum StatusEnum {
+public enum PayStatusEnum {
 
-    INACTIVE("INATIVO"), ACTIVE("ATIVO");
+    PAID("PAGO"), OVERDUE("VENCIDO"), CANCELED("CANCELADO"),
+    OPEN("AGUARDANDANDO_PAGAMENTO"), PARTIALLY_PAID("PARCIALMENTE_PAGO");
 
     @Getter(onMethod = @__(@JsonValue))
     private final String description;
 
-    StatusEnum(String description) {
+    PayStatusEnum(String description) {
         this.description = description;
     }
 
     @JsonCreator
-    public static StatusEnum fromValue(String value) {
-        return Stream.of(StatusEnum.values())
+    public static PayStatusEnum fromValue(String value) {
+        return Stream.of(PayStatusEnum.values())
                 .filter(e -> e.getDescription().equals(value))
                 .findFirst().orElse(null);
     }
+
+
 }

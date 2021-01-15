@@ -19,5 +19,6 @@ public class ProductDto {
     private String packageType;
     private StatusEnum status;
     private List<CategoryDto> categories = new ArrayList<>();
+    private BigDecimal shippingCost;
 
 }

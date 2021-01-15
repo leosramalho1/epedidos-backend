@@ -40,6 +40,13 @@ public class CustomerResources {
     }
 
     @GET
+    @Path("/suggestion")
+    @RolesAllowed(JwtRoles.USER_BACKOFFICE)
+    public Response buyerSuggestion(@QueryParam("query") String query) {
+        return Response.status(Response.Status.OK).entity(service.getSuggestions(query)).build();
+    }
+
+    @GET
     @RolesAllowed(JwtRoles.USER_BACKOFFICE)
     @Path("/select")
     public Response listActive() {

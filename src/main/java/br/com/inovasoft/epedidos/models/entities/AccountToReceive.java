@@ -1,33 +1,22 @@
 package br.com.inovasoft.epedidos.models.entities;
 
+import br.com.inovasoft.epedidos.models.BaseEntity;
+import br.com.inovasoft.epedidos.models.enums.PayStatusEnum;
+import br.com.inovasoft.epedidos.models.enums.converters.PayStatusEnumConverter;
+import lombok.*;
+
+import javax.persistence.*;
+import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.time.LocalDate;
-
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.SequenceGenerator;
-import javax.persistence.Table;
-import javax.validation.constraints.NotNull;
-
-import br.com.inovasoft.epedidos.models.BaseEntity;
-import br.com.inovasoft.epedidos.models.enums.StatusEnum;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+import java.util.Objects;
 
 @Data
 @Entity
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
 @Table(name = "conta_receber")
-public class AccountToReceive extends BaseEntity {
+public class AccountToReceive extends BaseEntity implements Billing {
 
     private static final long serialVersionUID = 904648166038765L;
 
@@ -51,19 +40,43 @@ public class AccountToReceive extends BaseEntity {
     private LocalDate dueDate;
 
     @Column(name = "valor_pago")
-    private BigDecimal ReceiveValue;
+    private BigDecimal receiveValue;
 
     @Column(name = "data_recebimento")
-    private LocalDate ReceiveDate;
-
-    @NotNull(message = "Status is required")
-    @Column(name = "situacao")
-    @Enumerated(EnumType.STRING)
-    private StatusEnum status;
+    private LocalDate receiveDate;
 
     @Column(name = "observacao")
     private String note;
 
     @Column(name = "sistema_id")
     private Long systemId;
+
+    @OneToOne(mappedBy = "accountToReceive")
+    private Order order;
+
+    @Column(name = "situacao")
+    @Getter(AccessLevel.NONE)
+    @Convert(converter = PayStatusEnumConverter.class)
+    private PayStatusEnum status;
+
+    @PrePersist
+    @PreUpdate
+    public void prePersist() {
+        if(Objects.isNull(receiveValue)) {
+            receiveValue = BigDecimal.ZERO;
+        }
+        if(Objects.isNull(taxValue)) {
+            taxValue = BigDecimal.ZERO;
+        }
+    }
+
+    @Override
+    public BigDecimal getPaidOut() {
+        return receiveValue;
+    }
+
+    @Override
+    public LocalDate getPaidOutDate() {
+        return receiveDate;
+    }
 }

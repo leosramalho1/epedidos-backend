@@ -1,21 +1,21 @@
 package br.com.inovasoft.epedidos.services;
 
-import java.util.List;
+import br.com.inovasoft.epedidos.mappers.CustomerMapper;
+import br.com.inovasoft.epedidos.models.dtos.CustomerDto;
+import br.com.inovasoft.epedidos.models.dtos.PaginationDataResponse;
+import br.com.inovasoft.epedidos.models.entities.Customer;
+import br.com.inovasoft.epedidos.models.enums.StatusEnum;
+import br.com.inovasoft.epedidos.security.TokenService;
+import io.quarkus.hibernate.orm.panache.PanacheQuery;
+import io.quarkus.panache.common.Page;
+import io.quarkus.panache.common.Sort;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
-
-import br.com.inovasoft.epedidos.mappers.CustomerMapper;
-import br.com.inovasoft.epedidos.models.dtos.CustomerDto;
-import br.com.inovasoft.epedidos.models.dtos.PaginationDataResponse;
-import br.com.inovasoft.epedidos.models.entities.Customer;
-import br.com.inovasoft.epedidos.models.entities.UserPortal;
-import br.com.inovasoft.epedidos.security.TokenService;
-import io.quarkus.hibernate.orm.panache.PanacheQuery;
-import io.quarkus.panache.common.Page;
+import java.util.List;
 
 @ApplicationScoped
 public class CustomerService extends BaseService<Customer> {
@@ -45,14 +45,12 @@ public class CustomerService extends BaseService<Customer> {
         return mapper.toDto(dataList);
     }
 
-    public PaginationDataResponse<CustomerDto> listCustomersBySystemKey(String systemKey, int page) {
-        PanacheQuery<Customer> listCustomers = Customer.find(
-                "select p from Customer p, CompanySystem c where p.systemId = c.id and c.systemKey = ?1 and p.deletedOn is null",
-                systemKey);
+    public List<CustomerDto> getSuggestions(String query) {
+        List<Customer> dataList = Customer.list(
+                "systemId = ?1 and upper(name) like ?2 and status = ?3 and deletedOn is null", Sort.by("name"),
+                tokenService.getSystemId(), query.toUpperCase() + "%", StatusEnum.ACTIVE);
 
-        List<Customer> dataList = listCustomers.page(Page.of(page - 1, limitPerPage)).list();
-
-        return new PaginationDataResponse<>(mapper.toDto(dataList), limitPerPage, (int) Customer.count());
+        return mapper.toDto(dataList);
     }
 
     public Customer findById(Long id) {
