@@ -53,9 +53,18 @@ public class UserService extends BaseService<UserPortal> {
 
 	@Transactional
 	public void changePassword(UserPortal userPortal) {
-		checkPassword(userPortal);
+		checkPassword(userPortal.getPassword(), userPortal.getConfirmPassword());
 		UserPortal userBase = UserPortal.find("email", tokenService.getJsonWebToken().getSubject()).firstResult();
 		userBase.setPassword(userPortal.getPassword());
+		userBase.persist();
+	}
+
+	@Transactional
+	public void changePassword(String newPassword, String confirmPassword) {
+		checkPassword(newPassword, confirmPassword);
+		
+		UserPortal userBase = UserPortal.find("email", tokenService.getJsonWebToken().getSubject()).firstResult();
+		userBase.setPassword(newPassword);
 		userBase.persist();
 	}
 
@@ -65,7 +74,7 @@ public class UserService extends BaseService<UserPortal> {
 
 	@Transactional
 	public void save(UserPortal entity) {
-		checkPassword(entity);
+		checkPassword(entity.getPassword(), entity.getConfirmPassword());
 		entity.setSystemId(tokenService.getSystemId());
 
 		UserPortal.persist(entity);
@@ -73,7 +82,7 @@ public class UserService extends BaseService<UserPortal> {
 
 	@Transactional
 	public UserPortal update(Long id, UserPortal dto) {
-		checkPassword(dto);
+		checkPassword(dto.getPassword(), dto.getConfirmPassword());
 		UserPortal entity = UserPortal.findById(id);
 
 		try {
@@ -91,8 +100,8 @@ public class UserService extends BaseService<UserPortal> {
 		return entity;
 	}
 
-	public void checkPassword(UserPortal userPortal) {
-		if (!userPortal.getConfirmPassword().equals(userPortal.getPassword())) {
+	public void checkPassword(String newPass, String confirmPass) {
+		if (!newPass.equals(confirmPass)) {
 			throw new WebApplicationException(
 					Response.status(400).entity("Confirmação senha deve ser igual a senha.").build());
 		}

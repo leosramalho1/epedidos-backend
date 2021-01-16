@@ -53,6 +53,14 @@ public class PurchaseService extends BaseService<Purchase> {
         return new PaginationDataResponse(mapper.toDto(dataList), limitPerPage, (int) Purchase.count());
     }
 
+    public List<PurchaseDto> listPurchasesByBuyer() {
+        PanacheQuery<Purchase> listPurchases = Purchase.find(
+                " buyer.email = ?1 and deletedOn is null",
+                tokenService.getUserEmail());
+
+        return mapper.toDto(listPurchases.list());
+    }
+
     public Purchase findById(Long id) {
         return Purchase.find("select p from Purchase p where p.id = ?1 and p.systemId = ?2 and p.deletedOn is null", id,
                 tokenService.getSystemId()).firstResult();
