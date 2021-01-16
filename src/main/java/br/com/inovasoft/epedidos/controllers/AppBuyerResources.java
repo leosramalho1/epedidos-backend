@@ -14,6 +14,7 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -23,6 +24,7 @@ import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 
 import br.com.inovasoft.epedidos.models.dtos.LoginDto;
 import br.com.inovasoft.epedidos.models.dtos.PurchaseDto;
+import br.com.inovasoft.epedidos.models.dtos.SupplierDto;
 import br.com.inovasoft.epedidos.models.entities.Company;
 import br.com.inovasoft.epedidos.models.entities.CompanySystem;
 import br.com.inovasoft.epedidos.models.entities.UserPortal;
@@ -30,9 +32,10 @@ import br.com.inovasoft.epedidos.models.enums.StatusEnum;
 import br.com.inovasoft.epedidos.security.TokenService;
 import br.com.inovasoft.epedidos.security.jwt.JwtRoles;
 import br.com.inovasoft.epedidos.services.PurchaseService;
+import br.com.inovasoft.epedidos.services.SupplierService;
 import br.com.inovasoft.epedidos.services.UserService;
 
-@Path("/app/buyer")
+@Path("/app/buyers")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 @Tag(name = "User")
@@ -43,6 +46,9 @@ public class AppBuyerResources {
 
     @Inject
     PurchaseService purchaseService;
+
+    @Inject
+    SupplierService supplierService;
 
     @Inject
     TokenService tokenService;
@@ -92,7 +98,7 @@ public class AppBuyerResources {
         Company company = system.getCompany();
         login.setPassword(null);
         login.setUserName(existingUser.getName());
-        login.setToken(tokenService.generateAppBuyerToken(existingUser.getEmail(), existingUser.getName(),
+        login.setToken(tokenService.generateAppBuyerToken(existingUser.getEmail(),
                 company.getId(), system.getSystemKey()));
 
         return login;
@@ -128,5 +134,20 @@ public class AppBuyerResources {
     public Response change(@PathParam("id") Long idPurchase, @Valid PurchaseDto purchaseDto)
             throws IllegalAccessException, InvocationTargetException {
         return Response.status(Response.Status.OK).entity(purchaseService.update(idPurchase, purchaseDto)).build();
+    }
+
+    @GET
+    @Path("/suppliers/suggestion")
+    @RolesAllowed(JwtRoles.USER_APP_BUYER)
+    public Response buyerSuggestion(@QueryParam("query") String query) {
+        return Response.status(Response.Status.OK).entity(supplierService.getSuggestions(query)).build();
+    }
+
+    @POST
+    @RolesAllowed(JwtRoles.USER_APP_BUYER)
+    @Path("/suppliers")
+    @Transactional
+    public Response save(@Valid SupplierDto SupplierDto) {
+        return Response.status(Response.Status.CREATED).entity(supplierService.saveDto(SupplierDto)).build();
     }
 }
