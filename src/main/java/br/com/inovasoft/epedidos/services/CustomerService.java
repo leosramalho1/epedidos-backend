@@ -64,7 +64,7 @@ public class CustomerService extends BaseService<Customer> {
 
     public CustomerDto saveDto(CustomerDto dto) {
         Customer entity = mapper.toEntity(dto);
-
+        entity.setPassword("123");
         entity.setSystemId(tokenService.getSystemId());
 
         super.save(entity);
