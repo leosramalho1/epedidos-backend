@@ -105,6 +105,14 @@ public class AppBuyerResources {
     }
 
     @GET
+    @Path("/purchases/prepare")
+    @RolesAllowed(JwtRoles.USER_APP_BUYER)
+    public Response prepareNewPurchase() {
+        UserPortal userPortal = UserPortal.find("email", tokenService.getUserEmail()).firstResult();
+        return Response.status(Response.Status.OK).entity(purchaseService.getOpenOrderAndGroupByIdBuyer(userPortal.getId())).build();
+    }
+
+    @GET
     @Path("/purchases")
     @RolesAllowed(JwtRoles.USER_APP_BUYER)
     public Response listPurchase() {
