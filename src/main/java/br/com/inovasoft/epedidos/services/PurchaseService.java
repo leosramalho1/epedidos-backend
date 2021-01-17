@@ -68,7 +68,7 @@ public class PurchaseService extends BaseService<Purchase> {
     }
 
     public PurchaseGroupDto getOpenOrderAndGroupByIdBuyer(Long buyerId) {
-        LocalDate yesterday = LocalDate.now().minusDays(-10);
+        LocalDate yesterday = LocalDate.now();//.minusDays(-1);
 
         List<OrderItem> ordersItems = OrderItem.list(
                 "select oi from OrderItem oi where oi.order.status=?1 " +
