@@ -36,7 +36,7 @@ public class OrderItem extends BaseEntity {
     private Product product;
 
     @NotNull
-    @Column(name = "quantity")
+    @Column(name = "quantidade")
     private Integer quantity;
 
     @Column(name = "quantidade_adiquirida")
