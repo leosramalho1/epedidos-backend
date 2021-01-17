@@ -1,28 +1,22 @@
 package br.com.inovasoft.epedidos.controllers;
 
-import java.lang.reflect.InvocationTargetException;
+import br.com.inovasoft.epedidos.models.dtos.AccountToReceiveDto;
+import br.com.inovasoft.epedidos.models.dtos.PaginationDataResponse;
+import br.com.inovasoft.epedidos.models.enums.PayStatusEnum;
+import br.com.inovasoft.epedidos.security.jwt.JwtRoles;
+import br.com.inovasoft.epedidos.services.AccountToReceiveService;
+import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 
 import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-
-import org.eclipse.microprofile.openapi.annotations.tags.Tag;
-
-import br.com.inovasoft.epedidos.models.dtos.AccountToReceiveDto;
-import br.com.inovasoft.epedidos.security.jwt.JwtRoles;
-import br.com.inovasoft.epedidos.services.AccountToReceiveService;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
 
 @Path("/account-receive")
 @Consumes(MediaType.APPLICATION_JSON)
@@ -34,41 +28,51 @@ public class AccountToReceiveResources {
     AccountToReceiveService service;
 
     @GET
-    @RolesAllowed(JwtRoles.USER_BACKOFFICE)
-    public Response listAll(@QueryParam("page") int page) {
-        return Response.status(Response.Status.OK).entity(service.listAll(page)).build();
+//    @RolesAllowed(JwtRoles.USER_BACKOFFICE)
+    public Response listAll(@QueryParam("page") int page, @QueryParam("status") List<PayStatusEnum> status,
+                            @QueryParam("customer") Long customer, @QueryParam("dueDateMin") String dueDateMin,
+                            @QueryParam("dueDateMax") String dueDateMax, @QueryParam("paidOutDateMin") String paidOutDateMin,
+                            @QueryParam("paidOutDateMax") String paidOutDateMax) {
+        PaginationDataResponse<AccountToReceiveDto> list;
+
+        list = service.listAll(page, status, null, customer,
+                Optional.ofNullable(dueDateMin).map(LocalDate::parse).orElse(null),
+                Optional.ofNullable(dueDateMax).map(LocalDate::parse).orElse(null),
+                Optional.ofNullable(paidOutDateMin).map(LocalDate::parse).orElse(null),
+                Optional.ofNullable(paidOutDateMax).map(LocalDate::parse).orElse(null)
+        );
+
+        return Response.status(Response.Status.OK).entity(list).build();
     }
 
     @GET
     @Path("/{id}")
     @RolesAllowed(JwtRoles.USER_BACKOFFICE)
-    public Response getById(@PathParam("id") Long AccountToReceiveId) {
-        return Response.status(Response.Status.OK).entity(service.findDtoById(AccountToReceiveId)).build();
+    public Response getById(@PathParam("id") Long accountToReceiveId) {
+        return Response.status(Response.Status.OK).entity(service.findDtoById(accountToReceiveId)).build();
     }
 
     @POST
     @RolesAllowed(JwtRoles.USER_BACKOFFICE)
     @Transactional
-    public Response save(@Valid AccountToReceiveDto AccountToReceiveDto) {
-        return Response.status(Response.Status.CREATED).entity(service.saveDto(AccountToReceiveDto)).build();
+    public Response save(@Valid AccountToReceiveDto accountToReceiveDto) {
+        return Response.status(Response.Status.CREATED).entity(service.saveDto(accountToReceiveDto)).build();
     }
 
     @PUT
     @Path("/{id}")
     @RolesAllowed(JwtRoles.USER_BACKOFFICE)
     @Transactional
-    public Response change(@PathParam("id") Long idAccountToReceive, @Valid AccountToReceiveDto AccountToReceive)
-            throws IllegalAccessException, InvocationTargetException {
-        return Response.status(Response.Status.OK).entity(service.update(idAccountToReceive, AccountToReceive)).build();
+    public Response pay(@PathParam("id") Long idAccountToReceive, @Valid AccountToReceiveDto accountToReceiveDto) {
+        return Response.status(Response.Status.OK).entity(service.update(idAccountToReceive, accountToReceiveDto)).build();
     }
 
-    @DELETE
+    @PUT
+    @Path("/{id}/receive")
     @RolesAllowed(JwtRoles.USER_BACKOFFICE)
-    @Path("/{id}")
     @Transactional
-    public Response delete(@PathParam("id") Long id) {
-        service.delete(id);
-        return Response.status(Response.Status.NO_CONTENT).build();
+    public Response change(@PathParam("id") Long id, @Valid AccountToReceiveDto accountToReceiveDto) {
+        return Response.status(Response.Status.OK).entity(service.receive(id, accountToReceiveDto)).build();
     }
 
 }

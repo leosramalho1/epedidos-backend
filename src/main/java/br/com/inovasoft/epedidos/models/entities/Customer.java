@@ -1,6 +1,7 @@
 package br.com.inovasoft.epedidos.models.entities;
 
 import br.com.inovasoft.epedidos.models.BaseEntity;
+import br.com.inovasoft.epedidos.models.enums.CustomerPayTypeEnum;
 import br.com.inovasoft.epedidos.models.enums.StatusEnum;
 import br.com.inovasoft.epedidos.util.FormatUtil;
 import lombok.Data;
@@ -67,14 +68,15 @@ public class Customer extends BaseEntity {
     private Long systemId;
 
     @Column(name = "cobranca_tipo")
-    private String payType;
+    @Enumerated(EnumType.STRING)
+    private CustomerPayTypeEnum payType;
 
     @Column(name = "cobranca_valor")
     private BigDecimal payValue;
 
     @PrePersist
     @PreUpdate
-    public void formatValues() {
+    public void unformatValues() {
         this.cpfCnpj = FormatUtil.onlyNumbers(this.cpfCnpj);
         this.phone = FormatUtil.onlyNumbers(this.phone);
     }

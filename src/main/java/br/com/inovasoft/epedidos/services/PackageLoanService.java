@@ -16,13 +16,7 @@ import org.hibernate.envers.query.AuditEntity;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 
@@ -48,21 +42,6 @@ public class PackageLoanService extends BaseService<PackageLoan> {
         return new PaginationDataResponse<>(mapper.toDto(dataList), limitPerPage, (int) PackageLoan.count(query, tokenService.getSystemId()));
     }
 
-    public List<PackageLoan> getSpecFromDatesAndExample(PackageLoanDto packageLoanExample) {
-        CriteriaBuilder criteriaBuilder = em.getCriteriaBuilder();
-
-        CriteriaQuery<PackageLoan> query = criteriaBuilder.createQuery(PackageLoan.class);
-        Root<PackageLoan> root = query.from(PackageLoan.class);
-        CriteriaQuery<PackageLoan> select = query.select(root);
-        List<Predicate> predicates = new ArrayList<>(Arrays.asList(criteriaBuilder.isNotNull(root.get("deletedOn")),
-                criteriaBuilder.lt(root.get("returnedAmount"), root.get("borrowedAmount")),
-                criteriaBuilder.equal(root.get("systemId"), tokenService.getSystemId()))
-        );
-
-        select.where((Predicate[]) predicates.toArray());
-
-        return em.createQuery(query).getResultList();
-    }
 
     public List<PackageLoanDto> listHistoryDto(Long id) {
 

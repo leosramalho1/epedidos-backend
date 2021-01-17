@@ -35,24 +35,47 @@ public class OrderItem extends BaseEntity {
     @OneToOne(targetEntity = Product.class)
     private Product product;
 
+    @NotNull
+    @Column(name = "quantity")
     private Integer quantity;
 
     @Column(name = "quantidade_adiquirida")
     private Integer realizedAmount;
 
+    @NotNull
+    @Column(name = "valor_unitario")
     private BigDecimal unitValue;
 
+    @NotNull
+    @Column(name = "valor_total")
     private BigDecimal totalValue;
 
     @Column(name = "peso")
     private BigDecimal weidth;
 
-    public BigDecimal getWeidth() {
-        if(!Objects.isNull(weidth)) {
-            return weidth;
-        } else {
-            return Objects.isNull(product) ? null : product.getWeidth();
+    @NotNull
+    @Column(name = "valor_unitario_frete")
+    private BigDecimal unitShippingCost;
+
+    @PreUpdate
+    @PrePersist
+    public void prePersist() {
+        if(Objects.isNull(weidth)) {
+            weidth = Objects.isNull(product) ? null : product.getWeidth();
         }
+
+        if(Objects.isNull(unitShippingCost)) {
+            unitShippingCost = Objects.isNull(product) ? BigDecimal.ZERO : product.getShippingCost();
+        }
+
+        if(Objects.isNull(totalValue)) {
+            totalValue = unitValue.add(unitShippingCost).multiply(BigDecimal.valueOf(quantity));
+        }
+
+        if(Objects.isNull(unitShippingCost)) {
+            unitShippingCost = BigDecimal.ZERO;
+        }
+
     }
 
 }

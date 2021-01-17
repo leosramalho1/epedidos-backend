@@ -58,4 +58,10 @@ public class Order extends BaseEntity {
     @Column(name = "situacao")
     @Enumerated(EnumType.STRING)
     private OrderEnum status;
+
+    @NotNull
+    @JoinColumn(name = "conta_receber_id")
+    @OneToOne(targetEntity = AccountToReceive.class)
+    private AccountToReceive accountToReceive;
+
 }

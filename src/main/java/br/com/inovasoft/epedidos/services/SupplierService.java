@@ -1,20 +1,18 @@
 package br.com.inovasoft.epedidos.services;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-
 import br.com.inovasoft.epedidos.mappers.SupplierMapper;
 import br.com.inovasoft.epedidos.models.dtos.PaginationDataResponse;
-import br.com.inovasoft.epedidos.models.dtos.SuggestionDto;
 import br.com.inovasoft.epedidos.models.dtos.SupplierDto;
 import br.com.inovasoft.epedidos.models.entities.Supplier;
 import br.com.inovasoft.epedidos.models.enums.StatusEnum;
 import br.com.inovasoft.epedidos.security.TokenService;
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import io.quarkus.panache.common.Page;
+import io.quarkus.panache.common.Sort;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+import java.util.List;
 
 @ApplicationScoped
 public class SupplierService extends BaseService<Supplier> {
@@ -25,32 +23,31 @@ public class SupplierService extends BaseService<Supplier> {
     @Inject
     SupplierMapper mapper;
 
-    public PaginationDataResponse listAll(int page) {
+    public PaginationDataResponse<SupplierDto> listAll(int page) {
         PanacheQuery<Supplier> listSuppliers = Supplier.find(
                 "select p from Supplier p where p.systemId = ?1 and p.deletedOn is null", tokenService.getSystemId());
 
         List<Supplier> dataList = listSuppliers.page(Page.of(page - 1, limitPerPage)).list();
 
-        return new PaginationDataResponse(mapper.toDto(dataList), limitPerPage, (int) Supplier.count());
+        return new PaginationDataResponse<>(mapper.toDto(dataList), limitPerPage, (int) Supplier.count());
     }
 
-    public List<SuggestionDto> getSuggestions(String query) {
+    public List<SupplierDto> getSuggestions(String query) {
         List<Supplier> dataList = Supplier.list(
-                "systemId = ?1 and upper(name) like ?2 and status = ?3 and deletedOn is null",
+                "systemId = ?1 and upper(name) like ?2 and status = ?3 and deletedOn is null",  Sort.by("name"),
                 tokenService.getSystemId(), query.toUpperCase() + "%", StatusEnum.ACTIVE);
 
-        return dataList.stream().map(item -> new SuggestionDto(item.getId(), item.getName()))
-                .collect(Collectors.toList());
+        return mapper.toDto(dataList);
     }
 
-    public PaginationDataResponse listSuppliersBySystemKey(String systemKey, int page) {
+    public PaginationDataResponse<SupplierDto> listSuppliersBySystemKey(String systemKey, int page) {
         PanacheQuery<Supplier> listSuppliers = Supplier.find(
                 "select p from Supplier p, CompanySystem c where p.systemId = c.id and c.systemKey = ?1 and p.deletedOn is null",
                 systemKey);
 
         List<Supplier> dataList = listSuppliers.page(Page.of(page - 1, limitPerPage)).list();
 
-        return new PaginationDataResponse(mapper.toDto(dataList), limitPerPage, (int) Supplier.count());
+        return new PaginationDataResponse<>(mapper.toDto(dataList), limitPerPage, (int) Supplier.count());
     }
 
     public Supplier findById(Long id) {

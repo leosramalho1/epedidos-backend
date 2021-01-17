@@ -15,9 +15,10 @@ public class ProductDto {
     private Long id;
     private String name;
     private BigDecimal weidth;
-    private String buyerCodeName;
+    private UserPortalDto buyer;
     private String packageType;
     private StatusEnum status;
     private List<CategoryDto> categories = new ArrayList<>();
+    private BigDecimal shippingCost;
 
 }

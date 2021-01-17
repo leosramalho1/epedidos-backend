@@ -1,28 +1,22 @@
 package br.com.inovasoft.epedidos.controllers;
 
-import java.lang.reflect.InvocationTargetException;
+import br.com.inovasoft.epedidos.models.dtos.AccountToPayDto;
+import br.com.inovasoft.epedidos.models.dtos.PaginationDataResponse;
+import br.com.inovasoft.epedidos.models.enums.PayStatusEnum;
+import br.com.inovasoft.epedidos.security.jwt.JwtRoles;
+import br.com.inovasoft.epedidos.services.AccountToPayService;
+import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 
 import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-
-import org.eclipse.microprofile.openapi.annotations.tags.Tag;
-
-import br.com.inovasoft.epedidos.models.dtos.AccountToPayDto;
-import br.com.inovasoft.epedidos.security.jwt.JwtRoles;
-import br.com.inovasoft.epedidos.services.AccountToPayService;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
 
 @Path("/account-pay")
 @Consumes(MediaType.APPLICATION_JSON)
@@ -34,48 +28,52 @@ public class AccountToPayResources {
     AccountToPayService service;
 
     @GET
-    @RolesAllowed(JwtRoles.USER_BACKOFFICE)
-    public Response listAll(@QueryParam("page") int page) {
-        return Response.status(Response.Status.OK).entity(service.listAll(page)).build();
-    }
+//    @RolesAllowed(JwtRoles.USER_BACKOFFICE)
+    public Response listAll(@QueryParam("page") int page, @QueryParam("status") List<PayStatusEnum> status,
+                            @QueryParam("supplier") Long supplier, @QueryParam("dueDateMin") String dueDateMin,
+                            @QueryParam("dueDateMax") String dueDateMax, @QueryParam("paidOutDateMin") String paidOutDateMin,
+                            @QueryParam("paidOutDateMax") String paidOutDateMax) {
+        PaginationDataResponse<AccountToPayDto> list;
 
-    @GET
-    @RolesAllowed(JwtRoles.USER_BACKOFFICE)
-    @Path("/select")
-    public Response listActive() {
-        return Response.status(Response.Status.OK).entity(service.listActive()).build();
+        list = service.listAll(page, status, supplier, null,
+                Optional.ofNullable(dueDateMin).map(LocalDate::parse).orElse(null),
+                Optional.ofNullable(dueDateMax).map(LocalDate::parse).orElse(null),
+                Optional.ofNullable(paidOutDateMin).map(LocalDate::parse).orElse(null),
+                Optional.ofNullable(paidOutDateMax).map(LocalDate::parse).orElse(null)
+        );
+
+
+        return Response.status(Response.Status.OK).entity(list).build();
     }
 
     @GET
     @Path("/{id}")
     @RolesAllowed(JwtRoles.USER_BACKOFFICE)
-    public Response getById(@PathParam("id") Long AccountToPayId) {
-        return Response.status(Response.Status.OK).entity(service.findDtoById(AccountToPayId)).build();
+    public Response getById(@PathParam("id") Long id) {
+        return Response.status(Response.Status.OK).entity(service.findDtoById(id)).build();
     }
 
     @POST
     @RolesAllowed(JwtRoles.USER_BACKOFFICE)
     @Transactional
-    public Response save(@Valid AccountToPayDto AccountToPayDto) {
-        return Response.status(Response.Status.CREATED).entity(service.saveDto(AccountToPayDto)).build();
+    public Response save(@Valid AccountToPayDto accountToPayDto) {
+        return Response.status(Response.Status.CREATED).entity(service.saveDto(accountToPayDto)).build();
     }
 
     @PUT
     @Path("/{id}")
     @RolesAllowed(JwtRoles.USER_BACKOFFICE)
     @Transactional
-    public Response change(@PathParam("id") Long idAccountToPay, @Valid AccountToPayDto AccountToPay)
-            throws IllegalAccessException, InvocationTargetException {
-        return Response.status(Response.Status.OK).entity(service.update(idAccountToPay, AccountToPay)).build();
+    public Response change(@PathParam("id") Long id, @Valid AccountToPayDto accountToPay) {
+        return Response.status(Response.Status.OK).entity(service.update(id, accountToPay)).build();
     }
 
-    @DELETE
+    @PUT
+    @Path("/{id}/pay")
     @RolesAllowed(JwtRoles.USER_BACKOFFICE)
-    @Path("/{id}")
     @Transactional
-    public Response delete(@PathParam("id") Long id) {
-        service.delete(id);
-        return Response.status(Response.Status.NO_CONTENT).build();
+    public Response pay(@PathParam("id") Long id, @Valid AccountToPayDto accountToPay) {
+        return Response.status(Response.Status.OK).entity(service.pay(id, accountToPay)).build();
     }
 
 }

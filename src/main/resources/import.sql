@@ -21,17 +21,48 @@ CREATE OR REPLACE VIEW public.mapa_correcao
     p.updatedon,
     p.deletedon,
     p.sistema_id,
-    jsonb_build_object('id', ci.produto_id, 'nome', p.nome, 'tipo_embalagem', p.tipo_embalagem, 'peso', p.peso, 'totalComprado', ( SELECT sum(compra_item.quantity) AS sum
+    jsonb_build_object('id', ci.produto_id, 'nome', p.nome, 'tipo_embalagem', p.tipo_embalagem, 'peso', p.peso, 'totalComprado', ( SELECT sum(compra_item.quantidade) AS sum
            FROM compra_item
           WHERE compra_item.produto_id = ci.produto_id
           GROUP BY ci.produto_id), 'pedidos', json_agg(DISTINCT jsonb_build_object('id', pi.id, 'cliente_id', ( SELECT pedido.cliente_id
            FROM pedido
-          WHERE pedido.id = pi.pedido_id))), 'categorias', json_agg(DISTINCT jsonb_build_object('id', pc.categoria_id, 'nome', cat.nome)), 'clientes', jsonb_agg(DISTINCT jsonb_build_object('id', c.id, 'nome', c.nome, 'total_pedido', ( SELECT COALESCE(sum(it.quantidade_adiquirida), sum(it.quantity)) AS sum
+          WHERE pedido.id = pi.pedido_id))), 'categorias', json_agg(DISTINCT jsonb_build_object('id', pc.categoria_id, 'nome', cat.nome)), 'clientes', jsonb_agg(DISTINCT jsonb_build_object('id', c.id, 'nome', c.nome, 'total_pedido', ( SELECT COALESCE(sum(it.quantidade_adiquirida), sum(it.quantidade)) AS sum
            FROM pedido_item it
              JOIN pedido ped ON ped.id = it.pedido_id
           WHERE it.produto_id = p.id AND ped.cliente_id = pe.cliente_id)))) AS mapa
    FROM produto p
      JOIN compra_item ci ON ci.produto_id = p.id
+     JOIN pedido_item pi ON p.id = pi.produto_id
+     JOIN pedido pe ON pe.id = pi.pedido_id
+     JOIN cliente c ON c.id = pe.cliente_id
+     LEFT JOIN produto_categoria pc ON pc.produto_id = p.id
+     LEFT JOIN categoria cat ON cat.id = pc.categoria_id
+  WHERE p.deletedon IS NULL
+  GROUP BY ci.produto_id, p.id
+  ORDER BY p.nome;
+
+
+SELECT ci.produto_id AS id,
+    p.createdon,
+    p.updatedon,
+    p.deletedon,
+    p.sistema_id,
+    jsonb_build_object(
+		'id', ci.produto_id, 'nome', p.nome, 'tipo_embalagem', p.tipo_embalagem, 'peso', p.peso, 'totalComprado', ( SELECT sum(compra_item.quantidade) AS sum
+           FROM compra_item
+          WHERE compra_item.produto_id = ci.produto_id
+          GROUP BY ci.produto_id),
+					   'compras', json_agg(DISTINCT jsonb_build_object('id', co.id, 'valor_medio', ( SELECT AVG(valor_unitario)
+           FROM compra_item
+          WHERE co.id = compra_item.compra_id), 'valor_total', ( SELECT SUM(valor_unitario)
+           FROM compra_item
+          WHERE co.id = compra_item.compra_id), 'quantidade', ( SELECT SUM(quantidade)
+           FROM compra_item
+          WHERE co.id = compra_item.compra_id))),
+					   'categorias', json_agg(DISTINCT jsonb_build_object('id', pc.categoria_id, 'nome', cat.nome))) AS mapa
+   FROM produto p
+     JOIN compra_item ci ON ci.produto_id = p.id
+     JOIN compra co ON ci.compra_id = co.id
      JOIN pedido_item pi ON p.id = pi.produto_id
      JOIN pedido pe ON pe.id = pi.pedido_id
      JOIN cliente c ON c.id = pe.cliente_id

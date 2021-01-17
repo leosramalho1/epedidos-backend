@@ -7,7 +7,7 @@ import java.util.List;
 
 public abstract class BaseService<E extends BaseEntity> {
 
-	protected int limitPerPage = 25;
+	public static final int limitPerPage = 25;
 
 	public List<E> listAll() {
 		return E.listAll();

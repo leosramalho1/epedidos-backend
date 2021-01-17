@@ -1,8 +1,9 @@
 package br.com.inovasoft.epedidos.services;
 
+import br.com.inovasoft.epedidos.mappers.UserMapper;
 import br.com.inovasoft.epedidos.models.dtos.OptionDto;
 import br.com.inovasoft.epedidos.models.dtos.PaginationDataResponse;
-import br.com.inovasoft.epedidos.models.dtos.SuggestionDto;
+import br.com.inovasoft.epedidos.models.dtos.UserPortalDto;
 import br.com.inovasoft.epedidos.models.entities.UserPortal;
 import br.com.inovasoft.epedidos.models.enums.RoleEnum;
 import br.com.inovasoft.epedidos.security.TokenService;
@@ -25,23 +26,25 @@ public class UserService extends BaseService<UserPortal> {
 	@Inject
 	TokenService tokenService;
 
-	public PaginationDataResponse listAll(int page) {
+	@Inject
+	UserMapper mapper;
+
+	public PaginationDataResponse<UserPortal> listAll(int page) {
 		PanacheQuery<UserPortal> listProducts = UserPortal.find(
 				"select p from UserPortal p where p.systemId = ?1 and p.deletedOn is null", tokenService.getSystemId());
 
 		List<UserPortal> dataList = listProducts.page(Page.of(page - 1, limitPerPage)).list();
 
-		return new PaginationDataResponse(dataList, limitPerPage,
+		return new PaginationDataResponse<>(dataList, limitPerPage,
 				(int) UserPortal.count("systemId  = ?1 and deletedOn is null", tokenService.getSystemId()));
 	}
 
-	public List<SuggestionDto> getSuggestions(String query) {
+	public List<UserPortalDto> getSuggestions(String query) {
 		List<UserPortal> dataList = UserPortal.list(
-				"systemId = ?1 and upper(name) like ?2 and role = ?3 and deletedOn is null", tokenService.getSystemId(),
-				query.toUpperCase() + "%", RoleEnum.BUYER);
+				"systemId = ?1 and upper(name) like ?2 and role = ?3 and deletedOn is null",
+				tokenService.getSystemId(), query.toUpperCase() + "%", RoleEnum.BUYER);
 
-		return dataList.stream().map(item -> new SuggestionDto(item.getId(), item.getName()))
-				.collect(Collectors.toList());
+		return mapper.toDto(dataList);
 	}
 
 	public List<OptionDto> getListAllOptions() {

@@ -34,6 +34,11 @@ public class PackageLoan extends BaseEntity {
     private OrderItem orderItem;
 
     @Audited(targetAuditMode = NOT_AUDITED)
+    @JoinColumn(name = "compra_item_id")
+    @ManyToOne(targetEntity = PurchaseItem.class)
+    private PurchaseItem purchaseItem;
+
+    @Audited(targetAuditMode = NOT_AUDITED)
     @JoinColumn(name = "fornecedor_id")
     @ManyToOne(targetEntity = Supplier.class)
     private Supplier supplier;
@@ -59,4 +64,12 @@ public class PackageLoan extends BaseEntity {
     @NotNull
     @Column(name = "usuario_alteracao")
     private String userChange;
+
+    @PreUpdate
+    @PrePersist
+    public void prePersist() {
+        if(returnedAmount == null) {
+            returnedAmount = 0L;
+        }
+    }
 }
