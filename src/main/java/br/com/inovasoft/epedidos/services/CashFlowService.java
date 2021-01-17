@@ -25,7 +25,8 @@ public class CashFlowService {
 
     public PaginationDataResponse<CashFlowDto> listAll(int page, LocalDate dateMin, LocalDate dateMax) {
 
-        List<PayStatusEnum> status = List.of(PayStatusEnum.PAID);
+        List<PayStatusEnum> status = List.of(PayStatusEnum.PAID, PayStatusEnum.PAID_OVERDUE,
+                PayStatusEnum.PARTIALLY_PAID);
 
         PaginationDataResponse<AccountToPayDto> accountToPayDto = accountToPayService.listAll(page,
                 status, null, null, null, null, dateMin, dateMax);
