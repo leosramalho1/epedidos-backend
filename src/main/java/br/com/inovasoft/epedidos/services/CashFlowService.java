@@ -4,6 +4,7 @@ import br.com.inovasoft.epedidos.models.dtos.AccountToPayDto;
 import br.com.inovasoft.epedidos.models.dtos.AccountToReceiveDto;
 import br.com.inovasoft.epedidos.models.dtos.CashFlowDto;
 import br.com.inovasoft.epedidos.models.dtos.PaginationDataResponse;
+import br.com.inovasoft.epedidos.models.enums.PayStatusEnum;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -20,23 +21,33 @@ public class CashFlowService {
     @Inject
     AccountToReceiveService accountToReceiveService;
 
-    public PaginationDataResponse<CashFlowDto> listAll(int page) {
+    public PaginationDataResponse<CashFlowDto> listAll(int page, LocalDate dateMin, LocalDate dateMax) {
 
-        PaginationDataResponse<AccountToPayDto> accountToPayDto = accountToPayService.listInactive(page);
-        PaginationDataResponse<AccountToReceiveDto> accountToReceiveDto = accountToReceiveService.listInactive(page);
+        List<PayStatusEnum> status = List.of(PayStatusEnum.PAID);
+
+        PaginationDataResponse<AccountToPayDto> accountToPayDto = accountToPayService.listAll(page,
+                status, null, null, null, null, dateMin, dateMax);
+        PaginationDataResponse<AccountToReceiveDto> accountToReceiveDto = accountToReceiveService.listAll(page,
+                status,null, null, null, null, dateMin, dateMax);
 
         List<CashFlowDto> list = buildCashFlowByDate(accountToReceiveDto.getData(), accountToPayDto.getData());
-        return new PaginationDataResponse<>(list, list.size(), list.size());
+
+        List<CashFlowDto> pageList = list.stream()
+                .skip((page - 1) * BaseService.limitPerPage)
+                .limit(BaseService.limitPerPage)
+                .collect(Collectors.toList());
+
+        return new PaginationDataResponse<>(pageList, BaseService.limitPerPage, list.size());
     }
 
 
     private List<CashFlowDto> buildCashFlowByDate(List<AccountToReceiveDto> accountToReceive, List<AccountToPayDto> accountToPay) {
 
         Map<LocalDate, List<AccountToReceiveDto>> accountToReceiveDtoMap = accountToReceive.stream()
-                .collect(Collectors.groupingBy(AccountToReceiveDto::getReceiveDate));
+                .collect(Collectors.groupingBy(AccountToReceiveDto::getPaidOutDate));
 
         Map<LocalDate, List<AccountToPayDto>> accountToPayDtoMap = accountToPay.stream()
-                .collect(Collectors.groupingBy(AccountToPayDto::getPayDate));
+                .collect(Collectors.groupingBy(AccountToPayDto::getPaidOutDate));
 
         Set<LocalDate> datesToReceive = accountToReceiveDtoMap.keySet();
         Set<LocalDate> datesToPay = accountToPayDtoMap.keySet();

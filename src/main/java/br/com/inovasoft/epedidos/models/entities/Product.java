@@ -55,9 +55,6 @@ public class Product extends BaseEntity {
             @JoinColumn(name = "produto_id")}, inverseJoinColumns = {@JoinColumn(name = "categoria_id")})
     private List<Category> categories;
 
-    @Column(name = "valor")
-    private BigDecimal price;
-
     @Column(name = "valor_frete")
     private BigDecimal shippingCost;
 

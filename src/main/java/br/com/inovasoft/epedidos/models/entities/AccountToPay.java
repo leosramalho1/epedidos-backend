@@ -45,10 +45,10 @@ public class AccountToPay extends BaseEntity implements Billing {
 
     @NotNull
     @Column(name = "valor_pago")
-    private BigDecimal payValue;
+    private BigDecimal paidOutValue;
 
     @Column(name = "data_pagamento")
-    private LocalDate payDate;
+    private LocalDate paidOutDate;
 
     @Column(name = "observacao")
     private String note;
@@ -64,23 +64,12 @@ public class AccountToPay extends BaseEntity implements Billing {
     @PrePersist
     @PreUpdate
     public void prePersist() {
-        if(Objects.isNull(payValue)) {
-            payValue = BigDecimal.ZERO;
+        if(Objects.isNull(paidOutValue)) {
+            paidOutValue = BigDecimal.ZERO;
         }
         if(Objects.isNull(taxValue)) {
             taxValue = BigDecimal.ZERO;
         }
     }
 
-    @Transient
-    @Override
-    public BigDecimal getPaidOut() {
-        return payValue;
-    }
-
-    @Transient
-    @Override
-    public LocalDate getPaidOutDate() {
-        return payDate;
-    }
 }

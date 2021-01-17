@@ -30,13 +30,16 @@ public class AccountToPayResources {
     @GET
 //    @RolesAllowed(JwtRoles.USER_BACKOFFICE)
     public Response listAll(@QueryParam("page") int page, @QueryParam("status") List<PayStatusEnum> status,
-                            @QueryParam("supplier") Long supplier, @QueryParam("dateMin") String dateMin,
-                            @QueryParam("dateMax") String dateMax) {
+                            @QueryParam("supplier") Long supplier, @QueryParam("dueDateMin") String dueDateMin,
+                            @QueryParam("dueDateMax") String dueDateMax, @QueryParam("paidOutDateMin") String paidOutDateMin,
+                            @QueryParam("paidOutDateMax") String paidOutDateMax) {
         PaginationDataResponse<AccountToPayDto> list;
 
         list = service.listAll(page, status, supplier, null,
-                Optional.ofNullable(dateMin).map(LocalDate::parse).orElse(null),
-                Optional.ofNullable(dateMax).map(LocalDate::parse).orElse(null)
+                Optional.ofNullable(dueDateMin).map(LocalDate::parse).orElse(null),
+                Optional.ofNullable(dueDateMax).map(LocalDate::parse).orElse(null),
+                Optional.ofNullable(paidOutDateMin).map(LocalDate::parse).orElse(null),
+                Optional.ofNullable(paidOutDateMax).map(LocalDate::parse).orElse(null)
         );
 
 

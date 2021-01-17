@@ -39,27 +39,39 @@ public abstract class BillingService<T extends BaseEntity, D> extends BaseServic
     }
 
     public PaginationDataResponse<D> listAll(int page, List<PayStatusEnum> status, Long supplier, Long customer,
-                                                          LocalDate dateMin, LocalDate dateMax) {
-        Parameters parameters = Parameters.with("systemId", 1L);
+                                             LocalDate dueDateMin, LocalDate dueDateMax,
+                                             LocalDate paidOutDateMin, LocalDate paidOutDateMax) {
+        Parameters parameters = Parameters.with("systemId", tokenService.getSystemId());
         String query = "systemId = :systemId";
 
         if(supplier != null) {
             query += " and supplier.id = :supplier";
             parameters.and("supplier", supplier);
         }
+
         if(customer != null) {
             query += " and customer.id = :customer";
             parameters.and("customer", customer);
         }
 
-        if(dateMin != null) {
-            query += " and dueDate >= :dateMin";
-            parameters.and("dateMin", dateMin);
+        if(dueDateMin != null) {
+            query += " and dueDate >= :dueDateMin";
+            parameters.and("dueDateMin", dueDateMin);
         }
 
-        if(dateMax != null) {
-            query += " and dueDate <= :dateMax";
-            parameters.and("dateMax", dateMax);
+        if(dueDateMax != null) {
+            query += " and dueDate <= :dueDateMax";
+            parameters.and("dueDateMax", dueDateMax);
+        }
+
+        if(paidOutDateMin != null) {
+            query += " and paidOutDate >= :paidOutDateMin";
+            parameters.and("paidOutDateMin", paidOutDateMin);
+        }
+
+        if(paidOutDateMax != null) {
+            query += " and paidOutDate <= :paidOutDateMax";
+            parameters.and("paidOutDateMax", paidOutDateMax);
         }
 
         if(CollectionUtils.isNotEmpty(status)) {

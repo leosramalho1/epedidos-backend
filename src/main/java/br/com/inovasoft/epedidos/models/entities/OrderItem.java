@@ -64,10 +64,6 @@ public class OrderItem extends BaseEntity {
             weidth = Objects.isNull(product) ? null : product.getWeidth();
         }
 
-        if(Objects.isNull(unitValue)) {
-            unitValue = Objects.isNull(product) ? BigDecimal.ZERO : product.getPrice();
-        }
-
         if(Objects.isNull(unitShippingCost)) {
             unitShippingCost = Objects.isNull(product) ? BigDecimal.ZERO : product.getShippingCost();
         }

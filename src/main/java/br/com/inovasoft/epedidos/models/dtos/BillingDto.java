@@ -11,7 +11,7 @@ public interface BillingDto {
 
     LocalDate getDueDate();
 
-    BigDecimal getPaidOut();
+    BigDecimal getPaidOutValue();
 
     LocalDate getPaidOutDate();
 }

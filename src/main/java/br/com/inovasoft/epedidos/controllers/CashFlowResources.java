@@ -9,6 +9,8 @@ import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.time.LocalDate;
+import java.util.Optional;
 
 @Path("/cash-flow")
 @Consumes(MediaType.APPLICATION_JSON)
@@ -21,8 +23,12 @@ public class CashFlowResources {
 
     @GET
     @RolesAllowed(JwtRoles.USER_BACKOFFICE)
-    public Response listAll(@QueryParam("page") int page) {
-        return Response.status(Response.Status.OK).entity(service.listAll(page)).build();
+    public Response listAll(@QueryParam("page") int page, @QueryParam("paidOutDateMin") String paidOutDateMin,
+                            @QueryParam("paidOutDateMax") String paidOutDateMax) {
+        return Response.status(Response.Status.OK).entity(service.listAll(page,
+                Optional.ofNullable(paidOutDateMin).map(LocalDate::parse).orElse(null),
+                Optional.ofNullable(paidOutDateMax).map(LocalDate::parse).orElse(null))
+        ).build();
     }
 
 

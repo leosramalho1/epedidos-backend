@@ -15,7 +15,7 @@ public interface Billing {
 
     LocalDate getDueDate();
 
-    BigDecimal getPaidOut();
+    BigDecimal getPaidOutValue();
 
     LocalDate getPaidOutDate();
 
@@ -32,15 +32,15 @@ public interface Billing {
     }
 
     default boolean isPaid() {
-        return getPaidOut().compareTo(totalValue()) >= 0 && getPaidOutDate() != null;
+        return getPaidOutValue().compareTo(totalValue()) >= 0 && getPaidOutDate() != null;
     }
 
     default boolean isPartiallyPaid() {
-        return getPaidOut().compareTo(totalValue()) < 0 && !isOverdue();
+        return getPaidOutValue().compareTo(totalValue()) < 0 && !isOverdue();
     }
 
     default boolean isAwaitingPaid() {
-        return getPaidOut().compareTo(BigDecimal.ZERO) == 0 && !isOverdue();
+        return getPaidOutValue().compareTo(BigDecimal.ZERO) == 0 && !isOverdue();
     }
 
     default boolean isOverdue() {

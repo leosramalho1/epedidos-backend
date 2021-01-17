@@ -40,10 +40,10 @@ public class AccountToReceive extends BaseEntity implements Billing {
     private LocalDate dueDate;
 
     @Column(name = "valor_pago")
-    private BigDecimal receiveValue;
+    private BigDecimal paidOutValue;
 
     @Column(name = "data_recebimento")
-    private LocalDate receiveDate;
+    private LocalDate paidOutDate;
 
     @Column(name = "observacao")
     private String note;
@@ -62,21 +62,13 @@ public class AccountToReceive extends BaseEntity implements Billing {
     @PrePersist
     @PreUpdate
     public void prePersist() {
-        if(Objects.isNull(receiveValue)) {
-            receiveValue = BigDecimal.ZERO;
+        if(Objects.isNull(paidOutValue)) {
+            paidOutValue = BigDecimal.ZERO;
         }
         if(Objects.isNull(taxValue)) {
             taxValue = BigDecimal.ZERO;
         }
     }
 
-    @Override
-    public BigDecimal getPaidOut() {
-        return receiveValue;
-    }
 
-    @Override
-    public LocalDate getPaidOutDate() {
-        return receiveDate;
-    }
 }

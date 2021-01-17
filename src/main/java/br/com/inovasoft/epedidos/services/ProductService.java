@@ -4,16 +4,17 @@ import br.com.inovasoft.epedidos.mappers.ProductMapper;
 import br.com.inovasoft.epedidos.models.dtos.OrderItemDto;
 import br.com.inovasoft.epedidos.models.dtos.PaginationDataResponse;
 import br.com.inovasoft.epedidos.models.dtos.ProductDto;
+import br.com.inovasoft.epedidos.models.dtos.UserPortalDto;
 import br.com.inovasoft.epedidos.models.entities.Product;
 import br.com.inovasoft.epedidos.models.entities.UserPortal;
 import br.com.inovasoft.epedidos.security.TokenService;
-import br.com.inovasoft.epedidos.util.SuggestionUtil;
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import io.quarkus.panache.common.Page;
-import org.apache.commons.lang3.StringUtils;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Response;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -75,15 +76,20 @@ public class ProductService extends BaseService<Product> {
         ProductDto result = mapper.toDto(entity);
         if (entity.getBuyerId() != null) {
             UserPortal buyer = UserPortal.findById(entity.getBuyerId());
-            result.setBuyerCodeName(SuggestionUtil.build(buyer.getId(), buyer.getName()));
+            result.setBuyer(UserPortalDto.builder().id(buyer.getId()).name(buyer.getName()).build());
         }
         return result;
     }
 
     public ProductDto saveDto(ProductDto dto) {
         Product entity = mapper.toEntity(dto);
-        if (StringUtils.isNotBlank(dto.getBuyerCodeName()))
-            entity.setBuyerId(SuggestionUtil.extractId(dto.getBuyerCodeName()));
+        if(dto.getBuyer() != null) {
+            UserPortal userPortal = (UserPortal) UserPortal
+                    .findByIdOptional(dto.getBuyer().getId())
+                    .orElseThrow(() -> new WebApplicationException(Response.status(400)
+                            .entity("Comprador inválido!").build()));
+            entity.setBuyerId(userPortal.getId());
+        }
         entity.setSystemId(tokenService.getSystemId());
 
         super.save(entity);
@@ -95,8 +101,13 @@ public class ProductService extends BaseService<Product> {
         Product entity = findById(id);
 
         mapper.updateEntityFromDto(dto, entity);
-        if (StringUtils.isNotBlank(dto.getBuyerCodeName()))
-            entity.setBuyerId(SuggestionUtil.extractId(dto.getBuyerCodeName()));
+        if(dto.getBuyer() != null) {
+            UserPortal userPortal = (UserPortal) UserPortal
+                    .findByIdOptional(dto.getBuyer().getId())
+                    .orElseThrow(() -> new WebApplicationException(Response.status(400)
+                            .entity("Comprador inválido!").build()));
+            entity.setBuyerId(userPortal.getId());
+        }
 
         entity.persist();
 

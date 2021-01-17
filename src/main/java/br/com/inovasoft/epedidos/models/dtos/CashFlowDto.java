@@ -31,13 +31,13 @@ public class CashFlowDto {
 
     public BigDecimal getReceivedValue() {
         return getAccountsToReceive().stream()
-                .map(AccountToReceiveDto::getReceiveValue)
+                .map(AccountToReceiveDto::getPaidOutValue)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
     public BigDecimal getPaidValue() {
         return getAccountsToPay().stream()
-                .map(AccountToPayDto::getPayValue)
+                .map(AccountToPayDto::getPaidOutValue)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 

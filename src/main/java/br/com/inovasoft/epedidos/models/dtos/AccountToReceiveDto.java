@@ -16,19 +16,9 @@ public class AccountToReceiveDto implements BillingDto {
     private BigDecimal originalValue;
     private BigDecimal taxValue;
     private LocalDate dueDate;
-    private BigDecimal receiveValue;
-    private LocalDate receiveDate;
+    private BigDecimal paidOutValue;
+    private LocalDate paidOutDate;
     private PayStatusEnum status;
     private String note;
-
-    @Override
-    public BigDecimal getPaidOut() {
-        return receiveValue;
-    }
-
-    @Override
-    public LocalDate getPaidOutDate() {
-        return receiveDate;
-    }
 
 }
