@@ -1,11 +1,5 @@
 package br.com.inovasoft.epedidos.services;
 
-import java.util.List;
-import java.util.Objects;
-
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-
 import br.com.inovasoft.epedidos.mappers.CategoryMapper;
 import br.com.inovasoft.epedidos.models.dtos.CategoryDto;
 import br.com.inovasoft.epedidos.models.dtos.PaginationDataResponse;
@@ -13,6 +7,11 @@ import br.com.inovasoft.epedidos.models.entities.references.Category;
 import br.com.inovasoft.epedidos.security.TokenService;
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import io.quarkus.panache.common.Page;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+import java.util.List;
+import java.util.Objects;
 
 @ApplicationScoped
 public class CategoryService extends BaseService<Category> {
@@ -36,18 +35,19 @@ public class CategoryService extends BaseService<Category> {
     }
 
     public PaginationDataResponse listAll(Integer page) {
+        int limitPerPageCategory = BaseService.limitPerPage;
         Long systemId = tokenService.getSystemId();
         PanacheQuery<Category> list = Category.find("select c from Category c where c.systemId = ?1", systemId);
         List<Category> dataList;
 
         if (!Objects.isNull(page)) {
-            dataList = list.page(Page.of(page - 1, limitPerPage)).list();
+            dataList = list.page(Page.of(page - 1, limitPerPageCategory)).list();
         } else {
             dataList = list.list();
-            limitPerPage = dataList.size();
+            limitPerPageCategory = dataList.size();
         }
 
-        return new PaginationDataResponse(mapper.toDto(dataList), limitPerPage,
+        return new PaginationDataResponse(mapper.toDto(dataList), limitPerPageCategory,
                 (int) Category.count("systemId = ?1", systemId));
     }
 
