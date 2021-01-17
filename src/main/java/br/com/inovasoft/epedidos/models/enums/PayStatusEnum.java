@@ -9,7 +9,8 @@ import java.util.stream.Stream;
 public enum PayStatusEnum {
 
     PAID("PAGO"), OVERDUE("VENCIDO"), CANCELED("CANCELADO"),
-    OPEN("AGUARDANDANDO_PAGAMENTO"), PARTIALLY_PAID("PARCIALMENTE_PAGO");
+    OPEN("AGUARDANDANDO_PAGAMENTO"), PARTIALLY_PAID("PARCIALMENTE_PAGO"),
+    PAID_OVERDUE("PAGO_EM_ATRASO");
 
     @Getter(onMethod = @__(@JsonValue))
     private final String description;

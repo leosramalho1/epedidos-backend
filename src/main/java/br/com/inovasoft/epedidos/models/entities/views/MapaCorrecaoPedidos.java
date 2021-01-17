@@ -17,9 +17,9 @@ import javax.persistence.Table;
 @Entity
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
-@Table(name = "mapa_correcao")
+@Table(name = "mapa_pedidos")
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class MapaCorrecao extends BaseEntity {
+public class MapaCorrecaoPedidos extends BaseEntity {
 
     private static final long serialVersionUID = 4219610476537959071L;
 

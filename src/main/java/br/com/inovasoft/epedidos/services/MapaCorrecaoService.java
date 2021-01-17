@@ -18,19 +18,19 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @ApplicationScoped
-public class MapaCorrecaoService extends BaseService<MapaCorrecao> {
+public class MapaCorrecaoService extends BaseService<MapaCorrecaoPedidos> {
 
     @Inject
     TokenService tokenService;
 
     protected int limitPerPage = 50;
 
-    public PaginationDataResponse<MapaCorrecao> listAll(Integer page, @NotNull Optional<Long> category) {
+    public PaginationDataResponse<MapaCorrecaoPedidos> listAll(Integer page, @NotNull Optional<Long> category) {
 
         Long systemId = tokenService.getSystemId();
-        PanacheQuery<MapaCorrecao> list = MapaCorrecao.find("systemId", systemId);
+        PanacheQuery<MapaCorrecaoPedidos> list = MapaCorrecaoPedidos.find("systemId", systemId);
 
-        List<MapaCorrecao> dataList = list.page(Page.of(page - 1, limitPerPage)).list();
+        List<MapaCorrecaoPedidos> dataList = list.page(Page.of(page - 1, limitPerPage)).list();
 
         if(category.isPresent()) {
             CategoriaCorrecao categoriaFiltro = CategoriaCorrecao.builder().id(category.get()).build();
@@ -39,10 +39,10 @@ public class MapaCorrecaoService extends BaseService<MapaCorrecao> {
                     .collect(Collectors.toList());
         }
 
-        return new PaginationDataResponse<>(dataList, limitPerPage, (int) MapaCorrecao.count("systemId", systemId));
+        return new PaginationDataResponse<>(dataList, limitPerPage, (int) MapaCorrecaoPedidos.count("systemId", systemId));
     }
 
-    public PaginationDataResponse<MapaCorrecao> update(List<ProdutoCorrecao> produtosCorrecao) {
+    public PaginationDataResponse<MapaCorrecaoPedidos> update(List<ProdutoCorrecao> produtosCorrecao) {
 
         produtosCorrecao.stream()
                 .filter(ProdutoCorrecao::isChangedOrhasCustomerChanged)

@@ -34,7 +34,7 @@ public class CategoryService extends BaseService<Category> {
                 systemKey));
     }
 
-    public PaginationDataResponse listAll(Integer page) {
+    public PaginationDataResponse<CategoryDto> listAll(Integer page) {
         int limitPerPageCategory = BaseService.limitPerPage;
         Long systemId = tokenService.getSystemId();
         PanacheQuery<Category> list = Category.find("select c from Category c where c.systemId = ?1", systemId);
@@ -47,7 +47,7 @@ public class CategoryService extends BaseService<Category> {
             limitPerPageCategory = dataList.size();
         }
 
-        return new PaginationDataResponse(mapper.toDto(dataList), limitPerPageCategory,
+        return new PaginationDataResponse<>(mapper.toDto(dataList), limitPerPageCategory,
                 (int) Category.count("systemId = ?1", systemId));
     }
 
