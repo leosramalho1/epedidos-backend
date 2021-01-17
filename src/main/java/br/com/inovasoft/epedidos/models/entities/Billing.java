@@ -48,7 +48,7 @@ public interface Billing {
     }
 
     default boolean isOverdue() {
-        return Optional.ofNullable(getPaidOutDate())
+        return getDueDate() != null && Optional.ofNullable(getPaidOutDate())
                 .orElse(LocalDate.now()).isAfter(getDueDate());
     }
 
