@@ -20,10 +20,13 @@ public class CashFlowService {
 
     @Inject
     AccountToReceiveService accountToReceiveService;
+    
+    private static final int limitPerPage = 31;
 
     public PaginationDataResponse<CashFlowDto> listAll(int page, LocalDate dateMin, LocalDate dateMax) {
 
-        List<PayStatusEnum> status = List.of(PayStatusEnum.PAID);
+        List<PayStatusEnum> status = List.of(PayStatusEnum.PAID, PayStatusEnum.PAID_OVERDUE,
+                PayStatusEnum.PARTIALLY_PAID);
 
         PaginationDataResponse<AccountToPayDto> accountToPayDto = accountToPayService.listAll(page,
                 status, null, null, null, null, dateMin, dateMax);
@@ -33,11 +36,11 @@ public class CashFlowService {
         List<CashFlowDto> list = buildCashFlowByDate(accountToReceiveDto.getData(), accountToPayDto.getData());
 
         List<CashFlowDto> pageList = list.stream()
-                .skip((page - 1) * BaseService.limitPerPage)
-                .limit(BaseService.limitPerPage)
+                .skip((page - 1) * limitPerPage)
+                .limit(limitPerPage)
                 .collect(Collectors.toList());
 
-        return new PaginationDataResponse<>(pageList, BaseService.limitPerPage, list.size());
+        return new PaginationDataResponse<>(pageList, limitPerPage, list.size());
     }
 
 
@@ -60,7 +63,7 @@ public class CashFlowService {
                 .map(d -> CashFlowDto.builder().cashFlowDate(d)
                         .accountsToReceive(accountToReceiveDtoMap.get(d))
                         .accountsToPay(accountToPayDtoMap.get(d)).build())
-                .sorted(Comparator.comparing(CashFlowDto::getCashFlowDate))
+                .sorted(Comparator.comparing(CashFlowDto::getCashFlowDate).reversed())
                 .collect(Collectors.toList());
     }
 

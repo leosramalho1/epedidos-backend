@@ -22,6 +22,8 @@ public abstract class BillingService<T extends BaseEntity, D> extends BaseServic
 
     BaseMapper<T, D> mapper;
 
+    protected static final int limitPerPage = 31;
+
     public BillingService(BaseMapper<T, D> mapper, TokenService tokenService) {
         this.mapper = mapper;
         this.tokenService = tokenService;
@@ -87,18 +89,6 @@ public abstract class BillingService<T extends BaseEntity, D> extends BaseServic
     public PaginationDataResponse<D> listByStatus(int page, List<PayStatusEnum> statusEnum) {
         String query = "systemId = ?1 and status in (?2)";
         return queryList(page, query, tokenService.getSystemId(), statusEnum);
-    }
-
-    public PaginationDataResponse<D> listActive(int page) {
-        String query = "systemId = ?1 and deletedOn is null " +
-                "and payValue < originalValue or payDate is null";
-        return queryList(page, query, tokenService.getSystemId());
-    }
-
-    public PaginationDataResponse<D> listInactive(int page) {
-        String query = "systemId = ?1 and deletedOn is null " +
-                "and payValue >= originalValue and payDate is not null";
-        return queryList(page, query, tokenService.getSystemId());
     }
 
     public T findById(Long id) {

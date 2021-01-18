@@ -36,15 +36,20 @@ public interface Billing {
     }
 
     default boolean isPartiallyPaid() {
-        return getPaidOutValue().compareTo(totalValue()) < 0 && !isOverdue();
+        return getPaidOutValue().compareTo(totalValue()) < 0 && !isOverdueNotPaid();
     }
 
     default boolean isAwaitingPaid() {
-        return getPaidOutValue().compareTo(BigDecimal.ZERO) == 0 && !isOverdue();
+        return getPaidOutValue().compareTo(BigDecimal.ZERO) == 0 && !isOverdueNotPaid();
+    }
+
+    default boolean isOverdueNotPaid() {
+        return isOverdue() && !isPaid();
     }
 
     default boolean isOverdue() {
-        return LocalDate.now().isAfter(getDueDate()) && !isPaid();
+        return getDueDate() != null && Optional.ofNullable(getPaidOutDate())
+                .orElse(LocalDate.now()).isAfter(getDueDate());
     }
 
     default boolean isCanceled() {
@@ -57,11 +62,15 @@ public interface Billing {
             return PayStatusEnum.CANCELED;
         }
 
+        if(isOverdue() && isPaid()) {
+            return PayStatusEnum.PAID_OVERDUE;
+        }
+
         if(isPaid()) {
             return PayStatusEnum.PAID;
         }
 
-        if(isOverdue()) {
+        if(isOverdueNotPaid()) {
             return PayStatusEnum.OVERDUE;
         }
 
