@@ -19,6 +19,7 @@ import javax.inject.Inject;
 import javax.transaction.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -155,6 +156,7 @@ public class PurchaseService extends BaseService<Purchase> {
     @Transactional
     public PurchaseDto saveDto(PurchaseDto dto) {
         Purchase purchase = mapper.toEntity(dto);
+        purchase.setCreatedOn(LocalDateTime.now());
         purchase.setBuyer(UserPortal.findById(dto.getIdBuyer()));
         purchase.setSupplier(Supplier.findById(dto.getSupplier().getId()));
         purchase.setSystemId(tokenService.getSystemId());

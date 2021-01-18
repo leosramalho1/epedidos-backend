@@ -20,6 +20,7 @@ import javax.transaction.Transactional;
 import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -131,6 +132,7 @@ public class OrderService extends BaseService<Order> {
         Order entity = mapper.toEntity(dto);
         entity.setCustomer(Customer.find("cpfCnpj=?1",tokenService.getJsonWebToken().getSubject()).firstResult());
         entity.setSystemId(tokenService.getSystemId());
+        entity.setCreatedOn(LocalDateTime.now());
         entity.setTotalLiquidProducts(BigDecimal.ZERO);
         entity.setTotalProducts(0);
         entity.setTotalValueProducts(BigDecimal.ZERO);
