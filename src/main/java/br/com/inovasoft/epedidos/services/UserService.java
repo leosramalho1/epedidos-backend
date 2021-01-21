@@ -1,6 +1,6 @@
 package br.com.inovasoft.epedidos.services;
 
-import br.com.inovasoft.epedidos.mappers.UserMapper;
+import br.com.inovasoft.epedidos.mappers.UserPortalMapper;
 import br.com.inovasoft.epedidos.models.dtos.OptionDto;
 import br.com.inovasoft.epedidos.models.dtos.PaginationDataResponse;
 import br.com.inovasoft.epedidos.models.dtos.UserPortalDto;
@@ -27,7 +27,7 @@ public class UserService extends BaseService<UserPortal> {
 	TokenService tokenService;
 
 	@Inject
-	UserMapper mapper;
+    UserPortalMapper mapper;
 
 	public PaginationDataResponse<UserPortal> listAll(int page) {
 		PanacheQuery<UserPortal> listProducts = UserPortal.find(

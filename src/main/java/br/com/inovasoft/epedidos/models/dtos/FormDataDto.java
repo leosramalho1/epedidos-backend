@@ -1,6 +1,7 @@
 package br.com.inovasoft.epedidos.models.dtos;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.jboss.resteasy.annotations.providers.multipart.PartType;
 
 import javax.ws.rs.FormParam;
@@ -9,6 +10,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 
 @Data
+@EqualsAndHashCode(callSuper = true)
 public class FormDataDto extends ArrayList<FormDataDto> {
 
     @FormParam("file")

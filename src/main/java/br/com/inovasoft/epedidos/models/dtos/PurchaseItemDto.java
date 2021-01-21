@@ -5,7 +5,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Objects;
+import java.util.Optional;
 
 @Data
 @NoArgsConstructor
@@ -17,6 +19,8 @@ public class PurchaseItemDto {
     private Integer quantity;
     private BigDecimal unitValue;
     private BigDecimal totalValue;
+    private BigDecimal valueCharged;
+    private BigDecimal averageValue;
 
     public PurchaseItemDto(Long idProduct, String nameProduct, Integer quantity) {
         this.idProduct = idProduct;
@@ -31,5 +35,15 @@ public class PurchaseItemDto {
         }
 
         return totalValue;
+    }
+
+    public BigDecimal getValueCharged() {
+        return Optional.ofNullable(valueCharged).orElse(getTotalValue());
+    }
+
+    public BigDecimal getAverageValue() {
+        return Optional.ofNullable(averageValue)
+                .orElse(getTotalValue()
+                        .divide(BigDecimal.valueOf(getQuantity()), 2, RoundingMode.HALF_UP));
     }
 }

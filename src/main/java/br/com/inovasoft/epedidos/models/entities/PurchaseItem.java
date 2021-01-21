@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
+import java.util.Objects;
 
 @Data
 @Entity
@@ -41,5 +42,18 @@ public class PurchaseItem extends BaseEntity {
 
     @Column(name = "valor_total")
     private BigDecimal totalValue;
+
+    @NotNull
+    @Column(name = "valor_cobrado")
+    private BigDecimal valueCharged;
+
+    @PreUpdate
+    @PrePersist
+    public void prePersist() {
+        if(Objects.isNull(totalValue)
+                && Objects.nonNull(unitValue) && Objects.nonNull(quantity)) {
+            totalValue = unitValue.multiply(BigDecimal.valueOf(quantity));
+        }
+    }
 
 }

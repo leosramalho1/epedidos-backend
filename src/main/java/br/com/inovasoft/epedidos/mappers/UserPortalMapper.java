@@ -5,6 +5,6 @@ import br.com.inovasoft.epedidos.models.entities.UserPortal;
 import org.mapstruct.Mapper;
 
 @Mapper(componentModel = "cdi")
-public interface UserMapper extends BaseMapper<UserPortal, UserPortalDto> {
+public interface UserPortalMapper extends BaseMapper<UserPortal, UserPortalDto> {
 
 }
