@@ -161,10 +161,6 @@ public class OrderService extends BaseService<Order> {
     public OrderDto update(Long id, OrderDto dto) {
         Order entity = Order.findById(id);
 
-        mapper.updateEntityFromDto(dto, entity);
-
-        Order.persist(entity);
-
         OrderItem.delete("order.id=?1", id);
         if(dto.getItens() != null){
             List<OrderItem> itens = orderItemMapper.toEntity(dto.getItens());
