@@ -1,6 +1,7 @@
 package br.com.inovasoft.epedidos.models.dtos;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
@@ -22,7 +23,9 @@ public class CashFlowDto {
     private BigDecimal balance;
     private BigDecimal receivedValue;
     private BigDecimal paidValue;
+    @Builder.Default
     private List<AccountToReceiveDto> accountsToReceive = new ArrayList<>();
+    @Builder.Default
     private List<AccountToPayDto> accountsToPay = new ArrayList<>();
 
     public BigDecimal getBalance() {

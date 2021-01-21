@@ -12,7 +12,9 @@ import br.com.inovasoft.epedidos.models.enums.PackageTypeEnum;
 import br.com.inovasoft.epedidos.security.TokenService;
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import io.quarkus.panache.common.Page;
+import io.quarkus.panache.common.Sort;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.MapUtils;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -34,30 +36,23 @@ public class PurchaseService extends BaseService<Purchase> {
     PurchaseMapper mapper;
 
     @Inject
-    PurchaseItemMapper PurchaseItemmapper;
+    PurchaseItemMapper purchaseItemmapper;
 
-    public PaginationDataResponse listAll(int page) {
-        PanacheQuery<Purchase> listPurchases = Purchase.find(
-                "select p from Purchase p where p.systemId = ?1 and p.deletedOn is null", tokenService.getSystemId());
-
-        List<Purchase> dataList = listPurchases.page(Page.of(page - 1, limitPerPage)).list();
-
-        return new PaginationDataResponse(mapper.toDto(dataList), limitPerPage, (int) Purchase.count());
-    }
-
-    public PaginationDataResponse listPurchasesBySystemKey(String systemKey, int page) {
-        PanacheQuery<Purchase> listPurchases = Purchase.find(
-                "select p from Purchase p, CompanySystem c where p.systemId = c.id and c.systemKey = ?1 and p.deletedOn is null",
-                systemKey);
+    public PaginationDataResponse<PurchaseDto> listAll(int page) {
+        String query = "systemId = ?1 and deletedOn is null";
+        PanacheQuery<Purchase> listPurchases = Purchase.find(query, Sort.by("id").descending(),
+                tokenService.getSystemId());
 
         List<Purchase> dataList = listPurchases.page(Page.of(page - 1, limitPerPage)).list();
 
-        return new PaginationDataResponse(mapper.toDto(dataList), limitPerPage, (int) Purchase.count());
+        return new PaginationDataResponse<>(mapper.toDto(dataList), limitPerPage,
+                (int) Purchase.count(query, tokenService.getSystemId()));
     }
+
 
     public List<PurchaseDto> listPurchasesByBuyer() {
         PanacheQuery<Purchase> listPurchases = Purchase.find(
-                " buyer.email = ?1 and deletedOn is null",
+                "buyer.email = ?1 and deletedOn is null",
                 tokenService.getUserEmail());
 
         return mapper.toDto(listPurchases.list());
@@ -108,7 +103,7 @@ public class PurchaseService extends BaseService<Purchase> {
 
         Map<Long, PurchaseItemDto> map = new HashMap<>();
 
-        if (ordersItems != null && !ordersItems.isEmpty()) {
+        if (CollectionUtils.isNotEmpty(ordersItems )) {
             for (OrderItem item : ordersItems) {
                 PurchaseItemDto purchaseItemDto = map.get(item.getProduct().getId());
                 if (purchaseItemDto == null) {
@@ -126,7 +121,7 @@ public class PurchaseService extends BaseService<Purchase> {
             }
         }
 
-        if (purchaseItems != null && !purchaseItems.isEmpty()) {
+        if (CollectionUtils.isNotEmpty(purchaseItems) && MapUtils.isNotEmpty(map)) {
             for (PurchaseItem item : purchaseItems) {
                 PurchaseItemDto purchaseItemDto = map.get(item.getProduct().getId());
                 purchaseItemDto.setQuantity(purchaseItemDto.getQuantity() - item.getQuantity());
@@ -147,7 +142,7 @@ public class PurchaseService extends BaseService<Purchase> {
 
         PurchaseDto purchase = mapper.toDto(entity);
 
-        purchase.setItens(PurchaseItemmapper
+        purchase.setItens(purchaseItemmapper
                 .toDto(PurchaseItem.list("purchase.id = ?1 Purchase by product.name", purchase.getId())));
 
         return purchase;
@@ -157,14 +152,14 @@ public class PurchaseService extends BaseService<Purchase> {
     public PurchaseDto saveDto(PurchaseDto dto) {
         Purchase purchase = mapper.toEntity(dto);
         purchase.setCreatedOn(LocalDateTime.now());
-        purchase.setBuyer(UserPortal.findById(dto.getIdBuyer()));
+        purchase.setBuyer(UserPortal.findById(dto.getBuyer().getId()));
         purchase.setSupplier(Supplier.findById(dto.getSupplier().getId()));
         purchase.setSystemId(tokenService.getSystemId());
         BigDecimal totalValueProducts = dto.getItens().stream().map(PurchaseItemDto::getTotalValue).reduce(BigDecimal.ZERO, BigDecimal::add);
-        purchase.setTotalValueProducts(totalValueProducts);
+        purchase.setTotalValue(totalValueProducts);
         purchase.persist();
 
-        List<PurchaseItem> purchaseItems = PurchaseItemmapper.toEntity(dto.getItens());
+        List<PurchaseItem> purchaseItems = purchaseItemmapper.toEntity(dto.getItens());
         if(CollectionUtils.isNotEmpty(purchaseItems)) {
             for (PurchaseItem purchaseItem : purchaseItems) {
                 purchaseItem.setPurchase(purchase);
@@ -172,15 +167,7 @@ public class PurchaseService extends BaseService<Purchase> {
 
                 Product product = Product.findById(purchaseItem.getProduct().getId());
 
-                if (product.getPackageType() == PackageTypeEnum.RETURNABLE) {
-                    PackageLoan packageLoan = new PackageLoan();
-                    packageLoan.setSystemId(tokenService.getSystemId());
-                    packageLoan.setSupplier(purchase.getSupplier());
-                    packageLoan.setPurchaseItem(purchaseItem);
-                    packageLoan.setUserChange(tokenService.getUserEmail());
-                    packageLoan.setBorrowedAmount(purchaseItem.getQuantity().longValue());
-                    packageLoan.persist();
-                }
+                savePackageType(purchase, purchaseItem, product);
 
             }
 
@@ -196,20 +183,36 @@ public class PurchaseService extends BaseService<Purchase> {
         return mapper.toDto(purchase);
     }
 
+    private void savePackageType(Purchase purchase, PurchaseItem purchaseItem, Product product) {
+        if (product.getPackageType() == PackageTypeEnum.RETURNABLE) {
+            PackageLoan packageLoan = new PackageLoan();
+            packageLoan.setSystemId(tokenService.getSystemId());
+            packageLoan.setSupplier(purchase.getSupplier());
+            packageLoan.setPurchaseItem(purchaseItem);
+            packageLoan.setUserChange(tokenService.getUserEmail());
+            packageLoan.setBorrowedAmount(purchaseItem.getQuantity().longValue());
+            packageLoan.persist();
+        }
+    }
+
     @Transactional
     public PurchaseDto update(Long id, PurchaseDto dto) {
         Purchase entity = Purchase.findById(id);
 
         mapper.updateEntityFromDto(dto, entity);
 
-        Purchase.persist(entity);
+        List<PackageLoan> packageLoans = PackageLoan.list("select p from PackageLoan p join p.purchaseItem pi " +
+                "where pi.purchase.id = ?1 and p.systemId = ?2 and p.deletedOn is null", id, tokenService.getSystemId());
+        packageLoans.forEach(PackageLoan::delete);
+        entity.persistAndFlush();
+        PurchaseItem.delete("purchase.id=?1", id);
 
-        PurchaseItem.delete("Purchase.id=?1", id);
-        List<PurchaseItem> itens = PurchaseItemmapper.toEntity(dto.getItens());
+        List<PurchaseItem> itens = purchaseItemmapper.toEntity(dto.getItens());
         for (PurchaseItem item : itens) {
             item.setId(null);
             item.setPurchase(entity);
             PurchaseItem.persist(item);
+            savePackageType(entity, item, Product.findById(item.getProduct().getId()));
         }
 
         return mapper.toDto(entity);
