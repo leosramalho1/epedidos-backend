@@ -68,13 +68,19 @@ public class OrderItem extends BaseEntity {
             unitShippingCost = Objects.isNull(product) ? BigDecimal.ZERO : product.getShippingCost();
         }
 
-        if(Objects.isNull(totalValue)) {
-            totalValue = unitValue.add(unitShippingCost).multiply(BigDecimal.valueOf(quantity));
+        if(Objects.isNull(unitValue)) {
+            unitValue = BigDecimal.ZERO;
         }
 
         if(Objects.isNull(unitShippingCost)) {
             unitShippingCost = BigDecimal.ZERO;
         }
+
+        if(Objects.isNull(totalValue)) {
+            totalValue = unitValue.add(unitShippingCost).multiply(BigDecimal.valueOf(quantity));
+        }
+
+       
 
     }
 
