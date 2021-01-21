@@ -136,7 +136,7 @@ public class OrderService extends BaseService<Order> {
         entity.setTotalLiquidProducts(BigDecimal.ZERO);
         entity.setTotalProducts(0);
         entity.setTotalValueProducts(BigDecimal.ZERO);
-        super.save(entity);
+        Order.persist(entity);
 
         List<OrderItem> itens = orderItemMapper.toEntity(dto.getItens());
         for (OrderItem item : itens) {
