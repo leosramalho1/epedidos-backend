@@ -105,6 +105,7 @@ public class OrderService extends BaseService<Order> {
         entity.setSystemId(tokenService.getSystemId());
         entity.setTotalLiquidProducts(BigDecimal.ZERO);
         entity.setTotalProducts(0);
+        entity.setCreatedOn(LocalDateTime.now());
         entity.setTotalValueProducts(BigDecimal.ZERO);
         entity.persist();
 
@@ -116,13 +117,13 @@ public class OrderService extends BaseService<Order> {
             }
             OrderItem.persist(item);
         }
-
+  /* Conta a receber será gerado no fechamento e não quando o pedido é criado...um conta a receber poderá ter mais de um pedidos vinculado a ele
         AccountToReceive accountToReceive = accountToReceiveService
                 .buildAccountToReceive(new AccountToReceive(), entity.getCustomer(),
                         calculateTotalValueProducts(itens, entity.getCustomer()));
         accountToReceive.persist();
         entity.setAccountToReceive(accountToReceive);
-        entity.persist();
+        entity.persist();*/
 
         return mapper.toDto(entity);
     }
@@ -147,13 +148,14 @@ public class OrderService extends BaseService<Order> {
             OrderItem.persist(item);
         }
 
+        /* Conta a receber será gerado no fechamento e não quando o pedido é criado...um conta a receber poderá ter mais de um pedidos vinculado a ele
         AccountToReceive accountToReceive = Optional.ofNullable(entity.getAccountToReceive()).orElse(new AccountToReceive());
         accountToReceiveService.buildAccountToReceive(accountToReceive, entity.getCustomer(),
                 calculateTotalValueProducts(itens, entity.getCustomer()));
         accountToReceive.persist();
 
         entity.setAccountToReceive(accountToReceive);
-        entity.persist();
+        entity.persist();*/
         return mapper.toDto(entity);
     }
 

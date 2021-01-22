@@ -37,8 +37,9 @@ public class PurchaseDto {
 
     public BigDecimal getAverageValue() {
         if(CollectionUtils.isNotEmpty(itens)) {
+            Integer quantityTemp = getTotalQuantity();
             return getTotalValue()
-                    .divide(BigDecimal.valueOf(getTotalQuantity()), 2, RoundingMode.HALF_UP);
+                    .divide(BigDecimal.valueOf(quantityTemp>0?quantityTemp:1), 2, RoundingMode.HALF_UP);
         }
 
         return BigDecimal.ZERO;

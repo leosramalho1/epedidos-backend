@@ -34,7 +34,7 @@ public class PurchaseItemDto {
             return unitValue.multiply(BigDecimal.valueOf(quantity));
         }
 
-        return totalValue;
+        return Optional.ofNullable(totalValue).orElse(BigDecimal.ONE);
     }
 
     public BigDecimal getValueCharged() {
@@ -42,8 +42,12 @@ public class PurchaseItemDto {
     }
 
     public BigDecimal getAverageValue() {
+        if(getTotalValue().intValue() > 0){
         return Optional.ofNullable(averageValue)
                 .orElse(getTotalValue()
-                        .divide(BigDecimal.valueOf(getQuantity()), 2, RoundingMode.HALF_UP));
+                        .divide(BigDecimal.valueOf(quantity!=null && quantity>0?quantity:1), 2, RoundingMode.HALF_UP));
+        }else{
+            return BigDecimal.ZERO;
+        }
     }
 }
