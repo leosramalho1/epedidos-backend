@@ -24,6 +24,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 @ApplicationScoped
@@ -73,7 +74,7 @@ public class PurchaseService extends BaseService<Purchase> {
                 OrderEnum.OPEN, buyerId, yesterday.atTime(23, 59, 59));
 
         List<PurchaseItem> purchaseItems = PurchaseItem.list(
-                "select pi from PurchaseItem pi where pi.purchase.status=?1 " +
+                "select pi from PurchaseItem pi where pi.purchase.deletedOn is null and pi.purchase.status=?1 " +
                         "and pi.purchase.buyer.id=?2 and pi.purchase.createdOn <= ?3 " +
                         "order by pi.product.id",
                 OrderEnum.OPEN, buyerId, yesterday.atTime(23, 59, 59));
@@ -130,7 +131,7 @@ public class PurchaseService extends BaseService<Purchase> {
         }
 
         List<PurchaseItemDto> items = new ArrayList<>(map.values());
-        purchaseGroup.setItens(items);
+        purchaseGroup.setItens(items.stream().filter(item -> item.getQuantity() > 0).collect(Collectors.toList()));
 
         items.sort(Comparator.comparing(PurchaseItemDto::getNameProduct, Comparator.naturalOrder()))    ;
 
