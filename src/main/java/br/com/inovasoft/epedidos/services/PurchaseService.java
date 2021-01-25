@@ -6,6 +6,7 @@ import br.com.inovasoft.epedidos.models.dtos.PaginationDataResponse;
 import br.com.inovasoft.epedidos.models.dtos.PurchaseDto;
 import br.com.inovasoft.epedidos.models.dtos.PurchaseGroupDto;
 import br.com.inovasoft.epedidos.models.dtos.PurchaseItemDto;
+import br.com.inovasoft.epedidos.models.dtos.UserPortalDto;
 import br.com.inovasoft.epedidos.models.entities.*;
 import br.com.inovasoft.epedidos.models.enums.OrderEnum;
 import br.com.inovasoft.epedidos.models.enums.PackageTypeEnum;
@@ -98,8 +99,9 @@ public class PurchaseService extends BaseService<Purchase> {
             List<PurchaseItem> purchaseItems) {
         UserPortal buyer = UserPortal.findById(buyerId);
         PurchaseGroupDto purchaseGroup = new PurchaseGroupDto();
-        purchaseGroup.setIdBuyer(buyerId);
-        purchaseGroup.setNameBuyer(buyer.getName());
+        purchaseGroup.setBuyer(new UserPortalDto());
+        purchaseGroup.getBuyer().setId(buyerId);
+        purchaseGroup.getBuyer().setName(buyer.getName());
         purchaseGroup.setDateRef(DateTimeFormatter.ofPattern("dd/MM/yyyy").format(refDate));
 
         Map<Long, PurchaseItemDto> map = new HashMap<>();

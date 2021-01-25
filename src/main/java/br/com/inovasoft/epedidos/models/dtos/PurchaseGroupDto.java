@@ -10,8 +10,7 @@ import lombok.Data;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PurchaseGroupDto {
 
-    private Long idBuyer;
-    private String nameBuyer;
+    private UserPortalDto buyer;
     private String dateRef;
     private List<PurchaseItemDto> itens;
 }
