@@ -114,8 +114,8 @@ public class PurchaseService extends BaseService<Purchase> {
                     purchaseItemDto.setIdProduct(item.getProduct().getId());
                     purchaseItemDto.setNameProduct(item.getProduct().getName());
                     purchaseItemDto.setQuantity(item.getQuantity());
-                    purchaseItemDto.setUnitValue(BigDecimal.ZERO);
-                    purchaseItemDto.setTotalValue(BigDecimal.ZERO);
+                    purchaseItemDto.setUnitValue(new BigDecimal("0.00"));
+                    purchaseItemDto.setTotalValue(new BigDecimal("0.00"));
 
                     map.put(item.getProduct().getId(), purchaseItemDto);
                 } else {
