@@ -35,9 +35,9 @@ public class PurchaseDto {
             return itens.stream()
                     .map(PurchaseItemDto::getTotalValue)
                     .filter(Objects::nonNull)
-                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+                    .reduce(new BigDecimal("0.0"), BigDecimal::add);
         }
-        return BigDecimal.ZERO;
+        return new BigDecimal("0.0");
     }
 
     public BigDecimal getAverageValue() {
@@ -66,9 +66,9 @@ public class PurchaseDto {
             return itens.stream()
                     .map(PurchaseItemDto::getValueCharged)
                     .filter(Objects::nonNull)
-                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+                    .reduce(new BigDecimal("0.0"), BigDecimal::add);
         }
 
-        return BigDecimal.ZERO;
+        return new BigDecimal("0.0");
     }
 }
