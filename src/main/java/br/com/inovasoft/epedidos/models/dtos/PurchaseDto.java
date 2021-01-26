@@ -25,6 +25,7 @@ public class PurchaseDto {
     private BigDecimal valueCharged;
     private String createdOn;
     private Long idSupplier;
+    private String supplierName;
     private Long idBuyer;
     private Long payNumber;
     private String payMethod;

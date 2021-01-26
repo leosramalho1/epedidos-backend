@@ -11,6 +11,7 @@ import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 
@@ -22,6 +23,13 @@ import java.util.Objects;
 public class Purchase extends BaseEntity {
 
     private static final long serialVersionUID = 7699908322410433370L;
+
+    public Purchase(Long id, String supplierName, LocalDateTime createdOn, BigDecimal totalValue ){
+        this.id = id;
+        this.supplierName = supplierName;
+        super.setCreatedOn(createdOn);
+        this.totalValue = totalValue;
+    }
 
     @Id
     @SequenceGenerator(name = "compra-sequence", sequenceName = "compra_sequence", allocationSize = 1)
@@ -60,6 +68,9 @@ public class Purchase extends BaseEntity {
 
     @OneToMany(targetEntity = PurchaseItem.class, mappedBy = "purchase")
     private List<PurchaseItem> itens;
+    
+    @Transient
+    String supplierName;
 
     @PreUpdate
     @PrePersist
