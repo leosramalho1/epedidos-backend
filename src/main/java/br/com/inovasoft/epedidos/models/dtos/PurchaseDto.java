@@ -21,7 +21,7 @@ public class PurchaseDto {
     private String dateRef;
     private OrderEnum status;
     private List<PurchaseItemDto> itens;
-    private LocalDate dueDate;
+    private String dueDate;
     private BigDecimal valueCharged;
     private String createdOn;
     private Long idSupplier;
