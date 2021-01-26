@@ -1,7 +1,10 @@
 package br.com.inovasoft.epedidos.models.dtos;
 
+import br.com.inovasoft.epedidos.models.dtos.serializers.MoneySerializer;
 import br.com.inovasoft.epedidos.models.enums.OrderEnum;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
 import lombok.Data;
 import org.apache.commons.collections.CollectionUtils;
 
@@ -22,6 +25,7 @@ public class PurchaseDto {
     private OrderEnum status;
     private List<PurchaseItemDto> itens;
     private String dueDate;
+    @JsonSerialize(using = MoneySerializer.class)
     private BigDecimal valueCharged;
     private String createdOn;
     private Long idSupplier;
@@ -30,6 +34,7 @@ public class PurchaseDto {
     private Long payNumber;
     private String payMethod;
 
+    @JsonSerialize(using = MoneySerializer.class)
     public BigDecimal getTotalValue() {
         if(CollectionUtils.isNotEmpty(itens)) {
             return itens.stream()
@@ -40,6 +45,7 @@ public class PurchaseDto {
         return new BigDecimal("0.0");
     }
 
+    @JsonSerialize(using = MoneySerializer.class)
     public BigDecimal getAverageValue() {
         if(CollectionUtils.isNotEmpty(itens)) {
             Integer quantityTemp = getTotalQuantity();
@@ -61,6 +67,7 @@ public class PurchaseDto {
         return 0;
     }
 
+    @JsonSerialize(using = MoneySerializer.class)
     public BigDecimal getValueCharged() {
         if(CollectionUtils.isNotEmpty(itens)) {
             return itens.stream()
