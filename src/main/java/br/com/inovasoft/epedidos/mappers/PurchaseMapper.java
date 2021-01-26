@@ -3,7 +3,6 @@ package br.com.inovasoft.epedidos.mappers;
 import br.com.inovasoft.epedidos.models.dtos.PurchaseDto;
 import br.com.inovasoft.epedidos.models.entities.Purchase;
 
-import java.util.List;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -15,5 +14,5 @@ public interface PurchaseMapper extends BaseMapper<Purchase, PurchaseDto> {
     @Mappings({
         @Mapping(target = "dueDate", dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
     })
-    List<Purchase> toEntity(List<PurchaseDto> dto);
+    Purchase toEntity(PurchaseDto dto);
 }
