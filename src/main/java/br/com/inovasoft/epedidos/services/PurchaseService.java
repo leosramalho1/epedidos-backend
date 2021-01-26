@@ -155,8 +155,11 @@ public class PurchaseService extends BaseService<Purchase> {
     public PurchaseDto saveDto(PurchaseDto dto) {
         Purchase purchase = mapper.toEntity(dto);
         purchase.setCreatedOn(LocalDateTime.now());
-        purchase.setBuyer(UserPortal.findById(dto.getBuyer().getId()));
-        purchase.setSupplier(Supplier.findById(dto.getSupplier().getId()));
+
+        UserPortal userPortal = UserPortal.find("email", tokenService.getUserEmail()).firstResult();
+
+        purchase.setBuyer(dto.getIdBuyer() !=null?UserPortal.findById(dto.getIdBuyer()):userPortal!=null?userPortal:UserPortal.findById(dto.getBuyer() != null && dto.getBuyer().getId() !=null?dto.getBuyer().getId():dto.getIdBuyer()));
+        purchase.setSupplier(Supplier.findById(dto.getSupplier() != null && dto.getSupplier().getId() !=null?dto.getSupplier().getId(): dto.getIdSupplier()));
         purchase.setSystemId(tokenService.getSystemId());
         BigDecimal totalValueProducts = dto.getItens().stream().map(PurchaseItemDto::getTotalValue).reduce(BigDecimal.ZERO, BigDecimal::add);
         purchase.setTotalValue(totalValueProducts);

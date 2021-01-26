@@ -24,6 +24,10 @@ public class PurchaseDto {
     private LocalDate dueDate;
     private BigDecimal valueCharged;
     private String createdOn;
+    private Long idSupplier;
+    private Long idBuyer;
+    private Long payNumber;
+    private String payMethod;
 
     public BigDecimal getTotalValue() {
         if(CollectionUtils.isNotEmpty(itens)) {
