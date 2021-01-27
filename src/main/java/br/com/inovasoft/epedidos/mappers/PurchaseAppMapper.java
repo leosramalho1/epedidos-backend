@@ -1,5 +1,7 @@
 package br.com.inovasoft.epedidos.mappers;
 
+import java.util.List;
+
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Mappings;
@@ -15,6 +17,9 @@ public interface PurchaseAppMapper{
             @Mapping(target = "idBuyer", source = "buyer.id"),
             @Mapping(target = "buyerName", source = "buyer.name") })
     PurchaseAppDto to(PurchaseDto dto);
+
+
+    List<PurchaseAppDto> to(List<PurchaseDto> entity);
 
     @Mappings({ @Mapping(target = "supplier.id", source = "idSupplier"),
             @Mapping(target = "supplier.name", source = "supplierName"),

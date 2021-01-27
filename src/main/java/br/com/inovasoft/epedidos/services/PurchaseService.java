@@ -63,11 +63,11 @@ public class PurchaseService extends BaseService<Purchase> {
     }
 
 
-    public List<PurchaseDto> listPurchasesByBuyer() {
+    public List<PurchaseAppDto> listPurchasesByBuyer() {
         PanacheQuery<Purchase> listPurchases = Purchase.find(" select new Purchase(id, supplier.name, createdOn, totalValue ) from Purchase where buyer.email = ?1 and deletedOn is null",
                 tokenService.getUserEmail());
 
-        return mapper.toDto(listPurchases.list());
+        return purchaseAppMapper.to(mapper.toDto(listPurchases.list()));
     }
 
     public Purchase findById(Long id) {
