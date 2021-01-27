@@ -76,7 +76,7 @@ public class AppBuyerResources {
     @Operation(operationId = "login")
     @PermitAll
     public LoginDto login(LoginDto login) {
-        UserPortal existingUser = UserPortal.find("email", login.getCpfCnpj()).firstResult();
+        UserPortal existingUser = UserPortal.find("email", login.getEmail()).firstResult();
 
         if (existingUser == null) {
             throw new WebApplicationException(Response.status(403).entity("Usuário ou senha inválido!").build());

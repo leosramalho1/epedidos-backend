@@ -1,5 +1,6 @@
 package br.com.inovasoft.epedidos.controllers;
 
+import br.com.inovasoft.epedidos.models.dtos.LoginDto;
 import br.com.inovasoft.epedidos.models.entities.Company;
 import br.com.inovasoft.epedidos.models.entities.CompanySystem;
 import br.com.inovasoft.epedidos.models.entities.UserPortal;
@@ -116,25 +117,10 @@ public class UserPortalResources {
     }
 
     @POST
-    @Path("/register")
-    @Operation(operationId = "register")
-    @PermitAll
-    public UserPortal register(UserPortal user) {
-
-        UserPortal existingUser = UserPortal.find("email", user.getEmail()).firstResult();
-        if (existingUser != null) {
-            throw new WebApplicationException(
-                    Response.status(400).entity("Já existe um usuário cadastrado com essa senha.").build());
-        }
-        service.save(user);
-        return user;
-    }
-
-    @POST
     @Path("/validateToken")
     @Operation(operationId = "validateToken")
     @PermitAll
-    public UserPortal validateToken(UserPortal user) {
+    public LoginDto validateToken(LoginDto user) {
         if (user.getToken() == null) {
             return null;
         }
@@ -149,7 +135,7 @@ public class UserPortalResources {
     @Path("/login")
     @Operation(operationId = "login")
     @PermitAll
-    public UserPortal login(UserPortal user) {
+    public LoginDto login(LoginDto user) {
         UserPortal existingUser = UserPortal.find("email", user.getEmail()).firstResult();
         if (existingUser == null) {
             throw new WebApplicationException(Response.status(403).entity("Usuário ou senha inválido!").build());
@@ -170,9 +156,9 @@ public class UserPortalResources {
         }
 
         Company company = system.getCompany();
-        existingUser.setToken(tokenService.generateBackofficeToken(existingUser.getEmail(), user.getName(),
+        user.setToken(tokenService.generateBackofficeToken(existingUser.getEmail(), existingUser.getName(),
                 company.getId(), system.getSystemKey()));
 
-        return existingUser;
+        return user;
     }
 }
