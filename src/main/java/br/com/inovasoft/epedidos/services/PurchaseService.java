@@ -189,6 +189,7 @@ public class PurchaseService extends BaseService<Purchase> {
         if(CollectionUtils.isNotEmpty(purchaseItems)) {
             for (PurchaseItem purchaseItem : purchaseItems) {
                 purchaseItem.setPurchase(purchase);
+                purchaseItems.parallelStream().forEach(item  -> { if(item.getValueCharged()==null)item.setValueCharged(BigDecimal.ZERO);});
                 purchaseItem.persist();
 
                 Product product = Product.findById(purchaseItem.getProduct().getId());
@@ -223,6 +224,8 @@ public class PurchaseService extends BaseService<Purchase> {
 
         UserPortal buyer = appDto.getIdBuyer() !=null?UserPortal.findById(appDto.getIdBuyer()):UserPortal.find("email", tokenService.getUserEmail()).firstResult();
         Supplier supplier = Supplier.findById(appDto.getIdSupplier());
+
+        
 
         PurchaseDto purchaseDto = saveDto( purchaseAppMapper.from(appDto),  buyer,  supplier);
 
