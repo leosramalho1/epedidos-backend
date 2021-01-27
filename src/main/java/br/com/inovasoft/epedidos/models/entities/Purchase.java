@@ -66,6 +66,14 @@ public class Purchase extends BaseEntity {
     @Column(name = "data_vencimento")
     private LocalDate dueDate;
 
+    @NotNull
+    @Column(name = "quantidade_parcela")
+    private Integer payNumber;
+
+    @NotNull
+    @Column(name = "forma_pagamento")
+    private String payMethod;
+
     @OneToMany(targetEntity = PurchaseItem.class, mappedBy = "purchase")
     private List<PurchaseItem> itens;
     

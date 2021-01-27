@@ -23,6 +23,7 @@ import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 
 import br.com.inovasoft.epedidos.models.dtos.LoginDto;
+import br.com.inovasoft.epedidos.models.dtos.PurchaseAppDto;
 import br.com.inovasoft.epedidos.models.dtos.PurchaseDto;
 import br.com.inovasoft.epedidos.models.dtos.SupplierDto;
 import br.com.inovasoft.epedidos.models.entities.Company;
@@ -124,15 +125,15 @@ public class AppBuyerResources {
     @Path("/purchases/{id}")
     @RolesAllowed(JwtRoles.USER_APP_BUYER)
     public Response getPurchaseById(@PathParam("id") Long id) {
-        return Response.status(Response.Status.OK).entity(purchaseService.findDtoById(id)).build();
+        return Response.status(Response.Status.OK).entity(purchaseService.findAppDtoById(id)).build();
     }
 
     @POST
     @Path("/purchases")
     @RolesAllowed(JwtRoles.USER_APP_BUYER)
     @Transactional
-    public Response save(@Valid PurchaseDto purchaseDto) {
-        return Response.status(Response.Status.CREATED).entity(purchaseService.saveDto(purchaseDto)).build();
+    public Response save(@Valid PurchaseAppDto purchaseDto) {
+        return Response.status(Response.Status.CREATED).entity(purchaseService.saveDtoFromApp(purchaseDto)).build();
     }
 
     @PUT

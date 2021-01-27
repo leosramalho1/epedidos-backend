@@ -1,32 +1,46 @@
 package br.com.inovasoft.epedidos.services;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+import javax.transaction.Transactional;
+
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.MapUtils;
+
+import br.com.inovasoft.epedidos.mappers.PurchaseAppMapper;
 import br.com.inovasoft.epedidos.mappers.PurchaseItemMapper;
 import br.com.inovasoft.epedidos.mappers.PurchaseMapper;
 import br.com.inovasoft.epedidos.models.dtos.PaginationDataResponse;
+import br.com.inovasoft.epedidos.models.dtos.PurchaseAppDto;
 import br.com.inovasoft.epedidos.models.dtos.PurchaseDto;
 import br.com.inovasoft.epedidos.models.dtos.PurchaseGroupDto;
 import br.com.inovasoft.epedidos.models.dtos.PurchaseItemDto;
 import br.com.inovasoft.epedidos.models.dtos.UserPortalDto;
-import br.com.inovasoft.epedidos.models.entities.*;
+import br.com.inovasoft.epedidos.models.entities.AccountToPay;
+import br.com.inovasoft.epedidos.models.entities.OrderItem;
+import br.com.inovasoft.epedidos.models.entities.PackageLoan;
+import br.com.inovasoft.epedidos.models.entities.Product;
+import br.com.inovasoft.epedidos.models.entities.Purchase;
+import br.com.inovasoft.epedidos.models.entities.PurchaseItem;
+import br.com.inovasoft.epedidos.models.entities.Supplier;
+import br.com.inovasoft.epedidos.models.entities.UserPortal;
 import br.com.inovasoft.epedidos.models.enums.OrderEnum;
 import br.com.inovasoft.epedidos.models.enums.PackageTypeEnum;
 import br.com.inovasoft.epedidos.security.TokenService;
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import io.quarkus.panache.common.Page;
 import io.quarkus.panache.common.Sort;
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.collections.MapUtils;
-
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-import javax.transaction.Transactional;
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.*;
-import java.util.stream.Collector;
-import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class PurchaseService extends BaseService<Purchase> {
@@ -36,6 +50,9 @@ public class PurchaseService extends BaseService<Purchase> {
 
     @Inject
     PurchaseMapper mapper;
+
+    @Inject
+    PurchaseAppMapper purchaseAppMapper;
 
     @Inject
     PurchaseItemMapper purchaseItemmapper;
@@ -49,6 +66,19 @@ public class PurchaseService extends BaseService<Purchase> {
 
         return new PaginationDataResponse<>(mapper.toDto(dataList), limitPerPage,
                 (int) Purchase.count(query, tokenService.getSystemId()));
+    }
+
+    public PaginationDataResponse<PurchaseDto> listAllByBuyer(int page, Long idBuyer) {
+        
+        String query = "systemId = ?1 and buyer.id =?2 and deletedOn is null";
+        PanacheQuery<Purchase> listPurchases = Purchase.find(query, Sort.by("id").descending(),
+                tokenService.getSystemId(), idBuyer);
+      
+
+        List<Purchase> dataList = listPurchases.page(Page.of(page - 1, limitPerPage)).list();
+
+        return new PaginationDataResponse<>(mapper.toDto(dataList), limitPerPage,
+                (int) Purchase.count(query, tokenService.getSystemId(), idBuyer));
     }
 
 
@@ -139,26 +169,36 @@ public class PurchaseService extends BaseService<Purchase> {
         return purchaseGroup;
     }
 
+    public PurchaseAppDto findAppDtoById(Long id) {
+        Purchase entity = findById(id);
+
+        PurchaseDto purchase = mapper.toDto(entity);
+
+        purchase.setItens(purchaseItemmapper
+                .toDto(PurchaseItem.list("purchase.id = ?1 order by product.name", purchase.getId())));
+
+        return purchaseAppMapper.to(purchase);
+    }
+
     public PurchaseDto findDtoById(Long id) {
         Purchase entity = findById(id);
 
         PurchaseDto purchase = mapper.toDto(entity);
 
         purchase.setItens(purchaseItemmapper
-                .toDto(PurchaseItem.list("purchase.id = ?1 Purchase by product.name", purchase.getId())));
+                .toDto(PurchaseItem.list("purchase.id = ?1 order by product.name", purchase.getId())));
 
         return purchase;
     }
 
+
     @Transactional
-    public PurchaseDto saveDto(PurchaseDto dto) {
+    public PurchaseDto saveDto(PurchaseDto dto, UserPortal buyer, Supplier supplier) {
         Purchase purchase = mapper.toEntity(dto);
         purchase.setCreatedOn(LocalDateTime.now());
 
-        UserPortal userPortal = UserPortal.find("email", tokenService.getUserEmail()).firstResult();
-
-        purchase.setBuyer(dto.getIdBuyer() !=null?UserPortal.findById(dto.getIdBuyer()):userPortal!=null?userPortal:UserPortal.findById(dto.getBuyer() != null && dto.getBuyer().getId() !=null?dto.getBuyer().getId():dto.getIdBuyer()));
-        purchase.setSupplier(Supplier.findById(dto.getSupplier() != null && dto.getSupplier().getId() !=null?dto.getSupplier().getId(): dto.getIdSupplier()));
+        purchase.setBuyer(buyer);
+        purchase.setSupplier(supplier);
         purchase.setSystemId(tokenService.getSystemId());
         BigDecimal totalValueProducts = dto.getItens().stream().map(PurchaseItemDto::getTotalValue).reduce(BigDecimal.ZERO, BigDecimal::add);
         purchase.setTotalValue(totalValueProducts);
@@ -186,6 +226,26 @@ public class PurchaseService extends BaseService<Purchase> {
         }
 
         return mapper.toDto(purchase);
+    }
+
+    @Transactional
+    public PurchaseDto saveDto(PurchaseDto dto) {
+
+        UserPortal buyer = UserPortal.findById(dto.getBuyer().getId());
+        Supplier supplier = Supplier.findById(dto.getSupplier().getId());
+
+        return  saveDto( dto,  buyer,  supplier);
+    }
+
+    @Transactional
+    public PurchaseAppDto saveDtoFromApp(PurchaseAppDto appDto) {
+
+        UserPortal buyer = appDto.getIdBuyer() !=null?UserPortal.findById(appDto.getIdBuyer()):UserPortal.find("email", tokenService.getUserEmail()).firstResult();
+        Supplier supplier = Supplier.findById(appDto.getIdSupplier());
+
+        PurchaseDto purchaseDto = saveDto( purchaseAppMapper.from(appDto),  buyer,  supplier);
+
+        return purchaseAppMapper.to(purchaseDto);
     }
 
     private void savePackageType(Purchase purchase, PurchaseItem purchaseItem, Product product) {

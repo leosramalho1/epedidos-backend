@@ -10,7 +10,6 @@ import org.apache.commons.collections.CollectionUtils;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 
@@ -28,10 +27,7 @@ public class PurchaseDto {
     @JsonSerialize(using = MoneySerializer.class)
     private BigDecimal valueCharged;
     private String createdOn;
-    private Long idSupplier;
-    private String supplierName;
-    private Long idBuyer;
-    private Long payNumber;
+    private Integer payNumber;
     private String payMethod;
 
     @JsonSerialize(using = MoneySerializer.class)
