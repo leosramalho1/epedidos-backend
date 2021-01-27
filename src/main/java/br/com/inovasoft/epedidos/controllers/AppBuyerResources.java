@@ -22,6 +22,7 @@ import javax.ws.rs.core.Response;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 
+import br.com.inovasoft.epedidos.models.dtos.ChangePassDto;
 import br.com.inovasoft.epedidos.models.dtos.LoginDto;
 import br.com.inovasoft.epedidos.models.dtos.PurchaseAppDto;
 import br.com.inovasoft.epedidos.models.dtos.PurchaseDto;
@@ -57,15 +58,15 @@ public class AppBuyerResources {
     @PUT
     @Path("/changePass")
     @RolesAllowed(JwtRoles.USER_APP_BUYER)
-    public Response changePass(UserPortal user) {
-        if (user.getPassword() == null) {
+    public Response changePass(ChangePassDto changePassDto) {
+        if (changePassDto.getPassword() == null) {
             throw new WebApplicationException(Response.status(400).entity("Nova senha é obrigatório").build());
         }
-        if (user.getConfirmPassword() == null) {
+        if (changePassDto.getConfirmPassword() == null) {
             throw new WebApplicationException(Response.status(400).entity("Confirmação senha é obrigatório").build());
         }
 
-        service.changePassword(user.getPassword(), user.getConfirmPassword());
+        service.changePassword(changePassDto.getPassword(), changePassDto.getConfirmPassword());
 
         return Response.status(Response.Status.CREATED).build();
 
@@ -140,7 +141,7 @@ public class AppBuyerResources {
     @Path("/purchases/{id}")
     @RolesAllowed(JwtRoles.USER_APP_BUYER)
     @Transactional
-    public Response change(@PathParam("id") Long idPurchase, @Valid PurchaseDto purchaseDto)
+    public Response change(@PathParam("id") Long idPurchase, @Valid PurchaseAppDto purchaseDto)
             throws IllegalAccessException, InvocationTargetException {
         return Response.status(Response.Status.OK).entity(purchaseService.update(idPurchase, purchaseDto)).build();
     }

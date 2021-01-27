@@ -242,6 +242,12 @@ public class PurchaseService extends BaseService<Purchase> {
     }
 
     @Transactional
+    public PurchaseAppDto update(Long id, PurchaseAppDto dto) {
+        PurchaseDto result = update( id,  purchaseAppMapper.from(dto));
+        return purchaseAppMapper.to(result);
+    }
+
+    @Transactional
     public PurchaseDto update(Long id, PurchaseDto dto) {
         Purchase entity = Purchase.findById(id);
 
