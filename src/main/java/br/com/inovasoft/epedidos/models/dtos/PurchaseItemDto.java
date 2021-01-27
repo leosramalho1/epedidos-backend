@@ -1,6 +1,9 @@
 package br.com.inovasoft.epedidos.models.dtos;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
+import br.com.inovasoft.epedidos.models.dtos.serializers.MoneySerializer;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -17,9 +20,13 @@ public class PurchaseItemDto {
     private Long idProduct;
     private String nameProduct;
     private Integer quantity;
+    @JsonSerialize(using = MoneySerializer.class)
     private BigDecimal unitValue;
+    @JsonSerialize(using = MoneySerializer.class)
     private BigDecimal totalValue;
+    @JsonSerialize(using = MoneySerializer.class)
     private BigDecimal valueCharged;
+    @JsonSerialize(using = MoneySerializer.class)
     private BigDecimal averageValue;
 
     public PurchaseItemDto(Long idProduct, String nameProduct, Integer quantity) {
@@ -28,26 +35,4 @@ public class PurchaseItemDto {
         this.quantity = quantity;
     }
 
-    public BigDecimal getTotalValue() {
-        if(Objects.isNull(totalValue) && Objects.nonNull(quantity)
-                && Objects.nonNull(unitValue)) {
-            return unitValue.multiply(BigDecimal.valueOf(quantity));
-        }
-
-        return Optional.ofNullable(totalValue).orElse(BigDecimal.ONE);
-    }
-
-    public BigDecimal getValueCharged() {
-        return Optional.ofNullable(valueCharged).orElse(getTotalValue());
-    }
-
-    public BigDecimal getAverageValue() {
-        if(getTotalValue().intValue() > 0){
-        return Optional.ofNullable(averageValue)
-                .orElse(getTotalValue()
-                        .divide(BigDecimal.valueOf(quantity!=null && quantity>0?quantity:1), 2, RoundingMode.HALF_UP));
-        }else{
-            return BigDecimal.ZERO;
-        }
-    }
 }
