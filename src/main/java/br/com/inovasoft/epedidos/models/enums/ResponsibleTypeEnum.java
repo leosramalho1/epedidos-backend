@@ -8,7 +8,7 @@ import java.util.stream.Stream;
 
 public enum ResponsibleTypeEnum {
 
-    Cliente("Cliente"), Fornecedor("Fornecedor");
+    CUSTOMER("Cliente"), SUPPLIER("Fornecedor");
 
     @Getter(onMethod = @__(@JsonValue))
     private final String description;

@@ -14,6 +14,7 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.math.BigDecimal;
+import java.util.List;
 
 @Data
 @Entity
@@ -73,6 +74,9 @@ public class Customer extends BaseEntity {
 
     @Column(name = "cobranca_valor")
     private BigDecimal payValue;
+
+    @OneToMany(targetEntity = AccountToReceive.class, mappedBy = "customer")
+    private List<AccountToReceive> itens;
 
     @PrePersist
     @PreUpdate

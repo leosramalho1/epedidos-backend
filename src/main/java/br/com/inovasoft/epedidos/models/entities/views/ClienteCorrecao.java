@@ -3,6 +3,8 @@ package br.com.inovasoft.epedidos.models.entities.views;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.Comparator;
 
@@ -12,7 +14,8 @@ public class ClienteCorrecao implements Comparable<ClienteCorrecao> {
 
     private Long id;
     private String nome;
-    @JsonProperty("total_pedido")
+    @Setter(onMethod_ = @JsonProperty("total_pedido"))
+    @Getter(onMethod_ = @JsonProperty("totalPedido"))
     private Integer totalPedido;
     private boolean changed;
 

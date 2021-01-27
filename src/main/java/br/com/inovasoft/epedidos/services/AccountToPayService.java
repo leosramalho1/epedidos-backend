@@ -1,6 +1,8 @@
 package br.com.inovasoft.epedidos.services;
 
 import br.com.inovasoft.epedidos.mappers.AccountToPayMapper;
+import br.com.inovasoft.epedidos.mappers.CustomerMapper;
+import br.com.inovasoft.epedidos.mappers.OrderMapper;
 import br.com.inovasoft.epedidos.models.dtos.AccountToPayDto;
 import br.com.inovasoft.epedidos.models.dtos.PaginationDataResponse;
 import br.com.inovasoft.epedidos.models.entities.AccountToPay;
@@ -20,9 +22,16 @@ import java.util.List;
 @ApplicationScoped
 public class AccountToPayService extends BillingService<AccountToPay, AccountToPayDto> {
 
+    CustomerMapper customerMapper;
+
+    OrderMapper orderMapper;
+
     @Inject
-    AccountToPayService(AccountToPayMapper mapper, TokenService tokenService) {
+    AccountToPayService(AccountToPayMapper mapper, TokenService tokenService, CustomerMapper customerMapper,
+                        OrderMapper orderMapper) {
         super(mapper, tokenService);
+        this.customerMapper = customerMapper;
+        this.orderMapper = orderMapper;
     }
 
     @Override
@@ -34,7 +43,7 @@ public class AccountToPayService extends BillingService<AccountToPay, AccountToP
         return new PaginationDataResponse<>(mapper.toDto(dataList), limitPerPage,
                 (int) AccountToPay.count(query, params));
     }
-
+    
     public AccountToPay findById(Long id) {
         return AccountToPay
                 .find("select p from AccountToPay p where p.id = ?1 and p.systemId = ?2 and p.deletedOn is null", id,

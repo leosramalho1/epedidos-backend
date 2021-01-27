@@ -24,8 +24,8 @@ public class PurchaseResources {
 
     @GET
     @RolesAllowed(JwtRoles.USER_BACKOFFICE)
-    public Response listAll(@QueryParam("page") int page, @QueryParam("idBuyer") Long idBuyer) {
-        return Response.status(Response.Status.OK).entity(idBuyer==null?service.listAll(page): service.listAllByBuyer(page, idBuyer)).build();
+    public Response listAll(@QueryParam("page") int page, @QueryParam("supplier") Long idSupplier, @QueryParam("idBuyer") Long idBuyer) {
+        return Response.status(Response.Status.OK).entity(service.listAll(page, idSupplier, idBuyer)).build();
     }
 
     @GET

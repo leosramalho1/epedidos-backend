@@ -2,8 +2,10 @@ package br.com.inovasoft.epedidos.controllers;
 
 import br.com.inovasoft.epedidos.models.dtos.CustomerAddressDto;
 import br.com.inovasoft.epedidos.models.dtos.CustomerDto;
+import br.com.inovasoft.epedidos.models.dtos.PaginationDataResponse;
 import br.com.inovasoft.epedidos.security.TokenService;
 import br.com.inovasoft.epedidos.security.jwt.JwtRoles;
+import br.com.inovasoft.epedidos.services.AccountToReceiveService;
 import br.com.inovasoft.epedidos.services.CustomerAddressService;
 import br.com.inovasoft.epedidos.services.CustomerService;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
@@ -33,10 +35,33 @@ public class CustomerResources {
     @Inject
     CustomerAddressService customerAddressService;
 
+    @Inject
+    AccountToReceiveService accountToReceiveService;
+
     @GET
     @RolesAllowed(JwtRoles.USER_BACKOFFICE)
     public Response listAll(@QueryParam("page") int page) {
         return Response.status(Response.Status.OK).entity(service.listAll(page)).build();
+    }
+
+    @GET
+    @Path("/{id}/billings")
+    @RolesAllowed(JwtRoles.USER_BACKOFFICE)
+    public Response listAllCostumerBillingByCustomer(@QueryParam("page") int page, @PathParam("id") Long idCustomer) {
+
+        PaginationDataResponse<CustomerDto> list;
+
+        list = accountToReceiveService.buildAllByCustomer(page);
+
+        return Response.status(Response.Status.OK).entity(list).build();
+    }
+
+    @GET
+    @Path("/billings")
+    @RolesAllowed(JwtRoles.USER_BACKOFFICE)
+    public PaginationDataResponse<CustomerDto> listAllCostumerBilling(
+            @QueryParam("page") int page) {
+        return accountToReceiveService.buildAllByCustomer(page);
     }
 
     @GET

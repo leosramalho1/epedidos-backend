@@ -32,15 +32,18 @@ public interface Billing {
     }
 
     default boolean isPaid() {
-        return getPaidOutValue().compareTo(totalValue()) >= 0 && getPaidOutDate() != null;
+        return Optional.ofNullable(getPaidOutValue()).orElse(BigDecimal.ZERO)
+                .compareTo(totalValue()) >= 0 && getPaidOutDate() != null;
     }
 
     default boolean isPartiallyPaid() {
-        return getPaidOutValue().compareTo(totalValue()) < 0 && !isOverdueNotPaid();
+        return Optional.ofNullable(getPaidOutValue()).orElse(BigDecimal.ZERO)
+                .compareTo(totalValue()) < 0 && !isOverdueNotPaid();
     }
 
     default boolean isAwaitingPaid() {
-        return getPaidOutValue().compareTo(BigDecimal.ZERO) == 0 && !isOverdueNotPaid();
+        return Optional.ofNullable(getPaidOutValue()).orElse(BigDecimal.ZERO)
+                .compareTo(BigDecimal.ZERO) == 0 && !isOverdueNotPaid();
     }
 
     default boolean isOverdueNotPaid() {

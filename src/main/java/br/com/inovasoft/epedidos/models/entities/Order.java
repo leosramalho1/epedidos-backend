@@ -63,4 +63,13 @@ public class Order extends BaseEntity {
     @OneToOne(targetEntity = AccountToReceive.class)
     private AccountToReceive accountToReceive;
 
+    @PreUpdate
+    @PrePersist
+    public void prePersist() {
+        if(status == OrderEnum.FINISHED) {
+            totalLiquidProductsRealized = totalLiquidProducts;
+            totalValueProductsRealized = totalValueProducts;
+            totalProductsRealized = totalProducts;
+        }
+    }
 }

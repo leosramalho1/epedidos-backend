@@ -4,6 +4,8 @@ import br.com.inovasoft.epedidos.models.enums.PackageTypeEnum;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.commons.collections.CollectionUtils;
 
 import java.math.BigDecimal;
@@ -21,7 +23,8 @@ public class ProdutoCorrecao {
     private String nome;
     private BigDecimal peso;
     private Long totalComprado;
-    @JsonProperty("tipo_embalagem")
+    @Setter(onMethod_ = @JsonProperty("tipo_embalagem"))
+    @Getter(onMethod_ = @JsonProperty("tipoEmbalagem"))
     private PackageTypeEnum tipoEmbalagem;
     private SortedSet<ClienteCorrecao> clientes;
     private Set<PedidoCorrecao> pedidos;

@@ -1,7 +1,6 @@
 package br.com.inovasoft.epedidos.models.enums;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonValue;
 import lombok.Getter;
 
 import java.util.stream.Stream;
@@ -12,7 +11,7 @@ public enum PayStatusEnum {
     OPEN("AGUARDANDANDO_PAGAMENTO"), PARTIALLY_PAID("PARCIALMENTE_PAGO"),
     PAID_OVERDUE("PAGO_EM_ATRASO");
 
-    @Getter(onMethod = @__(@JsonValue))
+    @Getter
     private final String description;
 
     PayStatusEnum(String description) {

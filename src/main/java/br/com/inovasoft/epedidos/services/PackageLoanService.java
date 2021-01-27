@@ -65,12 +65,12 @@ public class PackageLoanService extends BaseService<PackageLoan> {
         Parameters parameters = Parameters.with("systemId", tokenService.getSystemId());
 
         ResponsibleTypeEnum typeEnum = ResponsibleTypeEnum.fromValue(responsibleType);
-        if(ResponsibleTypeEnum.Cliente == typeEnum) {
+        if(ResponsibleTypeEnum.CUSTOMER == typeEnum) {
             query += " and p.customer is not null and p.supplier is null";
             if(StringUtils.isNotBlank(responsibleName)) {
                 query += " and lower(p.customer.name) like lower('%" + responsibleName + "%')";
             }
-        } else if(ResponsibleTypeEnum.Fornecedor == typeEnum) {
+        } else if(ResponsibleTypeEnum.SUPPLIER == typeEnum) {
             query += " and p.customer is null and p.supplier is not null";
             if(StringUtils.isNotBlank(responsibleName)) {
                 query += " and lower(p.supplier.name) like lower('%" + responsibleName + "%')";

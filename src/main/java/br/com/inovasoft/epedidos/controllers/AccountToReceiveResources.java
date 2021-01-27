@@ -28,7 +28,7 @@ public class AccountToReceiveResources {
     AccountToReceiveService service;
 
     @GET
-//    @RolesAllowed(JwtRoles.USER_BACKOFFICE)
+    @RolesAllowed(JwtRoles.USER_BACKOFFICE)
     public Response listAll(@QueryParam("page") int page, @QueryParam("status") List<PayStatusEnum> status,
                             @QueryParam("customer") Long customer, @QueryParam("dueDateMin") String dueDateMin,
                             @QueryParam("dueDateMax") String dueDateMax, @QueryParam("paidOutDateMin") String paidOutDateMin,

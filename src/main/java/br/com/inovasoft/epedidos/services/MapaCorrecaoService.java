@@ -42,7 +42,7 @@ public class MapaCorrecaoService extends BaseService<MapaCorrecaoPedidos> {
         return new PaginationDataResponse<>(dataList, limitPerPage, (int) MapaCorrecaoPedidos.count("systemId", systemId));
     }
 
-    public PaginationDataResponse<MapaCorrecaoPedidos> update(List<ProdutoCorrecao> produtosCorrecao) {
+    public void update(List<ProdutoCorrecao> produtosCorrecao) {
 
         produtosCorrecao.stream()
                 .filter(ProdutoCorrecao::isChangedOrhasCustomerChanged)
@@ -68,13 +68,11 @@ public class MapaCorrecaoService extends BaseService<MapaCorrecaoPedidos> {
                                     order.setTotalValueProductsRealized(value);
                                     order.setTotalLiquidProductsRealized(value);
                                     order.setStatus(OrderEnum.FINISHED);
-                                    order.persist();
-
+                                    order.persistAndFlush();
                                 }
                             });
                 });
 
-        return listAll(1, Optional.empty());
     }
 
     public OrderItem changeOrderItem(Long id, Integer realizedAmount, ProdutoCorrecao produtoCorrecao, ClienteCorrecao clienteCorrecao) {

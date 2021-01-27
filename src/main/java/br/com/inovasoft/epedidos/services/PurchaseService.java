@@ -1,46 +1,29 @@
 package br.com.inovasoft.epedidos.services;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-import javax.transaction.Transactional;
-
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.collections.MapUtils;
-
 import br.com.inovasoft.epedidos.mappers.PurchaseAppMapper;
 import br.com.inovasoft.epedidos.mappers.PurchaseItemMapper;
 import br.com.inovasoft.epedidos.mappers.PurchaseMapper;
-import br.com.inovasoft.epedidos.models.dtos.PaginationDataResponse;
-import br.com.inovasoft.epedidos.models.dtos.PurchaseAppDto;
-import br.com.inovasoft.epedidos.models.dtos.PurchaseDto;
-import br.com.inovasoft.epedidos.models.dtos.PurchaseGroupDto;
-import br.com.inovasoft.epedidos.models.dtos.PurchaseItemDto;
-import br.com.inovasoft.epedidos.models.dtos.UserPortalDto;
-import br.com.inovasoft.epedidos.models.entities.AccountToPay;
-import br.com.inovasoft.epedidos.models.entities.OrderItem;
-import br.com.inovasoft.epedidos.models.entities.PackageLoan;
-import br.com.inovasoft.epedidos.models.entities.Product;
-import br.com.inovasoft.epedidos.models.entities.Purchase;
-import br.com.inovasoft.epedidos.models.entities.PurchaseItem;
-import br.com.inovasoft.epedidos.models.entities.Supplier;
-import br.com.inovasoft.epedidos.models.entities.UserPortal;
+import br.com.inovasoft.epedidos.models.dtos.*;
+import br.com.inovasoft.epedidos.models.entities.*;
 import br.com.inovasoft.epedidos.models.enums.OrderEnum;
 import br.com.inovasoft.epedidos.models.enums.PackageTypeEnum;
 import br.com.inovasoft.epedidos.security.TokenService;
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import io.quarkus.panache.common.Page;
+import io.quarkus.panache.common.Parameters;
 import io.quarkus.panache.common.Sort;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.MapUtils;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+import javax.transaction.Transactional;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class PurchaseService extends BaseService<Purchase> {
@@ -57,28 +40,26 @@ public class PurchaseService extends BaseService<Purchase> {
     @Inject
     PurchaseItemMapper purchaseItemmapper;
 
-    public PaginationDataResponse<PurchaseDto> listAll(int page) {
-        String query = "systemId = ?1 and deletedOn is null";
-        PanacheQuery<Purchase> listPurchases = Purchase.find(query, Sort.by("id").descending(),
-                tokenService.getSystemId());
+    public PaginationDataResponse<PurchaseDto> listAll(int page, Long supplier, Long buyer) {
+        Parameters parameters = Parameters.with("systemId", tokenService.getSystemId());
+        String query = "systemId = :systemId and deletedOn is null";
+
+        if (supplier != null) {
+            query += " and supplier.id = :supplier";
+            parameters.and("supplier", supplier);
+        }
+
+        if (buyer != null) {
+            query += " and buyer.id = :buyer";
+            parameters.and("buyer", buyer);
+        }
+
+        PanacheQuery<Purchase> listPurchases = Purchase.find(query, Sort.by("id").descending(), parameters);
 
         List<Purchase> dataList = listPurchases.page(Page.of(page - 1, limitPerPage)).list();
 
         return new PaginationDataResponse<>(mapper.toDto(dataList), limitPerPage,
-                (int) Purchase.count(query, tokenService.getSystemId()));
-    }
-
-    public PaginationDataResponse<PurchaseDto> listAllByBuyer(int page, Long idBuyer) {
-        
-        String query = "systemId = ?1 and buyer.id =?2 and deletedOn is null";
-        PanacheQuery<Purchase> listPurchases = Purchase.find(query, Sort.by("id").descending(),
-                tokenService.getSystemId(), idBuyer);
-      
-
-        List<Purchase> dataList = listPurchases.page(Page.of(page - 1, limitPerPage)).list();
-
-        return new PaginationDataResponse<>(mapper.toDto(dataList), limitPerPage,
-                (int) Purchase.count(query, tokenService.getSystemId(), idBuyer));
+                (int) Purchase.count(query, parameters));
     }
 
 

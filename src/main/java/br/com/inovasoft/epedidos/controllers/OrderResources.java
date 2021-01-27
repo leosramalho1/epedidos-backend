@@ -80,9 +80,8 @@ public class OrderResources {
     @Path("/map")
     @Transactional
     @RolesAllowed(JwtRoles.USER_BACKOFFICE)
-    public Response update(List<ProdutoCorrecao> produtosCorrecao) {
-        return Response.status(Response.Status.OK)
-                .entity(mapaCorrecaoService.update(produtosCorrecao)).build();
+    public void update(List<ProdutoCorrecao> produtosCorrecao) {
+        mapaCorrecaoService.update(produtosCorrecao);
     }
 
 }
