@@ -24,9 +24,9 @@ public class Purchase extends BaseEntity {
 
     private static final long serialVersionUID = 7699908322410433370L;
 
-    public Purchase(Long id, String supplierName, LocalDateTime createdOn, BigDecimal totalValue ){
+    public Purchase(Long id, Supplier supplier, LocalDateTime createdOn, BigDecimal totalValue ){
         this.id = id;
-        this.supplierName = supplierName;
+        this.supplier = supplier;
         super.setCreatedOn(createdOn);
         this.totalValue = totalValue;
     }

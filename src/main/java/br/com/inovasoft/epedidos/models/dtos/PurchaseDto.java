@@ -29,18 +29,10 @@ public class PurchaseDto {
     private String createdOn;
     private Integer payNumber;
     private String payMethod;
-
     @JsonSerialize(using = MoneySerializer.class)
-    public BigDecimal getTotalValue() {
-        if(CollectionUtils.isNotEmpty(itens)) {
-            return itens.stream()
-                    .map(PurchaseItemDto::getTotalValue)
-                    .filter(Objects::nonNull)
-                    .reduce(new BigDecimal("0.0"), BigDecimal::add);
-        }
-        return new BigDecimal("0.0");
-    }
+    private BigDecimal totalValue;
 
+  
     @JsonSerialize(using = MoneySerializer.class)
     public BigDecimal getAverageValue() {
         if(CollectionUtils.isNotEmpty(itens)) {
@@ -61,17 +53,5 @@ public class PurchaseDto {
         }
 
         return 0;
-    }
-
-    @JsonSerialize(using = MoneySerializer.class)
-    public BigDecimal getValueCharged() {
-        if(CollectionUtils.isNotEmpty(itens)) {
-            return itens.stream()
-                    .map(PurchaseItemDto::getValueCharged)
-                    .filter(Objects::nonNull)
-                    .reduce(new BigDecimal("0.0"), BigDecimal::add);
-        }
-
-        return new BigDecimal("0.0");
     }
 }
