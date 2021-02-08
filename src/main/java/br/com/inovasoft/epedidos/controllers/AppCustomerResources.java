@@ -9,6 +9,7 @@ import br.com.inovasoft.epedidos.models.entities.UserPortal;
 import br.com.inovasoft.epedidos.models.enums.StatusEnum;
 import br.com.inovasoft.epedidos.security.TokenService;
 import br.com.inovasoft.epedidos.security.jwt.JwtRoles;
+import br.com.inovasoft.epedidos.services.AccountToReceiveService;
 import br.com.inovasoft.epedidos.services.CustomerService;
 import br.com.inovasoft.epedidos.services.OrderService;
 import br.com.inovasoft.epedidos.services.ProductService;
@@ -43,6 +44,9 @@ public class AppCustomerResources {
     
     @Inject
     ProductService productService;
+
+    @Inject
+    AccountToReceiveService accountToReceiveService;
 
     @PUT
     @Path("/changePass")
@@ -113,6 +117,20 @@ public class AppCustomerResources {
     @Path("/products")
     public Response listToGrid() {
         return Response.status(Response.Status.OK).entity(productService.listProductsToGrid()).build();
+    }
+
+    @GET
+    @RolesAllowed(JwtRoles.USER_APP_CUSTOMER)
+    @Path("/billings")
+    public Response listBillings() {
+        return Response.status(Response.Status.OK).entity(accountToReceiveService.listBillings()).build();
+    }
+
+    @GET
+    @RolesAllowed(JwtRoles.USER_APP_CUSTOMER)
+    @Path("/billings/{id}/orders")
+    public Response listToGrid(@PathParam("id") Long idAccountToReceive) {
+        return Response.status(Response.Status.OK).entity(orderService.listAllByCustomerAndAccounttoReceive(idAccountToReceive)).build();
     }
 
 

@@ -188,6 +188,13 @@ public class OrderService extends BaseService<Order> {
 		return mapper.toDto(listOrders.list());
 	}
 
+    public List<OrderDto> listAllByCustomerAndAccounttoReceive(Long idAccountToReceive) {
+        PanacheQuery<Order> listOrders = Order.find(
+            "select p from Order p where p.systemId = ?1 and p.customer.cpfCnpj=?2 and p.accountToReceive.id=?3 and p.deletedOn is null order by p.id desc", tokenService.getSystemId(),tokenService.getJsonWebToken().getSubject(),idAccountToReceive);
+
+		return mapper.toDto(listOrders.list());
+	}
+
 
     public void scheduler(Long buyerId) {
 

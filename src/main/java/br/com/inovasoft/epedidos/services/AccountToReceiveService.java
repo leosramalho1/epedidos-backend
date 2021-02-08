@@ -129,4 +129,14 @@ public class AccountToReceiveService extends BillingService<AccountToReceive, Ac
         accountToReceive.setOriginalValue(originalValue);
         return accountToReceive;
     }
+
+	public List<AccountToReceiveDto> listBillings() {
+
+        PanacheQuery<AccountToReceive> listAccountToReceive= AccountToReceive.find(
+                "select p from AccountToReceive p where p.systemId = ?1 and p.customer.cpfCnpj=?2  and p.deletedOn is null order by p.id desc", tokenService.getSystemId(),tokenService.getJsonWebToken().getSubject());
+    
+        return mapper.toDto(listAccountToReceive.list());
+	}
+
+
 }
