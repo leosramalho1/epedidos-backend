@@ -15,7 +15,6 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -28,13 +27,13 @@ public class ProductService extends BaseService<Product> {
     @Inject
     ProductMapper mapper;
 
-    public PaginationDataResponse listAll(int page) {
+    public PaginationDataResponse<ProductDto> listAll(int page) {
         PanacheQuery<Product> listProducts = Product.find(
                 "select p from Product p where p.systemId = ?1 and p.deletedOn is null", tokenService.getSystemId());
 
         List<Product> dataList = listProducts.page(Page.of(page - 1, limitPerPage)).list();
 
-        return new PaginationDataResponse(mapper.toDto(dataList), limitPerPage, (int) Product.count());
+        return new PaginationDataResponse<>(mapper.toDto(dataList), limitPerPage, (int) Product.count());
     }
 
     public List<OrderItemDto> listProductsToGrid() {
@@ -42,28 +41,9 @@ public class ProductService extends BaseService<Product> {
                 "select p from Product p where p.systemId = ?1 and p.deletedOn is null order by p.name",
                 tokenService.getSystemId());
 
-        return listProducts.list().stream().map(item -> new OrderItemDto(item.getId(), item.getName(), BigDecimal.ONE))
+        return listProducts.list().stream()
+                .map(item -> new OrderItemDto(item.getId(), item.getName()))
                 .collect(Collectors.toList());
-    }
-
-    
-
-    public PaginationDataResponse listProductsBySystemKey(String systemKey, int page) {
-        PanacheQuery<Product> listProducts = Product.find(
-                "select p from Product p, CompanySystem c where p.systemId = c.id and c.systemKey = ?1 and p.deletedOn is null",
-                systemKey);
-
-        List<Product> dataList = listProducts.page(Page.of(page - 1, limitPerPage)).list();
-
-        return new PaginationDataResponse(mapper.toDto(dataList), limitPerPage, (int) Product.count());
-    }
-
-    public ProductDto findProductsBySystemKeyAndId(String systemKey, Long id) {
-        Product product = Product.find(
-                "select p from Product p, CompanySystem c where p.systemId = c.id and c.systemKey = ?1 and p.id =?2 and p.deletedOn is null",
-                systemKey, id).firstResult();
-
-        return mapper.toDto(product);
     }
 
     public Product findById(Long id) {

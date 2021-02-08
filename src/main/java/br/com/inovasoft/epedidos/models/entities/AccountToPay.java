@@ -2,8 +2,8 @@ package br.com.inovasoft.epedidos.models.entities;
 
 import br.com.inovasoft.epedidos.models.BaseEntity;
 import br.com.inovasoft.epedidos.models.enums.PayStatusEnum;
-import br.com.inovasoft.epedidos.models.enums.converters.PayStatusEnumConverter;
 import lombok.*;
+import org.hibernate.envers.Audited;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
@@ -11,13 +11,18 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Objects;
 
+import static org.hibernate.envers.RelationTargetAuditMode.NOT_AUDITED;
+
 @Data
 @Entity
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
-@Table(name = "conta_pagar")
+@Table(name = "conta_pagar", indexes = {
+        @Index(name = "conta_pagar_index_sistema", columnList = "sistema_id"),
+        @Index(name = "conta_pagar_index_fornecedor", columnList = "fornecedor_id") })
+@Audited
 public class AccountToPay extends BaseEntity implements Billing {
 
     private static final long serialVersionUID = 904648166038765L;
@@ -28,15 +33,16 @@ public class AccountToPay extends BaseEntity implements Billing {
     private Long id;
 
     @NotNull
+    @Audited(targetAuditMode = NOT_AUDITED)
     @JoinColumn(name = "fornecedor_id")
     @ManyToOne(targetEntity = Supplier.class)
     private Supplier supplier;
 
     @NotNull
-    @Column(name = "valor")
+    @Column(name = "valor", scale = 2)
     private BigDecimal originalValue;
 
-    @Column(name = "tax")
+    @Column(name = "tax", scale = 2)
     private BigDecimal taxValue;
 
     @NotNull
@@ -44,7 +50,7 @@ public class AccountToPay extends BaseEntity implements Billing {
     private LocalDate dueDate;
 
     @NotNull
-    @Column(name = "valor_pago")
+    @Column(name = "valor_pago", scale = 2)
     private BigDecimal paidOutValue;
 
     @Column(name = "data_pagamento")
@@ -56,9 +62,10 @@ public class AccountToPay extends BaseEntity implements Billing {
     @Column(name = "sistema_id")
     private Long systemId;
 
+    @NotNull
     @Column(name = "situacao")
     @Getter(AccessLevel.NONE)
-    @Convert(converter = PayStatusEnumConverter.class)
+    @Enumerated(EnumType.STRING)
     private PayStatusEnum status;
 
     @PrePersist
@@ -70,6 +77,8 @@ public class AccountToPay extends BaseEntity implements Billing {
         if(Objects.isNull(taxValue)) {
             taxValue = BigDecimal.ZERO;
         }
+
+        status = getStatus();
     }
 
 }

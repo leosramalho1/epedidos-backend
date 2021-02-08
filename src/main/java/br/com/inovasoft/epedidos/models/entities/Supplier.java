@@ -3,9 +3,7 @@ package br.com.inovasoft.epedidos.models.entities;
 import br.com.inovasoft.epedidos.models.BaseEntity;
 import br.com.inovasoft.epedidos.models.enums.StatusEnum;
 import br.com.inovasoft.epedidos.util.FormatUtil;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import javax.persistence.*;
 import javax.validation.constraints.Email;
@@ -15,9 +13,11 @@ import javax.validation.constraints.Size;
 
 @Data
 @Entity
+@Builder
 @NoArgsConstructor
+@AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
-@Table(name = "fornecedor", indexes = { @Index(name = "fornecedor_index_loja", columnList = "sistema_id"),
+@Table(name = "fornecedor", indexes = { @Index(name = "fornecedor_index_sistema", columnList = "sistema_id"),
         @Index(name = "fornecedor_index_cpfCnpj", columnList = "cpfCnpj", unique = true),
         @Index(name = "fornecedor_index_email", columnList = "email", unique = true) })
 public class Supplier extends BaseEntity {

@@ -6,15 +6,18 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
+import javax.validation.ValidationException;
 import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.util.Objects;
+import java.util.Optional;
 
 @Data
 @Entity
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
-@Table(name = "pedido_item", indexes = { @Index(name = "pedido_item_index_pedido", columnList = "pedido_id"),
+@Table(name = "pedido_item", indexes = {
+        @Index(name = "pedido_item_index_pedido", columnList = "pedido_id"),
         @Index(name = "pedido_item_index_produto", columnList = "produto_id") })
 public class OrderItem extends BaseEntity {
 
@@ -39,23 +42,18 @@ public class OrderItem extends BaseEntity {
     @Column(name = "quantidade")
     private Integer quantity;
 
+    @Column(name = "valor_frete_unitario")
+    private BigDecimal unitShippingCost;
+
     @Column(name = "quantidade_adiquirida")
     private Integer realizedAmount;
-
-    @NotNull
-    @Column(name = "valor_unitario")
-    private BigDecimal unitValue;
-
-    @NotNull
-    @Column(name = "valor_total")
-    private BigDecimal totalValue;
 
     @Column(name = "peso")
     private BigDecimal weidth;
 
-    @NotNull
-    @Column(name = "valor_unitario_frete")
-    private BigDecimal unitShippingCost;
+    @Column(name = "quantidade_faturada")
+    private Integer billedQuantity;
+
 
     @PreUpdate
     @PrePersist
@@ -64,24 +62,27 @@ public class OrderItem extends BaseEntity {
             weidth = Objects.isNull(product) ? null : product.getWeidth();
         }
 
-        if(Objects.isNull(unitShippingCost)) {
-            unitShippingCost = Objects.isNull(product) ? BigDecimal.ZERO : product.getShippingCost();
+        if(Objects.isNull(billedQuantity)) {
+            addBilledQuantity(0);
+        } else if(billedQuantity > Optional.ofNullable(realizedAmount).orElse(quantity)){
+            throw new ValidationException("A quantidade faturada não pode ser maior que a quantidade pedida.");
         }
 
-        if(Objects.isNull(unitValue)) {
-            unitValue = BigDecimal.ZERO;
+    }
+
+    public boolean hasQuantityToBilled() {
+        return calculateRemainingQuantity() > 0;
+    }
+
+    public Integer calculateRemainingQuantity() {
+        return Optional.ofNullable(realizedAmount).orElse(quantity) - Optional.ofNullable(billedQuantity).orElse(0);
+    }
+
+    public void addBilledQuantity(Integer billedQuantity) {
+        if(Objects.isNull(this.billedQuantity)) {
+            this.billedQuantity = 0;
         }
-
-        if(Objects.isNull(unitShippingCost)) {
-            unitShippingCost = BigDecimal.ZERO;
-        }
-
-        if(Objects.isNull(totalValue)) {
-            totalValue = unitValue.add(unitShippingCost).multiply(BigDecimal.valueOf(quantity));
-        }
-
-       
-
+        this.billedQuantity += billedQuantity;
     }
 
 }

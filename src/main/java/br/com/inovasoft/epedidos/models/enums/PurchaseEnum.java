@@ -2,18 +2,17 @@ package br.com.inovasoft.epedidos.models.enums;
 
 import lombok.Getter;
 
-public enum OrderEnum {
+public enum PurchaseEnum {
 
     OPEN("ABERTO"),
-    PURCHASE("COMPRA"),
     DISTRIBUTED("DISTRIBUIDO"),
-    FINISHED("FECHADO"),
+    FINISHED("FINALIZADO"),
     CANCELED("CANCELADO");
 
     @Getter
     private final String description;
 
-    OrderEnum(String description) {
+    PurchaseEnum(String description) {
         this.description = description;
     }
 

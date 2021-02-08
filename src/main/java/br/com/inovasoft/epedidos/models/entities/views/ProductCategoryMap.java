@@ -1,6 +1,7 @@
 package br.com.inovasoft.epedidos.models.entities.views;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
@@ -11,16 +12,17 @@ import java.util.Objects;
 @SuperBuilder
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class CategoriaCorrecao {
+public class ProductCategoryMap {
 
     private Long id;
-    private String nome;
+    @JsonProperty(value = "nome")
+    private String name;
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        CategoriaCorrecao other = (CategoriaCorrecao) o;
+        ProductCategoryMap other = (ProductCategoryMap) o;
         return Objects.equals(id, other.id);
     }
 

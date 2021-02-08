@@ -5,17 +5,21 @@ import br.com.inovasoft.epedidos.models.enums.OrderEnum;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
+import org.apache.commons.collections.CollectionUtils;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
-import java.math.BigDecimal;
+import java.util.List;
 
 @Data
 @Entity
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
-@Table(name = "pedido", indexes = { @Index(name = "pedido_index_cliente", columnList = "cliente_id"),
-        @Index(name = "pedido_index_loja", columnList = "sistema_id") })
+@Table(name = "pedido", indexes = {
+        @Index(name = "pedido_index_sistema", columnList = "sistema_id"),
+        @Index(name = "pedido_index_cliente", columnList = "cliente_id"),
+        @Index(name = "pedido_index_situacao", columnList = "situacao") })
 public class Order extends BaseEntity {
 
     private static final long serialVersionUID = 7699908322410433370L;
@@ -34,42 +38,27 @@ public class Order extends BaseEntity {
     private Customer customer;
 
     @NotNull
-    @Column(name = "quantidade_total")
-    private Integer totalProducts;
-
-    @Column(name = "quantidade_total_adiquirida")
-    private Integer totalProductsRealized;
-
-    @NotNull
-    @Column(name = "valor_bruto_total")
-    private BigDecimal totalValueProducts;
-
-    @NotNull
-    @Column(name = "valor_liquido_total")
-    private BigDecimal totalLiquidProducts;
-
-    @Column(name = "valor_bruto_total_adquirido")
-    private BigDecimal totalValueProductsRealized;
-
-    @Column(name = "valor_liquido_total_adquirido")
-    private BigDecimal totalLiquidProductsRealized;
-
-    @NotNull
     @Column(name = "situacao")
     @Enumerated(EnumType.STRING)
     private OrderEnum status;
 
-    @JoinColumn(name = "conta_receber_id")
-    @OneToOne(targetEntity = AccountToReceive.class)
-    private AccountToReceive accountToReceive;
+    @ToString.Exclude
+    @OneToMany(targetEntity = OrderItem.class, mappedBy = "order", orphanRemoval = true)
+    private List<OrderItem> orderItems;
 
     @PreUpdate
     @PrePersist
     public void prePersist() {
-        if(status == OrderEnum.FINISHED) {
-            totalLiquidProductsRealized = totalLiquidProducts;
-            totalValueProductsRealized = totalValueProducts;
-            totalProductsRealized = totalProducts;
+        if(CollectionUtils.isNotEmpty(orderItems) && !hasQuantityToBilled()) {
+            status = OrderEnum.FINISHED;
         }
+    }
+
+    public boolean hasQuantityToBilled() {
+        if(CollectionUtils.isNotEmpty(orderItems)) {
+            return orderItems.stream().anyMatch(OrderItem::hasQuantityToBilled);
+        }
+
+        return false;
     }
 }

@@ -4,12 +4,9 @@ import br.com.inovasoft.epedidos.mappers.AccountToReceiveMapper;
 import br.com.inovasoft.epedidos.mappers.CustomerMapper;
 import br.com.inovasoft.epedidos.mappers.OrderMapper;
 import br.com.inovasoft.epedidos.models.dtos.AccountToReceiveDto;
-import br.com.inovasoft.epedidos.models.dtos.CustomerDto;
 import br.com.inovasoft.epedidos.models.dtos.PaginationDataResponse;
 import br.com.inovasoft.epedidos.models.entities.AccountToReceive;
 import br.com.inovasoft.epedidos.models.entities.Customer;
-import br.com.inovasoft.epedidos.models.entities.Order;
-import br.com.inovasoft.epedidos.models.enums.OrderEnum;
 import br.com.inovasoft.epedidos.security.TokenService;
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import io.quarkus.panache.common.Page;
@@ -21,8 +18,6 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @NoArgsConstructor
 @ApplicationScoped
@@ -35,7 +30,7 @@ public class AccountToReceiveService extends BillingService<AccountToReceive, Ac
     @Inject
     AccountToReceiveService(AccountToReceiveMapper mapper, TokenService tokenService, CustomerMapper customerMapper,
                         OrderMapper orderMapper) {
-        super(mapper, tokenService);
+        super(mapper, tokenService, AccountToReceive.class);
         this.customerMapper = customerMapper;
         this.orderMapper = orderMapper;
     }
@@ -51,41 +46,6 @@ public class AccountToReceiveService extends BillingService<AccountToReceive, Ac
     }
 
 
-    public PaginationDataResponse<CustomerDto> buildAllByCustomer(int page) {
-        String query = "select order from Order order, Customer customer " +
-                "where order.customer.id = customer.id and order.deletedOn is null and customer.deletedOn is null " +
-                "and order.accountToReceive is null and order.systemId = ?1 and order.status = ?2";
-
-        PanacheQuery<Order> list = Order.find(query, tokenService.getSystemId(), OrderEnum.FINISHED);
-
-        List<Order> dataList = list.page(Page.of(page - 1, limitPerPage)).list();
-
-        Map<Customer, List<Order>> ordersByCustomer = dataList.stream()
-                .collect(Collectors.groupingBy(Order::getCustomer));
-
-        List<CustomerDto> collect = ordersByCustomer.entrySet().stream()
-                .map(i -> {
-                    List<AccountToReceiveDto> accountToReceives = orderMapper.toAccountToReceiveDto(i.getValue());
-                    CustomerDto customerDto = customerMapper.toDto(i.getKey());
-                    return customerDto.toBuilder()
-                            .accountToReceives(accountToReceives)
-                            .build();
-                }).collect(Collectors.toList());
-
-        return new PaginationDataResponse<>(collect, limitPerPage, (int) Customer.count());
-    }
-
-    public AccountToReceive findById(Long id) {
-        return AccountToReceive
-                .find("select p from AccountToReceive p where p.id = ?1 and p.systemId = ?2 and p.deletedOn is null",
-                        id, tokenService.getSystemId())
-                .firstResult();
-    }
-
-    public AccountToReceiveDto findDtoById(Long id) {
-        return mapper.toDto(findById(id));
-    }
-
     public AccountToReceiveDto saveDto(AccountToReceiveDto dto) {
         AccountToReceive entity = mapper.toEntity(dto);
         entity.setCustomer(Customer.findById(dto.getCustomer().getId()));
@@ -93,6 +53,19 @@ public class AccountToReceiveService extends BillingService<AccountToReceive, Ac
         super.save(entity);
 
         return mapper.toDto(entity);
+    }
+
+    public AccountToReceive findById(Long id) {
+        return AccountToReceive
+                .find("id = ?1 and systemId = ?2 and deletedOn is null", id,
+                        tokenService.getSystemId())
+                .firstResult();
+    }
+
+    public AccountToReceiveDto findDtoById(Long id) {
+        AccountToReceiveDto accountToReceiveDto = mapper.toDto(findById(id));
+        accountToReceiveDto.setHistory(listHistoryDto(id));
+        return accountToReceiveDto;
     }
 
     public AccountToReceiveDto update(Long id, AccountToReceiveDto dto) {
@@ -134,7 +107,7 @@ public class AccountToReceiveService extends BillingService<AccountToReceive, Ac
 
         PanacheQuery<AccountToReceive> listAccountToReceive= AccountToReceive.find(
                 "select p from AccountToReceive p where p.systemId = ?1 and p.customer.cpfCnpj=?2  and p.deletedOn is null order by p.id desc", tokenService.getSystemId(),tokenService.getJsonWebToken().getSubject());
-    
+
         return mapper.toDto(listAccountToReceive.list());
 	}
 

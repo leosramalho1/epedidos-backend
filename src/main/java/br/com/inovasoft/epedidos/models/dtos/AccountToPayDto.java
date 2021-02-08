@@ -6,6 +6,8 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -20,5 +22,7 @@ public class AccountToPayDto implements BillingDto {
     private LocalDate paidOutDate;
     private PayStatusEnum status;
     private String note;
+    private String updatedOn;
+    private List<AccountToPayDto> history = new ArrayList<>();
 
 }

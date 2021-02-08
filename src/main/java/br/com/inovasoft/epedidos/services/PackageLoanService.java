@@ -3,7 +3,8 @@ package br.com.inovasoft.epedidos.services;
 import br.com.inovasoft.epedidos.mappers.PackageLoanMapper;
 import br.com.inovasoft.epedidos.models.dtos.PackageLoanDto;
 import br.com.inovasoft.epedidos.models.dtos.PaginationDataResponse;
-import br.com.inovasoft.epedidos.models.entities.PackageLoan;
+import br.com.inovasoft.epedidos.models.entities.*;
+import br.com.inovasoft.epedidos.models.enums.PackageTypeEnum;
 import br.com.inovasoft.epedidos.models.enums.ResponsibleTypeEnum;
 import br.com.inovasoft.epedidos.security.TokenService;
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
@@ -128,5 +129,38 @@ public class PackageLoanService extends BaseService<PackageLoan> {
         PackageLoan entity = findById(id);
         entity.setDeletedOn(LocalDateTime.now());
         entity.persist();
+    }
+
+
+    public void registryPackageLoan(OrderItem orderItem) {
+        Product product = orderItem.getProduct();
+        if (product.getPackageType() == PackageTypeEnum.RETURNABLE) {
+            Order order = orderItem.getOrder();
+            Customer customer = order.getCustomer();
+
+            PackageLoan packageLoan = new PackageLoan();
+            packageLoan.setOrderItem(orderItem);
+            packageLoan.setCustomer(customer);
+            packageLoan.setBorrowedAmount(orderItem.getBilledQuantity().longValue());
+            packageLoan.setSystemId(tokenService.getSystemId());
+            packageLoan.setUserChange(tokenService.getUserEmail());
+            packageLoan.persist();
+        }
+    }
+
+    public void registryPackageLoan(PurchaseItem purchaseItem) {
+        Product product = purchaseItem.getProduct();
+        if (product.getPackageType() == PackageTypeEnum.RETURNABLE) {
+            Purchase purchase = purchaseItem.getPurchase();
+            Supplier supplier = purchase.getSupplier();
+
+            PackageLoan packageLoan = new PackageLoan();
+            packageLoan.setPurchaseItem(purchaseItem);
+            packageLoan.setSupplier(supplier);
+            packageLoan.setBorrowedAmount(purchaseItem.getQuantity().longValue());
+            packageLoan.setSystemId(tokenService.getSystemId());
+            packageLoan.setUserChange(tokenService.getUserEmail());
+            packageLoan.persist();
+        }
     }
 }

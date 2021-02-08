@@ -1,36 +1,26 @@
 package br.com.inovasoft.epedidos.models.entities;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Index;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.SequenceGenerator;
-import javax.persistence.Table;
-import javax.persistence.Transient;
-import javax.validation.constraints.Email;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
 import br.com.inovasoft.epedidos.models.BaseEntity;
 import br.com.inovasoft.epedidos.models.enums.RoleEnum;
 import br.com.inovasoft.epedidos.models.enums.StatusEnum;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import lombok.*;
+
+import javax.persistence.*;
+import javax.validation.constraints.Email;
+import javax.validation.constraints.NotBlank;
 
 @Data
 @Entity
+@Builder
 @NoArgsConstructor
+@AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
-@Table(name = "usuario_portal", indexes = { @Index(name = "usuario_portal_index_email", columnList = "email") })
+@JsonIgnoreProperties(ignoreUnknown = true)
+@Table(name = "usuario_portal", indexes = {
+		@Index(name = "usuario_portal_index_email", columnList = "email"),
+		@Index(name = "usuario_portal_index_sistema", columnList = "sistema_id") })
 public class UserPortal extends BaseEntity {
 
 	private static final long serialVersionUID = 8391366118819091299L;

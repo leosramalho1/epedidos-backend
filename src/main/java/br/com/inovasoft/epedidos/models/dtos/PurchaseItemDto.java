@@ -1,22 +1,23 @@
 package br.com.inovasoft.epedidos.models.dtos;
 
+import br.com.inovasoft.epedidos.models.dtos.serializers.MoneySerializer;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-
-import br.com.inovasoft.epedidos.models.dtos.serializers.MoneySerializer;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.util.Objects;
-import java.util.Optional;
 
 @Data
+@Builder
 @NoArgsConstructor
+@AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PurchaseItemDto {
 
+    private Long id;
     private Long idProduct;
     private String nameProduct;
     private Integer quantity;
@@ -25,14 +26,15 @@ public class PurchaseItemDto {
     @JsonSerialize(using = MoneySerializer.class)
     private BigDecimal totalValue;
     @JsonSerialize(using = MoneySerializer.class)
-    private BigDecimal valueCharged;
-    @JsonSerialize(using = MoneySerializer.class)
     private BigDecimal averageValue;
+    @JsonSerialize(using = MoneySerializer.class)
+    private BigDecimal valueCharged;
 
     public PurchaseItemDto(Long idProduct, String nameProduct, Integer quantity) {
         this.idProduct = idProduct;
         this.nameProduct = nameProduct;
         this.quantity = quantity;
     }
+
 
 }

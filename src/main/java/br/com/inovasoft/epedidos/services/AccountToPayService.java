@@ -29,7 +29,7 @@ public class AccountToPayService extends BillingService<AccountToPay, AccountToP
     @Inject
     AccountToPayService(AccountToPayMapper mapper, TokenService tokenService, CustomerMapper customerMapper,
                         OrderMapper orderMapper) {
-        super(mapper, tokenService);
+        super(mapper, tokenService, AccountToPay.class);
         this.customerMapper = customerMapper;
         this.orderMapper = orderMapper;
     }
@@ -52,7 +52,9 @@ public class AccountToPayService extends BillingService<AccountToPay, AccountToP
     }
 
     public AccountToPayDto findDtoById(Long id) {
-        return mapper.toDto(findById(id));
+        AccountToPayDto accountToPayDto = mapper.toDto(findById(id));
+        accountToPayDto.setHistory(listHistoryDto(id));
+        return accountToPayDto;
     }
 
     public AccountToPayDto saveDto(AccountToPayDto dto) {

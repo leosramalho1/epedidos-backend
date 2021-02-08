@@ -17,7 +17,12 @@ import static org.hibernate.envers.RelationTargetAuditMode.NOT_AUDITED;
 @Entity
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
-@Table(name = "emprestimo_embalagem")
+@Table(name = "emprestimo_embalagem", indexes = {
+        @Index(name = "emprestimo_embalagem_index_sistema", columnList = "sistema_id"),
+        @Index(name = "emprestimo_embalagem_index_order_item", columnList = "order_item_id"),
+        @Index(name = "emprestimo_embalagem_index_compra_item", columnList = "compra_item_id"),
+        @Index(name = "emprestimo_embalagem_index_fornecedor", columnList = "fornecedor_id"),
+        @Index(name = "emprestimo_embalagem_index_cliente", columnList = "cliente_id") })
 @Audited
 public class PackageLoan extends BaseEntity {
 

@@ -17,9 +17,9 @@ import javax.persistence.Table;
 @Entity
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
-@Table(name = "mapa_pedidos")
+@Table(name = "mapa_distribuicao")
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class MapaCorrecaoPedidos extends BaseEntity {
+public class OrderDistributionMap extends BaseEntity {
 
     private static final long serialVersionUID = 4219610476537959071L;
 
@@ -33,6 +33,6 @@ public class MapaCorrecaoPedidos extends BaseEntity {
 
     @Type(type = "jsonb")
     @Column(columnDefinition = "jsonb", name = "mapa")
-    private ProdutoCorrecao produtosCorrecao;
+    private ProductMap productMap;
 
 }

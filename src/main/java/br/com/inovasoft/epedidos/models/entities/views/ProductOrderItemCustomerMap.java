@@ -6,9 +6,9 @@ import lombok.Data;
 
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class PedidoCorrecao {
+public class ProductOrderItemCustomerMap {
 
     private Long id;
-    @JsonProperty("cliente_id")
-    private Long cliente;
+    @JsonProperty(value = "cliente")
+    private Long customer;
 }

@@ -1,9 +1,9 @@
 package br.com.inovasoft.epedidos.controllers;
 
 import br.com.inovasoft.epedidos.models.dtos.OrderDto;
-import br.com.inovasoft.epedidos.models.entities.views.ProdutoCorrecao;
+import br.com.inovasoft.epedidos.models.entities.views.ProductMap;
 import br.com.inovasoft.epedidos.security.jwt.JwtRoles;
-import br.com.inovasoft.epedidos.services.MapaCorrecaoService;
+import br.com.inovasoft.epedidos.services.OrderDistributionService;
 import br.com.inovasoft.epedidos.services.OrderService;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 
@@ -28,7 +28,7 @@ public class OrderResources {
     OrderService service;
 
     @Inject
-    MapaCorrecaoService mapaCorrecaoService;
+    OrderDistributionService orderDistributionService;
 
     @GET
     @RolesAllowed(JwtRoles.USER_BACKOFFICE)
@@ -73,15 +73,15 @@ public class OrderResources {
     @RolesAllowed(JwtRoles.USER_BACKOFFICE)
     public Response listAll(@QueryParam("page") int page, @QueryParam("category") Long category) {
         return Response.status(Response.Status.OK)
-                .entity(mapaCorrecaoService.listAll(page, Optional.ofNullable(category))).build();
+                .entity(orderDistributionService.listAll(page, Optional.ofNullable(category))).build();
     }
 
     @PUT
     @Path("/map")
     @Transactional
     @RolesAllowed(JwtRoles.USER_BACKOFFICE)
-    public void update(List<ProdutoCorrecao> produtosCorrecao) {
-        mapaCorrecaoService.update(produtosCorrecao);
+    public void update(List<ProductMap> produtosCorrecao) {
+        orderDistributionService.update(produtosCorrecao);
     }
 
 }

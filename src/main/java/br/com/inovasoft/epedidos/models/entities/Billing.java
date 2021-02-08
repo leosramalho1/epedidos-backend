@@ -85,7 +85,6 @@ public interface Billing {
             return PayStatusEnum.PARTIALLY_PAID;
         }
 
-
         return PayStatusEnum.OPEN;
     }
 }

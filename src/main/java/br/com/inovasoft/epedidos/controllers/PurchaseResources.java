@@ -1,6 +1,7 @@
 package br.com.inovasoft.epedidos.controllers;
 
 import br.com.inovasoft.epedidos.models.dtos.PurchaseDto;
+import br.com.inovasoft.epedidos.models.dtos.PurchaseItemDto;
 import br.com.inovasoft.epedidos.security.jwt.JwtRoles;
 import br.com.inovasoft.epedidos.services.PurchaseService;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
@@ -12,6 +13,7 @@ import javax.validation.Valid;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.util.List;
 
 @Path("/purchase")
 @Consumes(MediaType.APPLICATION_JSON)
@@ -26,6 +28,22 @@ public class PurchaseResources {
     @RolesAllowed(JwtRoles.USER_BACKOFFICE)
     public Response listAll(@QueryParam("page") int page, @QueryParam("supplier") Long idSupplier, @QueryParam("idBuyer") Long idBuyer) {
         return Response.status(Response.Status.OK).entity(service.listAll(page, idSupplier, idBuyer)).build();
+    }
+
+    @GET
+    @Path("/map")
+    @RolesAllowed(JwtRoles.USER_BACKOFFICE)
+    public Response listMap(@QueryParam("page") int page, @QueryParam("supplier") Long idSupplier,
+            @QueryParam("nameProduct") String nameProduct) {
+        return Response.status(Response.Status.OK).entity(service.listMap(page, idSupplier, nameProduct)).build();
+    }
+
+    @PUT
+    @Path("/map")
+    @RolesAllowed(JwtRoles.USER_BACKOFFICE)
+    public Response putMap(List<PurchaseItemDto> purchaseItemsDto) {
+        service.saveMap(purchaseItemsDto);
+        return Response.status(Response.Status.OK).build();
     }
 
     @GET

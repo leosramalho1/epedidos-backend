@@ -1,34 +1,40 @@
 package br.com.inovasoft.epedidos.models.entities;
 
 import br.com.inovasoft.epedidos.models.BaseEntity;
-import br.com.inovasoft.epedidos.models.enums.OrderEnum;
+import br.com.inovasoft.epedidos.models.enums.PurchaseEnum;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 import org.apache.commons.collections.CollectionUtils;
 
 import javax.persistence.*;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 @Data
 @Entity
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
-@Table(name = "compra")
+@Table(name = "compra", indexes = {
+        @Index(name = "compra_index_sistema", columnList = "sistema_id"),
+        @Index(name = "compra_index_comprador", columnList = "comprador_id"),
+        @Index(name = "compra_index_fornecedor", columnList = "fornecedor_id"),
+        @Index(name = "compra_index_situacao", columnList = "situacao") })
 public class Purchase extends BaseEntity {
 
     private static final long serialVersionUID = 7699908322410433370L;
 
-    public Purchase(Long id, Long idSupplier, String nameSupplier, LocalDateTime createdOn, BigDecimal totalValue ){
+    public Purchase(Long id, Long idSupplier, String nameSupplier, LocalDateTime createdOn, BigDecimal totalValue){
         this.id = id;
-        this.supplier = new Supplier();
-        this.supplier.setId(idSupplier);
-        this.supplier.setName(nameSupplier);
+        this.supplier = Supplier.builder().id(idSupplier).name(nameSupplier).build();
         super.setCreatedOn(createdOn);
         this.totalValue = totalValue;
     }
@@ -51,66 +57,99 @@ public class Purchase extends BaseEntity {
     @ManyToOne(targetEntity = Supplier.class)
     private Supplier supplier;
 
+    @Min(value = 1, message = "O valor total deve ser maior que 0")
     @NotNull
-    @Column(name = "valor_total")
+    @Column(name = "valor_total", scale = 4)
     private BigDecimal totalValue;
 
+    @Min(value = 1, message = "A quantidade total deve ser maior que 0")
     @NotNull
-    @Column(name = "valor_cobrado")
-    private BigDecimal valueCharged;
+    @Column(name = "quantidade_total")
+    private Integer totalQuantity;;
 
     @NotNull
     @Column(name = "situacao")
     @Enumerated(EnumType.STRING)
-    private OrderEnum status;
+    private PurchaseEnum status;
 
     @NotNull
     @Column(name = "data_vencimento")
     private LocalDate dueDate;
 
-    @NotNull
     @Column(name = "quantidade_parcela")
     private Integer payNumber;
 
-    @NotNull
     @Column(name = "forma_pagamento")
     private String payMethod;
 
+    @ToString.Exclude
     @OneToMany(targetEntity = PurchaseItem.class, mappedBy = "purchase")
     private List<PurchaseItem> itens;
-    
+
     @Transient
-    String supplierName;
+    private BigDecimal averageValue;
 
     @PreUpdate
     @PrePersist
     public void prePersist(){
-        if(Objects.isNull(totalValue)) {
-            totalValue = calculateTotalValue();
-        }
-        if(Objects.isNull(valueCharged)) {
-            valueCharged = calculateValueCharged();
-        }
+        totalValue = calculateTotalValue(itens, totalValue);
+        totalQuantity = calculateQuantity(itens, totalQuantity);
+
     }
 
-    public BigDecimal calculateTotalValue() {
-        if(CollectionUtils.isNotEmpty(itens)) {
-            return itens.stream()
-                    .map(PurchaseItem::getTotalValue)
+    public static BigDecimal calculateTotalValue(List<PurchaseItem> purchaseItems, BigDecimal nullDefault) {
+        if(CollectionUtils.isNotEmpty(purchaseItems)) {
+            return purchaseItems.stream()
+                    .map(PurchaseItem::calculateTotalValue)
                     .filter(Objects::nonNull)
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
         }
-        return BigDecimal.ZERO;
+        return nullDefault;
     }
 
-    public BigDecimal calculateValueCharged() {
-        if(CollectionUtils.isNotEmpty(itens)) {
-            return itens.stream()
+    public static Integer calculateQuantity(List<PurchaseItem> purchaseItems, Integer nullDefault) {
+        if(CollectionUtils.isNotEmpty(purchaseItems)) {
+            return purchaseItems.stream()
+                    .map(PurchaseItem::getQuantity)
+                    .filter(Objects::nonNull)
+                    .reduce(0, Integer::sum);
+        }
+
+        return nullDefault;
+    }
+
+    public BigDecimal calculateAverageValue(List<PurchaseItem> purchaseItems) {
+        if(getTotalValue().intValue() > 0){
+            BigDecimal totalValue = getTotalValue();
+            Integer quantity = calculateQuantity(purchaseItems, 1);
+            return Optional.ofNullable(totalValue).orElse(calculateTotalValue(purchaseItems, BigDecimal.ZERO))
+                    .divide(BigDecimal.valueOf(quantity), 2, RoundingMode.UP);
+        }
+
+        return BigDecimal.ZERO;
+
+    }
+
+
+    public static boolean hasItemNotDistributed(List<PurchaseItem> purchaseItems) {
+        if(CollectionUtils.isNotEmpty(purchaseItems)) {
+            return purchaseItems.stream()
                     .map(PurchaseItem::getValueCharged)
-                    .filter(Objects::nonNull)
-                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+                    .anyMatch(Objects::isNull);
         }
-        return BigDecimal.ZERO;
+
+        return false;
+
+    }
+
+
+    public boolean hasQuantityToDistributed() {
+        if(CollectionUtils.isNotEmpty(itens)) {
+            return itens.stream()
+                .anyMatch(PurchaseItem::hasQuantityToDistributed);
+        }
+
+        return false;
     }
 
 }

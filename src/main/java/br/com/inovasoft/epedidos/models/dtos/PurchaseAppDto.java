@@ -1,11 +1,10 @@
 package br.com.inovasoft.epedidos.models.dtos;
 
-import java.util.List;
-
+import br.com.inovasoft.epedidos.models.enums.PurchaseEnum;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-
-import br.com.inovasoft.epedidos.models.enums.OrderEnum;
 import lombok.Data;
+
+import java.util.List;
 
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -17,7 +16,7 @@ public class PurchaseAppDto {
     private Long idBuyer;
     private String buyerName;
     private String dateRef;
-    private OrderEnum status;
+    private PurchaseEnum status;
     private List<PurchaseItemDto> itens;
     private String dueDate;
     private String createdOn;

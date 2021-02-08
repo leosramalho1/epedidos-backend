@@ -9,7 +9,6 @@ import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import javax.ws.rs.Produces;
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 
 public class MoneySerializer extends StdSerializer<BigDecimal> {
 
@@ -26,7 +25,7 @@ public class MoneySerializer extends StdSerializer<BigDecimal> {
         if(value == null) {
             jgen.writeNull();
         } else {
-            jgen.writeString(value.setScale(2, RoundingMode.HALF_UP).toString());
+            jgen.writeString(value.toString());
         }
     }
 

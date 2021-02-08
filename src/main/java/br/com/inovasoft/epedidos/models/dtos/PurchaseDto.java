@@ -1,14 +1,13 @@
 package br.com.inovasoft.epedidos.models.dtos;
 
-import java.math.BigDecimal;
-import java.util.List;
-
+import br.com.inovasoft.epedidos.models.dtos.serializers.MoneySerializer;
+import br.com.inovasoft.epedidos.models.enums.PurchaseEnum;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-
-import br.com.inovasoft.epedidos.models.dtos.serializers.MoneySerializer;
-import br.com.inovasoft.epedidos.models.enums.OrderEnum;
 import lombok.Data;
+
+import java.math.BigDecimal;
+import java.util.List;
 
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -18,11 +17,9 @@ public class PurchaseDto {
     private UserPortalDto buyer;
     private SupplierDto supplier;
     private String dateRef;
-    private OrderEnum status;
+    private PurchaseEnum status;
     private List<PurchaseItemDto> itens;
     private String dueDate;
-    @JsonSerialize(using = MoneySerializer.class)
-    private BigDecimal valueCharged;
     private String createdOn;
     private Integer payNumber;
     private String payMethod;
@@ -30,6 +27,5 @@ public class PurchaseDto {
     private BigDecimal totalValue;
     @JsonSerialize(using = MoneySerializer.class)
     private BigDecimal averageValue;
-    @JsonSerialize(using = MoneySerializer.class)
-    private BigDecimal totalQuantity;
+    private Integer totalQuantity;
 }

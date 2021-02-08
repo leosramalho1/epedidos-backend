@@ -6,7 +6,7 @@ import br.com.inovasoft.epedidos.mappers.PurchaseMapper;
 import br.com.inovasoft.epedidos.models.dtos.*;
 import br.com.inovasoft.epedidos.models.entities.*;
 import br.com.inovasoft.epedidos.models.enums.OrderEnum;
-import br.com.inovasoft.epedidos.models.enums.PackageTypeEnum;
+import br.com.inovasoft.epedidos.models.enums.PurchaseEnum;
 import br.com.inovasoft.epedidos.security.TokenService;
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import io.quarkus.panache.common.Page;
@@ -14,13 +14,14 @@ import io.quarkus.panache.common.Parameters;
 import io.quarkus.panache.common.Sort;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -38,7 +39,10 @@ public class PurchaseService extends BaseService<Purchase> {
     PurchaseAppMapper purchaseAppMapper;
 
     @Inject
-    PurchaseItemMapper purchaseItemmapper;
+    PurchaseItemMapper purchaseItemMapper;
+
+    @Inject
+    PackageLoanService packageLoanService;
 
     public PaginationDataResponse<PurchaseDto> listAll(int page, Long supplier, Long buyer) {
         Parameters parameters = Parameters.with("systemId", tokenService.getSystemId());
@@ -62,33 +66,108 @@ public class PurchaseService extends BaseService<Purchase> {
                 (int) Purchase.count(query, parameters));
     }
 
+    public PaginationDataResponse<PurchaseItemDto> listMap(int page, Long supplier, String nameProduct) {
+
+        String select = "select new PurchaseItem(pr.id, sum(pi.quantity), " +
+                "sum(pi.unitValue * pi.quantity), " +
+                "sum(pi.unitValue * pi.quantity) / sum(pi.quantity) as avgUnitValue, " +
+                "sum(COALESCE(pi.valueCharged, pi.unitValue) * pi.quantity) as sumValueCharged) %s";
+        String where = "from PurchaseItem pi join pi.purchase p join pi.product pr " +
+                "where p.systemId = :systemId " +
+                "and p.status in (:status) " +
+                "and p.deletedOn is null " +
+                "and pr.deletedOn is null ";
+
+        Parameters parameters = Parameters.with("systemId", tokenService.getSystemId());
+        parameters.and("status", List.of(PurchaseEnum.OPEN, PurchaseEnum.DISTRIBUTED));
+
+        if (supplier != null) {
+            where += " and p.supplier.id = :supplier ";
+            parameters.and("supplier", supplier);
+        }
+
+        if (StringUtils.isNotBlank(nameProduct)) {
+            where += " and upper(pr.name) like :nameProduct ";
+            parameters.and("nameProduct", "%" + nameProduct.toUpperCase() + "%");
+        }
+        where += "group by pr.id ";
+        PanacheQuery<PurchaseItem> list = PurchaseItem.find(String.format(select, where), Sort.by("pr.name"), parameters);
+
+        List<PurchaseItem> dataList = list.page(Page.of(page - 1, limitPerPage)).list();
+
+        return new PaginationDataResponse<>(purchaseItemMapper.toDto(dataList), limitPerPage,
+                dataList.size() > 0 ? (int) Purchase.count(where, parameters) : 0);
+    }
+
+    @Transactional
+    public List<PurchaseItemDto> saveMap(List<PurchaseItemDto> purchaseItemDtos) {
+
+        purchaseItemDtos.forEach(purchaseItemDto -> {
+            Long idProduct = purchaseItemDto.getIdProduct();
+            List<PurchaseItem> purchaseItems = PurchaseItem.list("product.id = ?1 and purchase.systemId = ?2 and purchase.status in (?3) ",
+                    idProduct, tokenService.getSystemId(), List.of(PurchaseEnum.OPEN, PurchaseEnum.DISTRIBUTED));
+
+            purchaseItems.forEach(purchaseItem -> {
+                purchaseItem.setValueCharged(purchaseItemDto.getValueCharged());
+                purchaseItem.persist();
+
+                Purchase purchase = purchaseItem.getPurchase();
+                purchase.prePersist();
+                purchase.persist();
+
+            });
+
+            List<PurchaseDistribution> purchaseDistributions = PurchaseDistribution
+                    .list("select new PurchaseDistribution(pd.id) " +
+                            "from PurchaseDistribution pd " +
+                            "join pd.purchaseItem pi " +
+                            "where pi.product.id = ?1 " +
+                            "and pd.accountToReceive.id is null", idProduct);
+
+            List<Long> ids = purchaseDistributions.stream()
+                    .map(PurchaseDistribution::getId)
+                    .collect(Collectors.toList());
+
+            PurchaseDistribution
+                    .update("valueCharged = ?1 " +
+                                    "where id in (?2)",
+                            purchaseItemDto.getValueCharged(), ids);
+
+
+        });
+
+        return purchaseItemDtos;
+    }
+
 
     public List<PurchaseAppDto> listPurchasesByBuyer() {
-        PanacheQuery<Purchase> listPurchases = Purchase.find(" select new Purchase(id, supplier.id,supplier.name, createdOn, totalValue ) from Purchase where buyer.email = ?1 and deletedOn is null",
+        PanacheQuery<Purchase> listPurchases = Purchase.find(" select new Purchase(id, supplier.id, " +
+                        "supplier.name, createdOn, totalValue ) from Purchase " +
+                        "where buyer.email = ?1 and deletedOn is null",
                 tokenService.getUserEmail());
 
         return purchaseAppMapper.to(mapper.toDto(listPurchases.list()));
     }
 
     public Purchase findById(Long id) {
-        return Purchase.find("select p from Purchase p where p.id = ?1 and p.systemId = ?2 and p.deletedOn is null", id,
+        return Purchase.find("id = ?1 and systemId = ?2 and deletedOn is null", id,
                 tokenService.getSystemId()).firstResult();
     }
 
     public PurchaseGroupDto getOpenOrderAndGroupByIdBuyer(Long buyerId) {
-        LocalDate yesterday = LocalDate.now();//.minusDays(-1);
+        LocalDate yesterday = LocalDate.now();
 
         List<OrderItem> ordersItems = OrderItem.list(
                 "select oi from OrderItem oi where oi.order.status=?1 " +
-                        "and oi.product.buyerId= ?2 and oi.order.createdOn <= ?3 " +
+                        "and oi.product.buyerId= ?2 " +
                         "and oi.order.deletedOn is null order by oi.product.id",
-                OrderEnum.OPEN, buyerId, yesterday.atTime(23, 59, 59));
+                OrderEnum.PURCHASE, buyerId);
 
         List<PurchaseItem> purchaseItems = PurchaseItem.list(
                 "select pi from PurchaseItem pi where pi.purchase.deletedOn is null and pi.purchase.status=?1 " +
-                        "and pi.purchase.buyer.id=?2 and pi.purchase.createdOn <= ?3 " +
+                        "and pi.purchase.buyer.id=?2 " +
                         "order by pi.product.id",
-                OrderEnum.OPEN, buyerId, yesterday.atTime(23, 59, 59));
+                PurchaseEnum.OPEN, buyerId);
 
         return mountPurchaseGroup(buyerId, yesterday, ordersItems, purchaseItems);
     }
@@ -116,7 +195,7 @@ public class PurchaseService extends BaseService<Purchase> {
 
         Map<Long, PurchaseItemDto> map = new HashMap<>();
 
-        if (CollectionUtils.isNotEmpty(ordersItems )) {
+        if (CollectionUtils.isNotEmpty(ordersItems)) {
             for (OrderItem item : ordersItems) {
                 PurchaseItemDto purchaseItemDto = map.get(item.getProduct().getId());
                 if (purchaseItemDto == null) {
@@ -124,8 +203,8 @@ public class PurchaseService extends BaseService<Purchase> {
                     purchaseItemDto.setIdProduct(item.getProduct().getId());
                     purchaseItemDto.setNameProduct(item.getProduct().getName());
                     purchaseItemDto.setQuantity(item.getQuantity());
-                    purchaseItemDto.setUnitValue(new BigDecimal("0.00"));
-                    purchaseItemDto.setTotalValue(new BigDecimal("0.00"));
+                    purchaseItemDto.setUnitValue(BigDecimal.ZERO);
+                    purchaseItemDto.setTotalValue(BigDecimal.ZERO);
 
                     map.put(item.getProduct().getId(), purchaseItemDto);
                 } else {
@@ -135,9 +214,9 @@ public class PurchaseService extends BaseService<Purchase> {
         }
 
         if (CollectionUtils.isNotEmpty(purchaseItems) && MapUtils.isNotEmpty(map)) {
-            for (PurchaseItem item : purchaseItems) {
-                PurchaseItemDto purchaseItemDto = map.get(item.getProduct().getId());
-                purchaseItemDto.setQuantity(purchaseItemDto.getQuantity() - item.getQuantity());
+            for (PurchaseItem purchaseItem : purchaseItems) {
+                PurchaseItemDto purchaseItemDto = map.get(purchaseItem.getProduct().getId());
+                purchaseItemDto.setQuantity(purchaseItemDto.getQuantity() - purchaseItem.getQuantity());
             }
 
         }
@@ -155,7 +234,7 @@ public class PurchaseService extends BaseService<Purchase> {
 
         PurchaseDto purchase = mapper.toDto(entity);
 
-        purchase.setItens(purchaseItemmapper
+        purchase.setItens(purchaseItemMapper
                 .toDto(PurchaseItem.list("purchase.id = ?1 order by product.name", purchase.getId())));
 
         return purchaseAppMapper.to(purchase);
@@ -166,7 +245,7 @@ public class PurchaseService extends BaseService<Purchase> {
 
         PurchaseDto purchase = mapper.toDto(entity);
 
-        purchase.setItens(purchaseItemmapper
+        purchase.setItens(purchaseItemMapper
                 .toDto(PurchaseItem.list("purchase.id = ?1 order by product.name", purchase.getId())));
 
         return purchase;
@@ -175,35 +254,46 @@ public class PurchaseService extends BaseService<Purchase> {
 
     @Transactional
     public PurchaseDto saveDto(PurchaseDto dto, UserPortal buyer, Supplier supplier) {
-        Purchase purchase = mapper.toEntity(dto);
-        purchase.setCreatedOn(LocalDateTime.now());
+        List<PurchaseItem> purchaseItems = purchaseItemMapper.toEntity(dto.getItens());
 
+        Purchase purchase = mapper.toEntity(dto);
         purchase.setBuyer(buyer);
         purchase.setSupplier(supplier);
         purchase.setSystemId(tokenService.getSystemId());
-        BigDecimal totalValueProducts = dto.getItens().stream().map(PurchaseItemDto::getTotalValue).reduce(BigDecimal.ZERO, BigDecimal::add);
-        purchase.setTotalValue(totalValueProducts);
+        purchase.setTotalValue(Purchase.calculateTotalValue(purchaseItems, BigDecimal.ZERO));
+        purchase.setTotalQuantity(Purchase.calculateQuantity(purchaseItems, 0));
         purchase.persist();
 
-        List<PurchaseItem> purchaseItems = purchaseItemmapper.toEntity(dto.getItens());
         if(CollectionUtils.isNotEmpty(purchaseItems)) {
             for (PurchaseItem purchaseItem : purchaseItems) {
-                purchaseItem.setPurchase(purchase);
-                purchaseItems.parallelStream().forEach(item  -> { if(item.getValueCharged()==null)item.setValueCharged(BigDecimal.ZERO);});
-                purchaseItem.persist();
-
-                Product product = Product.findById(purchaseItem.getProduct().getId());
-
-                savePackageType(purchase, purchaseItem, product);
-
+                if(purchaseItem.getQuantity() > 0) {
+                    purchaseItem.setPurchase(purchase);
+                    purchaseItem.persist();
+                    packageLoanService.registryPackageLoan(purchaseItem);
+                }
             }
 
-            AccountToPay accountToPay = new AccountToPay();
-            accountToPay.setSystemId(tokenService.getSystemId());
-            accountToPay.setSupplier(purchase.getSupplier());
-            accountToPay.setOriginalValue(totalValueProducts);
-            accountToPay.setDueDate(purchase.getDueDate());
-            accountToPay.persist();
+            BigDecimal totalValue = purchase.getTotalValue();
+            Integer payNumber = dto.getPayNumber();
+            BigDecimal partialValue = purchase.getTotalValue()
+                    .divide(BigDecimal.valueOf(payNumber), 2, RoundingMode.UP);
+
+            for(int i = 0; i < payNumber; i++) {
+
+                if(i == payNumber - 1) {
+                    // Última parcela
+                    partialValue = totalValue;
+                } else {
+                    totalValue = totalValue.subtract(partialValue);
+                }
+
+                AccountToPay accountToPay = new AccountToPay();
+                accountToPay.setSystemId(tokenService.getSystemId());
+                accountToPay.setSupplier(purchase.getSupplier());
+                accountToPay.setOriginalValue(partialValue);
+                accountToPay.setDueDate(purchase.getDueDate().plusMonths(i));
+                accountToPay.persist();
+            }
 
         }
 
@@ -232,18 +322,6 @@ public class PurchaseService extends BaseService<Purchase> {
         return purchaseAppMapper.to(purchaseDto);
     }
 
-    private void savePackageType(Purchase purchase, PurchaseItem purchaseItem, Product product) {
-        if (product.getPackageType() == PackageTypeEnum.RETURNABLE) {
-            PackageLoan packageLoan = new PackageLoan();
-            packageLoan.setSystemId(tokenService.getSystemId());
-            packageLoan.setSupplier(purchase.getSupplier());
-            packageLoan.setPurchaseItem(purchaseItem);
-            packageLoan.setUserChange(tokenService.getUserEmail());
-            packageLoan.setBorrowedAmount(purchaseItem.getQuantity().longValue());
-            packageLoan.persist();
-        }
-    }
-
     @Transactional
     public PurchaseAppDto update(Long id, PurchaseAppDto dto) {
         PurchaseDto result = update( id,  purchaseAppMapper.from(dto));
@@ -251,23 +329,45 @@ public class PurchaseService extends BaseService<Purchase> {
     }
 
     @Transactional
+    public List<PurchaseItemDto> update(List<PurchaseItemDto> purchaseItems) {
+        if(CollectionUtils.isNotEmpty(purchaseItems)) {
+            purchaseItems.forEach(purchaseItemDto -> {
+                PurchaseItem purchaseItem = PurchaseItem.findById(purchaseItemDto.getId());
+                purchaseItemMapper.updateEntityFromDto(purchaseItemDto, purchaseItem);
+                purchaseItem.persist();
+            });
+        }
+        return purchaseItems;
+    }
+
+    @Transactional
     public PurchaseDto update(Long id, PurchaseDto dto) {
         Purchase entity = Purchase.findById(id);
 
-        mapper.updateEntityFromDto(dto, entity);
+        mapper.updateEntityIgnoringNull(mapper.toEntity(dto), entity);
+        List<PurchaseItem> purchaseItems = purchaseItemMapper.toEntity(dto.getItens());
 
         List<PackageLoan> packageLoans = PackageLoan.list("select p from PackageLoan p join p.purchaseItem pi " +
                 "where pi.purchase.id = ?1 and p.systemId = ?2 and p.deletedOn is null", id, tokenService.getSystemId());
         packageLoans.forEach(PackageLoan::delete);
+
+        List<PurchaseDistribution> purchaseDistributions = PurchaseDistribution.list("select p from PurchaseDistribution p join p.purchaseItem pi " +
+                "where pi.purchase.id = ?1 and p.systemId = ?2 and p.deletedOn is null", id, tokenService.getSystemId());
+        purchaseDistributions.forEach(PurchaseDistribution::delete);
+
+        entity.setTotalQuantity(Purchase.calculateQuantity(purchaseItems, 0));
+        entity.setTotalValue(Purchase.calculateTotalValue(purchaseItems, BigDecimal.ZERO));
         entity.persistAndFlush();
+
         PurchaseItem.delete("purchase.id=?1", id);
 
-        List<PurchaseItem> itens = purchaseItemmapper.toEntity(dto.getItens());
-        for (PurchaseItem item : itens) {
-            item.setId(null);
-            item.setPurchase(entity);
-            PurchaseItem.persist(item);
-            savePackageType(entity, item, Product.findById(item.getProduct().getId()));
+        for (PurchaseItem purchaseItem : purchaseItems) {
+            if(purchaseItem.getQuantity() > 0) {
+                purchaseItem.setId(null);
+                purchaseItem.setPurchase(entity);
+                PurchaseItem.persist(purchaseItem);
+                packageLoanService.registryPackageLoan(purchaseItem);
+            }
         }
 
         return mapper.toDto(entity);

@@ -1,37 +1,31 @@
-insert into public.empresa
-values
-    (nextval('public.empresa_sequence'), now(), null, now(), 'Razão Social', '00000000000191', 'admin@epedidos.com.br', 'Nome Fantasia', '3133333333');
-insert into public.sistema
-values
-    (nextval('public.sistema_sequence'), now(), null, now(), 'E-Pedidos');
-insert into public.empresa_sistema
-values
-    (nextval('public.empresa_sistema_sequence'), now(), null, now(), 'admin@epedidos.com.br', 1, 'A', 'Cliente1', 1, 1);
-insert into public.usuario_admin
-values
-    (nextval('public.usuario_admin_sequence'), now(), null, now(), 'admin@epedidos.com.br', 'Admin', '123');
-insert into public.usuario_portal
-values
-    (nextval('public.usuario_portal_sequence'), now(), null, now(), 'admin@epedidos.com.br', null, '123', 'ADMIN', null, 1);
+insert into public.empresa values (nextval('public.empresa_sequence'), now(), null, now(), 'Razão Social', '00000000000191', 'admin@epedidos.com.br', 'Nome Fantasia', '3133333333');
+insert into public.sistema values (nextval('public.sistema_sequence'), now(), null, now(), 'E-Pedidos');
+insert into public.empresa_sistema values (nextval('public.empresa_sistema_sequence'), now(), null, now(), 'admin@epedidos.com.br', 1, 'A', 'Cliente1', 1, 1);
+insert into public.usuario_admin values (nextval('public.usuario_admin_sequence'), now(), null, now(), 'admin@epedidos.com.br', 'Admin', '123');
+insert into public.usuario_portal values (nextval('public.usuario_portal_sequence'), now(), null, now(), 'admin@epedidos.com.br', null, '123', 'ADMIN', 'ACTIVE', 1);
 
-CREATE OR REPLACE VIEW public.mapa_correcao
+-- View: public.mapa_pedidos
+DROP TABLE IF EXISTS public.mapa_distribuicao;
+DROP VIEW IF EXISTS public.mapa_distribuicao;
+CREATE OR REPLACE VIEW public.mapa_distribuicao
     AS
-    SELECT ci.produto_id AS id,
+     SELECT ci.produto_id AS id,
     p.createdon,
     p.updatedon,
     p.deletedon,
     p.sistema_id,
-    jsonb_build_object('id', ci.produto_id, 'nome', p.nome, 'tipo_embalagem', p.tipo_embalagem, 'peso', p.peso, 'totalComprado', ( SELECT sum(compra_item.quantidade) AS sum
+    jsonb_build_object('id', ci.produto_id, 'nome', p.nome, 'tipoEmbalagem', p.tipo_embalagem, 'peso', p.peso, 'totalComprado', ( SELECT sum(compra_item.quantidade) AS sum
            FROM compra_item
           WHERE compra_item.produto_id = ci.produto_id
-          GROUP BY ci.produto_id), 'pedidos', json_agg(DISTINCT jsonb_build_object('id', pi.id, 'cliente_id', ( SELECT pedido.cliente_id
+          GROUP BY ci.produto_id), 'compras', json_agg(DISTINCT jsonb_build_object('id', co.id)), 'pedidos', json_agg(DISTINCT jsonb_build_object('id', pi.id, 'cliente', ( SELECT pedido.cliente_id
            FROM pedido
-          WHERE pedido.id = pi.pedido_id))), 'categorias', json_agg(DISTINCT jsonb_build_object('id', pc.categoria_id, 'nome', cat.nome)), 'clientes', jsonb_agg(DISTINCT jsonb_build_object('id', c.id, 'nome', c.nome, 'total_pedido', ( SELECT COALESCE(sum(it.quantidade_adiquirida), sum(it.quantidade)) AS sum
+          WHERE pedido.id = pi.pedido_id))), 'categorias', json_agg(DISTINCT jsonb_build_object('id', pc.categoria_id, 'nome', cat.nome)), 'clientes', jsonb_agg(DISTINCT jsonb_build_object('id', c.id, 'nome', c.nome, 'totalPedido', ( SELECT COALESCE(sum(it.quantidade_adiquirida), sum(it.quantidade)) AS sum
            FROM pedido_item it
              JOIN pedido ped ON ped.id = it.pedido_id
           WHERE it.produto_id = p.id AND ped.cliente_id = pe.cliente_id)))) AS mapa
    FROM produto p
      JOIN compra_item ci ON ci.produto_id = p.id
+     JOIN compra co ON ci.compra_id = co.id AND co.situacao::text = 'OPEN'::text
      JOIN pedido_item pi ON p.id = pi.produto_id
      JOIN pedido pe ON pe.id = pi.pedido_id
      JOIN cliente c ON c.id = pe.cliente_id
@@ -41,34 +35,6 @@ CREATE OR REPLACE VIEW public.mapa_correcao
   GROUP BY ci.produto_id, p.id
   ORDER BY p.nome;
 
--- View: public.mapa_pedidos
--- DROP VIEW public.mapa_pedidos;
-CREATE OR REPLACE VIEW public.mapa_pedidos
- AS
- SELECT ci.produto_id AS id,
-    p.createdon,
-    p.updatedon,
-    p.deletedon,
-    p.sistema_id,
-    jsonb_build_object('id', ci.produto_id, 'nome', p.nome, 'tipo_embalagem', p.tipo_embalagem, 'peso', pi.peso, 'totalComprado', ( SELECT sum(compra_item.quantidade) AS sum
-           FROM compra_item
-          WHERE compra_item.produto_id = ci.produto_id
-          GROUP BY ci.produto_id), 'pedidos', json_agg(DISTINCT jsonb_build_object('id', pi.id, 'cliente_id', ( SELECT pedido.cliente_id
-           FROM pedido
-          WHERE pedido.id = pi.pedido_id))), 'categorias', json_agg(DISTINCT jsonb_build_object('id', pc.categoria_id, 'nome', cat.nome)), 'clientes', jsonb_agg(DISTINCT jsonb_build_object('id', c.id, 'nome', c.nome, 'total_pedido', ( SELECT COALESCE(sum(it.quantidade_adiquirida), sum(it.quantidade)) AS sum
-           FROM pedido_item it
-             JOIN pedido ped ON ped.id = it.pedido_id
-          WHERE it.produto_id = p.id AND ped.cliente_id = pe.cliente_id)))) AS mapa
-   FROM produto p
-     JOIN compra_item ci ON ci.produto_id = p.id
-     JOIN pedido_item pi ON p.id = pi.produto_id
-     JOIN pedido pe ON pe.id = pi.pedido_id
-     JOIN cliente c ON c.id = pe.cliente_id
-     LEFT JOIN produto_categoria pc ON pc.produto_id = p.id
-     LEFT JOIN categoria cat ON cat.id = pc.categoria_id
-  WHERE p.deletedon IS NULL
-  GROUP BY ci.produto_id, p.id, pi.peso
-  ORDER BY p.nome;
 
 INSERT INTO public.estado
     (id, codigo, sigla, nome, latitude, longitude)
