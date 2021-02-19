@@ -140,6 +140,14 @@
 			<artifactId>hibernate-types-52</artifactId>
 			<version>2.10.1</version>
 		</dependency>
+		<dependency>
+			<groupId>io.quarkus</groupId>
+			<artifactId>quarkus-scheduler</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>io.quarkus</groupId>
+			<artifactId>quarkus-quartz</artifactId>
+		</dependency>
 	</dependencies>
 	<build>
 

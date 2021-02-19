@@ -4,12 +4,22 @@ import br.com.inovasoft.epedidos.mappers.OrderItemMapper;
 import br.com.inovasoft.epedidos.mappers.OrderMapper;
 import br.com.inovasoft.epedidos.models.dtos.OrderDto;
 import br.com.inovasoft.epedidos.models.dtos.PaginationDataResponse;
-import br.com.inovasoft.epedidos.models.entities.*;
+import br.com.inovasoft.epedidos.models.entities.Customer;
+import br.com.inovasoft.epedidos.models.entities.Order;
+import br.com.inovasoft.epedidos.models.entities.OrderItem;
+import br.com.inovasoft.epedidos.models.entities.Product;
 import br.com.inovasoft.epedidos.models.enums.OrderEnum;
 import br.com.inovasoft.epedidos.security.TokenService;
+import com.cronutils.mapper.CronMapper;
+import com.cronutils.model.Cron;
+import com.cronutils.model.CronType;
+import com.cronutils.model.definition.CronDefinitionBuilder;
+import com.cronutils.parser.CronParser;
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import io.quarkus.panache.common.Page;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
+import org.quartz.*;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -19,6 +29,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 
+@Slf4j
 @ApplicationScoped
 public class OrderService extends BaseService<Order> {
 
@@ -30,6 +41,11 @@ public class OrderService extends BaseService<Order> {
 
     @Inject
     OrderItemMapper orderItemMapper;
+
+    @Inject
+    Scheduler quartz;
+
+    final CronParser unixParser = new CronParser(CronDefinitionBuilder.instanceDefinitionFor(CronType.UNIX));
 
     public PaginationDataResponse<OrderDto> listAll(int page) {
         PanacheQuery<Order> listOrders = Order.find(
@@ -141,32 +157,68 @@ public class OrderService extends BaseService<Order> {
         }
     }
 
-    public void scheduler(Long buyerId) {
+    @Transactional
+    public int changeOrdersToStatusPurchase(Long systemId) {
+        return Order.update("set status = ?1 where status = ?2 and systemId = ?3", OrderEnum.PURCHASE, OrderEnum.OPEN, systemId);
+    }
 
-        List<Order> orders = Order.list("status", OrderEnum.OPEN);
+    @Transactional
+    public OrderDto changeOrdersToStatusPurchase() {
+        int updates = changeOrdersToStatusPurchase(tokenService.getSystemId());
+        return OrderDto.builder()
+                .updates(updates)
+                .build();
+    }
 
-        orders.forEach(order -> {
-            List<OrderItem> orderItems = OrderItem.list("order.id", order.getId());
-            @NotNull Customer customer = order.getCustomer();
-            orderItems.forEach(orderItem -> {
-                PackageLoan packageLoan = new PackageLoan();
-                packageLoan.setCustomer(customer);
-                packageLoan.setSystemId(order.getSystemId());
-                packageLoan.setUserChange("system");
-                packageLoan.setOrderItem(orderItem);
-                packageLoan.setRemainingAmount(orderItem.getQuantity().longValue());
-                packageLoan.persist();
-            });
+    public void schedulerOrderToPurchase(@NotNull String cron, @NotNull Long systemId) throws SchedulerException {
+        String cronQuartz = cronUnixToCronQuartz(cron);
 
-            Integer totalProductsRealized = orderItems.stream()
-                    .map(OrderItem::getRealizedAmount)
-                    .reduce(0, Integer::sum);
+        JobKey jobKey = JobKey.jobKey("order-job-" + systemId,
+                "system-" + systemId);
 
-            order.setStatus(OrderEnum.FINISHED);
-            order.persist();
-        });
+        JobDetail job = JobBuilder.newJob(OrderToPurchaseJob.class)
+                .withIdentity(jobKey)
+                .build();
 
-        return;
+        job.getJobDataMap()
+                .put("systemId", systemId);
+
+        Trigger trigger = TriggerBuilder.newTrigger()
+                .withIdentity("order-trigger-" + systemId,
+                        "system-" + systemId)
+                .withSchedule(CronScheduleBuilder.cronSchedule(cronQuartz))
+                .startNow()
+                .build();
+
+        if (quartz.checkExists(jobKey)) {
+            quartz.deleteJob(jobKey);
+        }
+
+        quartz.scheduleJob(job, trigger);
+    }
+
+    private String cronUnixToCronQuartz(String cron) {
+        Cron parse = unixParser.parse(cron);
+        return CronMapper.fromUnixToQuartz().map(parse).asString();
+    }
+
+    public static class OrderToPurchaseJob implements Job {
+
+        @Inject
+        OrderService orderService;
+
+        public void execute(JobExecutionContext context) {
+            JobDetail jobDetail = context.getJobDetail();
+            JobDataMap jobDataMap = jobDetail.getJobDataMap();
+            Long systemId = jobDataMap.getLong("systemId");
+
+            log.info(" #### JOB #### - INICIO - Sistema: {}, Nome: {}, Próxima Execução: {}", systemId,
+                    jobDetail.getKey(), context.getNextFireTime());
+            int update = orderService.changeOrdersToStatusPurchase(systemId);
+            log.info(" #### JOB #### - FIM - Sistema: {}, Nome: {}, Registros atualizados: {}", systemId,
+                    jobDetail.getKey(), update);
+        }
+
     }
 
 }

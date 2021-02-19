@@ -84,4 +84,10 @@ public class OrderResources {
         orderDistributionService.update(produtosCorrecao);
     }
 
+    @POST
+    @Path("/scheduler")
+    @RolesAllowed(JwtRoles.USER_BACKOFFICE)
+    public Response scheduler() {
+        return Response.status(Response.Status.OK).entity(service.changeOrdersToStatusPurchase()).build();
+    }
 }
