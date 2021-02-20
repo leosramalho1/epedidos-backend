@@ -1,5 +1,6 @@
 package br.com.inovasoft.epedidos.models.entities;
 
+import br.com.inovasoft.epedidos.constraint.CpfCnpj;
 import br.com.inovasoft.epedidos.models.BaseEntity;
 import br.com.inovasoft.epedidos.models.enums.CustomerPayTypeEnum;
 import br.com.inovasoft.epedidos.models.enums.StatusEnum;
@@ -36,6 +37,7 @@ public class Customer extends BaseEntity {
     @Column(name = "nome")
     private String name;
 
+    @CpfCnpj
     @Size(max = 14)
     @NotBlank(message = "CPF/CNPJ is required")
     @Column(name = "cpfCnpj")

@@ -76,6 +76,12 @@ public class AccountToReceive extends BaseEntity implements Billing {
 
         status = getStatus();
 
+        if(status == PayStatusEnum.PARTIALLY_PAID
+                || status == PayStatusEnum.PAID
+                || status == PayStatusEnum.PAID_OVERDUE) {
+            Objects.requireNonNull(paidOutDate, "Data de pagamento é obrigatória");
+        }
+
     }
 
 

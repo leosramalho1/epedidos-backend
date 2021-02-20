@@ -1,5 +1,6 @@
 package br.com.inovasoft.epedidos.models.entities;
 
+import br.com.inovasoft.epedidos.constraint.CpfCnpj;
 import br.com.inovasoft.epedidos.models.BaseEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -32,6 +33,7 @@ public class CustomerUser extends BaseEntity {
     private String name;
 
     @NotNull
+    @CpfCnpj
     @Column(name = "cpfCnpj")
     private String cpfCnpj;
 

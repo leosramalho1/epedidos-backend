@@ -8,6 +8,7 @@ import br.com.inovasoft.epedidos.models.enums.PurchaseEnum;
 import br.com.inovasoft.epedidos.security.TokenService;
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import io.quarkus.panache.common.Page;
+import io.quarkus.panache.common.Sort;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -29,7 +30,7 @@ public class OrderDistributionService extends BaseService<OrderDistributionMap> 
     public PaginationDataResponse<OrderDistributionMap> listAll(Integer page, @NotNull Optional<Long> category) {
 
         Long systemId = tokenService.getSystemId();
-        PanacheQuery<OrderDistributionMap> list = OrderDistributionMap.find("systemId", systemId);
+        PanacheQuery<OrderDistributionMap> list = OrderDistributionMap.find("systemId", Sort.by("id"), systemId);
 
         List<OrderDistributionMap> dataList = list.page(Page.of(page - 1, limitPerPage)).list();
 
