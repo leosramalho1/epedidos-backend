@@ -17,6 +17,7 @@ import com.cronutils.model.definition.CronDefinitionBuilder;
 import com.cronutils.parser.CronParser;
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import io.quarkus.panache.common.Page;
+import io.quarkus.panache.common.Sort;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.quartz.*;
@@ -49,7 +50,7 @@ public class OrderService extends BaseService<Order> {
 
     public PaginationDataResponse<OrderDto> listAll(int page) {
         PanacheQuery<Order> listOrders = Order.find(
-                "select p from Order p where p.systemId = ?1 and p.deletedOn is null", tokenService.getSystemId());
+                "systemId = ?1 and deletedOn is null", Sort.by("id").descending(), tokenService.getSystemId());
 
         List<Order> dataList = listOrders.page(Page.of(page - 1, limitPerPage)).list();
 
