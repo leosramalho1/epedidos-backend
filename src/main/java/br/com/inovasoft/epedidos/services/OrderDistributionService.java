@@ -30,7 +30,7 @@ public class OrderDistributionService extends BaseService<OrderDistributionMap> 
     public PaginationDataResponse<OrderDistributionMap> listAll(Integer page, @NotNull Optional<Long> category) {
 
         Long systemId = tokenService.getSystemId();
-        PanacheQuery<OrderDistributionMap> list = OrderDistributionMap.find("systemId", Sort.by("id"), systemId);
+        PanacheQuery<OrderDistributionMap> list = OrderDistributionMap.find("systemId", Sort.by("id").descending(), systemId);
 
         List<OrderDistributionMap> dataList = list.page(Page.of(page - 1, limitPerPage)).list();
 
