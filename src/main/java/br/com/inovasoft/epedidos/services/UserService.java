@@ -30,26 +30,26 @@ public class UserService extends BaseService<UserPortal> {
     UserPortalMapper mapper;
 
 	public PaginationDataResponse<UserPortal> listAll(int page) {
-		PanacheQuery<UserPortal> listProducts = UserPortal.find(
-				"select p from UserPortal p where p.systemId = ?1 and p.deletedOn is null", tokenService.getSystemId());
+		String query = "systemId = ?1 and deletedOn is null";
+		PanacheQuery<UserPortal> listProducts = UserPortal.find(query, tokenService.getSystemId());
 
 		List<UserPortal> dataList = listProducts.page(Page.of(page - 1, limitPerPage)).list();
 
 		return new PaginationDataResponse<>(dataList, limitPerPage,
-				(int) UserPortal.count("systemId  = ?1 and deletedOn is null", tokenService.getSystemId()));
+				(int) UserPortal.count(query, tokenService.getSystemId()));
 	}
 
 	public List<UserPortalDto> getSuggestions(String query) {
 		List<UserPortal> dataList = UserPortal.list(
-				"systemId = ?1 and upper(name) like ?2 and role = ?3 and deletedOn is null",
-				tokenService.getSystemId(), query.toUpperCase() + "%", RoleEnum.BUYER);
+				"systemId = ?1 and upper(name) like ?2 and role in (?3) and deletedOn is null",
+				tokenService.getSystemId(), query.toUpperCase() + "%", List.of(RoleEnum.BUYER, RoleEnum.ADMIN));
 
 		return mapper.toDto(dataList);
 	}
 
 	public List<OptionDto> getListAllOptions() {
-		List<UserPortal> dataList = UserPortal.list("systemId = ?1 and  role = ?2 and deletedOn is null order by name",
-				tokenService.getSystemId(), RoleEnum.BUYER);
+		List<UserPortal> dataList = UserPortal.list("systemId = ?1 and role in (?2) and deletedOn is null order by name",
+				tokenService.getSystemId(), List.of(RoleEnum.BUYER, RoleEnum.ADMIN));
 
 		return dataList.stream().map(item -> new OptionDto(item.getId(), item.getName())).collect(Collectors.toList());
 	}

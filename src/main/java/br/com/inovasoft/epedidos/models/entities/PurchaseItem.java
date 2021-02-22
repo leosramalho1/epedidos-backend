@@ -86,6 +86,11 @@ public class PurchaseItem extends BaseEntity {
         }
     }
 
+    @PostLoad
+    public void postLoad() {
+        totalValue = calculateTotalValue();
+    }
+
     public BigDecimal calculateTotalValue() {
         return Optional.ofNullable(valueCharged).orElse(unitValue).multiply(BigDecimal.valueOf(quantity))
                 .setScale(2, RoundingMode.UP);

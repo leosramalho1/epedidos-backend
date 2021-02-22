@@ -20,7 +20,9 @@ import javax.validation.constraints.NotBlank;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Table(name = "usuario_portal", indexes = {
 		@Index(name = "usuario_portal_index_email", columnList = "email"),
-		@Index(name = "usuario_portal_index_sistema", columnList = "sistema_id") })
+		@Index(name = "usuario_portal_index_sistema", columnList = "sistema_id"),
+		@Index(name = "usuario_portal_index_sistema_perfil", columnList = "sistema_id, perfil, deletedOn"),
+		@Index(name = "usuario_portal_index_sistema_perfil_nome", columnList = "sistema_id, perfil, nome, deletedOn") })
 public class UserPortal extends BaseEntity {
 
 	private static final long serialVersionUID = 8391366118819091299L;

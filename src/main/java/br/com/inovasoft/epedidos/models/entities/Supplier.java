@@ -41,7 +41,6 @@ public class Supplier extends BaseEntity {
     private String cpfCnpj;
 
     @Email
-    @NotBlank(message = "E-mail is required")
     @Column(name = "email")
     private String email;
 

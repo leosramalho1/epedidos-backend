@@ -15,14 +15,15 @@ import static org.hibernate.envers.RelationTargetAuditMode.NOT_AUDITED;
 
 @Data
 @Entity
+@Audited
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
 @Table(name = "conta_pagar", indexes = {
         @Index(name = "conta_pagar_index_sistema", columnList = "sistema_id"),
-        @Index(name = "conta_pagar_index_fornecedor", columnList = "fornecedor_id") })
-@Audited
+        @Index(name = "conta_pagar_index_fornecedor", columnList = "fornecedor_id"),
+        @Index(name = "conta_pagar_index_fornecedor_sistema", columnList = "fornecedor_id, sistema_id") })
 public class AccountToPay extends BaseEntity implements Billing {
 
     private static final long serialVersionUID = 904648166038765L;
@@ -59,6 +60,7 @@ public class AccountToPay extends BaseEntity implements Billing {
     @Column(name = "observacao")
     private String note;
 
+    @NotNull
     @Column(name = "sistema_id")
     private Long systemId;
 
