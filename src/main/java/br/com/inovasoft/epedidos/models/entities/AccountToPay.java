@@ -1,7 +1,9 @@
 package br.com.inovasoft.epedidos.models.entities;
 
 import br.com.inovasoft.epedidos.models.BaseEntity;
+import br.com.inovasoft.epedidos.models.enums.PayMethodEnum;
 import br.com.inovasoft.epedidos.models.enums.PayStatusEnum;
+import br.com.inovasoft.epedidos.models.enums.converters.PayMethodEnumConverter;
 import lombok.*;
 import org.hibernate.envers.Audited;
 
@@ -69,6 +71,17 @@ public class AccountToPay extends BaseEntity implements Billing {
     @Getter(AccessLevel.NONE)
     @Enumerated(EnumType.STRING)
     private PayStatusEnum status;
+
+    @NotNull(message = "Purchase is required")
+    @Audited(targetAuditMode = NOT_AUDITED)
+    @JoinColumn(name = "compra_id")
+    @ManyToOne(targetEntity = Purchase.class)
+    private Purchase purchase;
+
+    @NotNull
+    @Convert(converter = PayMethodEnumConverter.class)
+    @Column(name = "forma_pagamento")
+    private PayMethodEnum payMethod;
 
     @PrePersist
     @PreUpdate

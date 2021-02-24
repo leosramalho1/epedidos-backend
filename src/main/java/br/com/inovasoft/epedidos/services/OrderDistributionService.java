@@ -97,14 +97,16 @@ public class OrderDistributionService extends BaseService<OrderDistributionMap> 
                     distributedQuantity = remainingQuantity;
                 }
 
+                Customer customer = orderItemMaster.getOrder().getCustomer();
                 PurchaseDistribution purchaseDistribution = PurchaseDistribution.builder()
                         .systemId(tokenService.getSystemId())
                         .purchaseItem(purchaseItem)
                         .orderItem(orderItemMaster)
-                        .customer(orderItemMaster.getOrder().getCustomer())
-                        .status(OrderEnum.OPEN)
+                        .customer(customer)
                         .quantity(distributedQuantity)
                         .valueCharged(purchaseItem.getValueCharged())
+                        .unitCustomerCost(customer.getPayValue())
+                        .customerPayType(customer.getPayType())
                         .build();
 
                 Purchase purchase = purchaseItem.getPurchase();

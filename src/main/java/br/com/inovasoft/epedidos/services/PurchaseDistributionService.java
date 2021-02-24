@@ -44,18 +44,20 @@ public class PurchaseDistributionService extends BaseService<PurchaseDistributio
     @Inject
     PackageLoanService packageLoanService;
 
-    public PaginationDataResponse<CustomerBillingDto> buildAllByCustomer(int page, Long idCustomer) {
+    public PaginationDataResponse<CustomerBillingDto> buildAllByCustomer(int page, Long idCustomer, OrderEnum orderEnum) {
 
         String select = "select pd ";
-        String where = "from PurchaseDistribution pd inner join pd.orderItem oi inner join oi.order ord " +
+        String where = "from PurchaseDistribution pd " +
+                "inner join pd.orderItem oi " +
+                "inner join oi.order ord " +
                 "where ord.deletedOn is null " +
                 "and pd.customer.deletedOn is null " +
                 "and pd.accountToReceive is null " +
                 "and pd.systemId = :systemId " +
-                "and pd.status = :status";
+                "and ord.status = :status";
 
         Parameters parameters = Parameters.with("systemId", tokenService.getSystemId());
-        parameters.and("status", OrderEnum.OPEN);
+        parameters.and("status", orderEnum);
 
         if(idCustomer != null) {
             where += " and pd.customer.id = :idCustomer";
@@ -180,8 +182,8 @@ public class PurchaseDistributionService extends BaseService<PurchaseDistributio
 
                     OrderItem orderItem = entity.getOrderItem();
                     Order order = orderItem.getOrder();
-                    if (order.getStatus() != OrderEnum.FINISHED) {
-                        order.setStatus(OrderEnum.FINISHED);
+                    if (order.getStatus() != OrderEnum.BILLED) {
+                        order.setStatus(OrderEnum.BILLED);
                         order.persist();
                     }
 
@@ -217,6 +219,8 @@ public class PurchaseDistributionService extends BaseService<PurchaseDistributio
         purchaseDistributions.forEach(purchaseDistributionDto -> {
             PurchaseDistribution purchaseDistribution = PurchaseDistribution.findById(purchaseDistributionDto.getId());
             mapper.updateEntityIgnoringNull(mapper.toEntity(purchaseDistributionDto), purchaseDistribution);
+            Order order = purchaseDistribution.getOrderItem().getOrder();
+
             purchaseDistribution.persist();
             entities.add(purchaseDistribution);
         });

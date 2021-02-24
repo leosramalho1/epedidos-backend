@@ -1,10 +1,13 @@
 package br.com.inovasoft.epedidos.controllers;
 
+import br.com.inovasoft.epedidos.models.dtos.CustomerBillingDto;
 import br.com.inovasoft.epedidos.models.dtos.OrderDto;
 import br.com.inovasoft.epedidos.models.entities.views.ProductMap;
+import br.com.inovasoft.epedidos.models.enums.OrderEnum;
 import br.com.inovasoft.epedidos.security.jwt.JwtRoles;
 import br.com.inovasoft.epedidos.services.OrderDistributionService;
 import br.com.inovasoft.epedidos.services.OrderService;
+import br.com.inovasoft.epedidos.services.PurchaseDistributionService;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 
 import javax.annotation.security.RolesAllowed;
@@ -14,7 +17,6 @@ import javax.validation.Valid;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.Optional;
 
@@ -30,10 +32,13 @@ public class OrderResources {
     @Inject
     OrderDistributionService orderDistributionService;
 
+    @Inject
+    PurchaseDistributionService purchaseDistributionService;
+
     @GET
     @RolesAllowed(JwtRoles.USER_BACKOFFICE)
-    public Response listAll(@QueryParam("page") int page) {
-        return Response.status(Response.Status.OK).entity(service.listAll(page)).build();
+    public Response listAll(@QueryParam("page") int page, @QueryParam("status") List<OrderEnum> orderEnums) {
+        return Response.status(Response.Status.OK).entity(service.listAll(page, orderEnums)).build();
     }
 
     @GET
@@ -54,8 +59,7 @@ public class OrderResources {
     @Path("/{id}")
     @RolesAllowed(JwtRoles.USER_BACKOFFICE)
     @Transactional
-    public Response change(@PathParam("id") Long idOrder, @Valid OrderDto order)
-            throws IllegalAccessException, InvocationTargetException {
+    public Response change(@PathParam("id") Long idOrder, @Valid OrderDto order) {
         return Response.status(Response.Status.OK).entity(service.update(idOrder, order)).build();
     }
 
@@ -89,5 +93,21 @@ public class OrderResources {
     @RolesAllowed(JwtRoles.USER_BACKOFFICE)
     public Response scheduler() {
         return Response.status(Response.Status.OK).entity(service.changeOrdersToStatusPurchase()).build();
+    }
+
+    @GET
+    @Path("/closing")
+    @RolesAllowed(JwtRoles.USER_BACKOFFICE)
+    public Response getClosing(@QueryParam("page") int page) {
+        return Response.status(Response.Status.OK)
+                .entity(purchaseDistributionService.buildAllByCustomer(page, null, OrderEnum.DISTRIBUTED)).build();
+    }
+
+    @POST
+    @Path("/closing")
+    @RolesAllowed(JwtRoles.USER_BACKOFFICE)
+    public Response postClosing(List<CustomerBillingDto> customerBillingDtos) {
+        service.closeOrders(customerBillingDtos);
+        return Response.status(Response.Status.OK).build();
     }
 }

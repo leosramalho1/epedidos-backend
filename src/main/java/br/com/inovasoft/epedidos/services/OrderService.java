@@ -2,6 +2,7 @@ package br.com.inovasoft.epedidos.services;
 
 import br.com.inovasoft.epedidos.mappers.OrderItemMapper;
 import br.com.inovasoft.epedidos.mappers.OrderMapper;
+import br.com.inovasoft.epedidos.models.dtos.CustomerBillingDto;
 import br.com.inovasoft.epedidos.models.dtos.OrderDto;
 import br.com.inovasoft.epedidos.models.dtos.PaginationDataResponse;
 import br.com.inovasoft.epedidos.models.entities.Customer;
@@ -27,6 +28,7 @@ import javax.inject.Inject;
 import javax.transaction.Transactional;
 import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 
@@ -48,13 +50,20 @@ public class OrderService extends BaseService<Order> {
 
     final CronParser unixParser = new CronParser(CronDefinitionBuilder.instanceDefinitionFor(CronType.UNIX));
 
-    public PaginationDataResponse<OrderDto> listAll(int page) {
+    public PaginationDataResponse<OrderDto> listAll(int page, List<OrderEnum> orderEnums) {
+
+        if(CollectionUtils.isEmpty(orderEnums)) {
+            orderEnums = List.of(OrderEnum.values());
+        }
+
+        String query = "deletedOn is null and systemId = ?1 and status in (?2)";
         PanacheQuery<Order> listOrders = Order.find(
-                "systemId = ?1 and deletedOn is null", Sort.by("id").descending(), tokenService.getSystemId());
+                query, Sort.by("id").descending(), tokenService.getSystemId(), orderEnums);
 
         List<Order> dataList = listOrders.page(Page.of(page - 1, limitPerPage)).list();
 
-        return new PaginationDataResponse<>(mapper.toDto(dataList), limitPerPage, (int) Order.count());
+        return new PaginationDataResponse<>(mapper.toDto(dataList), limitPerPage,
+                (int) Order.count(query, tokenService.getSystemId(), orderEnums));
     }
 
 
@@ -109,7 +118,7 @@ public class OrderService extends BaseService<Order> {
     @Transactional
     public OrderDto update(Long id, OrderDto dto) {
         Order entity = Order.findById(id);
-        OrderItem.delete("order.id=?1", id);
+        OrderItem.delete("order.id = ?1", id);
         List<OrderItem> orderItems = orderItemMapper.toEntity(dto.getItens());
         saveOrderItems(entity, orderItems);
         mapper.updateEntityFromDto(dto, entity);
@@ -169,6 +178,20 @@ public class OrderService extends BaseService<Order> {
         return OrderDto.builder()
                 .updates(updates)
                 .build();
+    }
+
+    @Transactional
+    public void closeOrders(List<CustomerBillingDto> customerBillingDtos) {
+
+        customerBillingDtos.stream()
+                .map(CustomerBillingDto::getPurchaseDistributions)
+                .flatMap(Collection::stream)
+                .forEach(purchaseDistributionDto -> {
+                    Order order = Order.findById(purchaseDistributionDto.getIdOrder());
+                    order.setStatus(OrderEnum.FINISHED);
+                    order.persist();
+                });
+
     }
 
     public void schedulerOrderToPurchase(@NotNull String cron, @NotNull Long systemId) throws SchedulerException {

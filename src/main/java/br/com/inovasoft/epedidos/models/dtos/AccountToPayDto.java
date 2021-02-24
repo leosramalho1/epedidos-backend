@@ -1,5 +1,6 @@
 package br.com.inovasoft.epedidos.models.dtos;
 
+import br.com.inovasoft.epedidos.models.enums.PayMethodEnum;
 import br.com.inovasoft.epedidos.models.enums.PayStatusEnum;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
@@ -24,5 +25,7 @@ public class AccountToPayDto implements BillingDto {
     private String note;
     private String updatedOn;
     private List<AccountToPayDto> history = new ArrayList<>();
+    private PurchaseDto purchaseDto;
+    private PayMethodEnum payMethod;
 
 }

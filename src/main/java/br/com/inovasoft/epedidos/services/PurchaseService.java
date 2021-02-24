@@ -292,6 +292,8 @@ public class PurchaseService extends BaseService<Purchase> {
                 accountToPay.setSupplier(purchase.getSupplier());
                 accountToPay.setOriginalValue(partialValue);
                 accountToPay.setDueDate(purchase.getDueDate().plusMonths(i));
+                accountToPay.setPurchase(purchase);
+                accountToPay.setPayMethod(purchase.getPayMethod());
                 accountToPay.persist();
             }
 
@@ -351,8 +353,10 @@ public class PurchaseService extends BaseService<Purchase> {
                 "where pi.purchase.id = ?1 and p.systemId = ?2 and p.deletedOn is null", id, tokenService.getSystemId());
         packageLoans.forEach(PackageLoan::delete);
 
-        List<PurchaseDistribution> purchaseDistributions = PurchaseDistribution.list("select p from PurchaseDistribution p join p.purchaseItem pi " +
-                "where pi.purchase.id = ?1 and p.systemId = ?2 and p.deletedOn is null", id, tokenService.getSystemId());
+        List<PurchaseDistribution> purchaseDistributions = PurchaseDistribution.list(
+                "select p from PurchaseDistribution p join p.purchaseItem pi " +
+                "where pi.purchase.id = ?1 and p.systemId = ?2 and p.deletedOn is null",
+                id, tokenService.getSystemId());
         purchaseDistributions.forEach(PurchaseDistribution::delete);
 
         entity.setTotalQuantity(Purchase.calculateQuantity(purchaseItems, 0));

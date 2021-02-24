@@ -1,7 +1,9 @@
 package br.com.inovasoft.epedidos.models.entities;
 
 import br.com.inovasoft.epedidos.models.BaseEntity;
+import br.com.inovasoft.epedidos.models.enums.PayMethodEnum;
 import br.com.inovasoft.epedidos.models.enums.PurchaseEnum;
+import br.com.inovasoft.epedidos.models.enums.converters.PayMethodEnumConverter;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -79,8 +81,10 @@ public class Purchase extends BaseEntity {
     @Column(name = "quantidade_parcela")
     private Integer payNumber;
 
+    @NotNull
+    @Convert(converter = PayMethodEnumConverter.class)
     @Column(name = "forma_pagamento")
-    private String payMethod;
+    private PayMethodEnum payMethod;
 
     @ToString.Exclude
     @OneToMany(targetEntity = PurchaseItem.class, mappedBy = "purchase")

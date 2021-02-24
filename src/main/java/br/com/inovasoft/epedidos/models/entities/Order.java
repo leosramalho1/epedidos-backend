@@ -49,7 +49,8 @@ public class Order extends BaseEntity {
     @PreUpdate
     @PrePersist
     public void prePersist() {
-        if(CollectionUtils.isNotEmpty(orderItems) && !hasQuantityToBilled()) {
+        if(CollectionUtils.isNotEmpty(orderItems)
+                && !hasQuantityToBilled()) {
             status = OrderEnum.FINISHED;
         }
     }

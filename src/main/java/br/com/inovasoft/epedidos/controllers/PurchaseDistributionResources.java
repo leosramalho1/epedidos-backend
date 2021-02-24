@@ -2,6 +2,7 @@ package br.com.inovasoft.epedidos.controllers;
 
 import br.com.inovasoft.epedidos.models.dtos.BillingClosingDto;
 import br.com.inovasoft.epedidos.models.dtos.PurchaseDistributionDto;
+import br.com.inovasoft.epedidos.models.enums.OrderEnum;
 import br.com.inovasoft.epedidos.security.jwt.JwtRoles;
 import br.com.inovasoft.epedidos.services.PurchaseDistributionService;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
@@ -37,7 +38,7 @@ public class PurchaseDistributionResources {
     @RolesAllowed(JwtRoles.USER_BACKOFFICE)
     public Response listAll(@QueryParam("page") int page, @QueryParam("customer") Long idCustomer,
                             @QueryParam("createdOnMin") String createdOnMin, @QueryParam("createdOnMax") String createdOnMax) {
-        return Response.status(Response.Status.OK).entity(service.buildAllByCustomer(page, idCustomer)).build();
+        return Response.status(Response.Status.OK).entity(service.buildAllByCustomer(page, idCustomer, OrderEnum.FINISHED)).build();
     }
 
     @PUT

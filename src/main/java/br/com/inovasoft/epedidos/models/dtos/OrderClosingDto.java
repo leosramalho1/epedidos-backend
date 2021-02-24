@@ -10,18 +10,17 @@ import lombok.NoArgsConstructor;
 import java.util.List;
 
 @Data
-@Builder
+@Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class OrderDto {
+public class OrderClosingDto {
 
     private Long id;
-    private Long idCustomer;
     private String nameCustomer;
     private String createdOn;
     private OrderEnum status;
-    private List<OrderItemDto> itens;
+    private List<OrderItemDto> orderItems;
     private Integer updates;
     private boolean editable = true;
 

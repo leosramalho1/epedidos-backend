@@ -1,7 +1,7 @@
 package br.com.inovasoft.epedidos.models.entities;
 
 import br.com.inovasoft.epedidos.models.BaseEntity;
-import br.com.inovasoft.epedidos.models.enums.OrderEnum;
+import br.com.inovasoft.epedidos.models.enums.CustomerPayTypeEnum;
 import lombok.*;
 
 import javax.persistence.*;
@@ -54,11 +54,6 @@ public class PurchaseDistribution extends BaseEntity {
     private AccountToReceive accountToReceive;
 
     @NotNull
-    @Column(name = "situacao")
-    @Enumerated(EnumType.STRING)
-    private OrderEnum status;
-
-    @NotNull
     @Column(name = "quantidade_distribuida")
     private Integer quantity;
 
@@ -66,9 +61,14 @@ public class PurchaseDistribution extends BaseEntity {
     @Column(name = "valor_unitario", scale = 4)
     private BigDecimal valueCharged;
 
-//    @NotNull
-//    @Column(name = "valor_frete_unitario")
-//    private BigDecimal unitShippingCost;
+    @NotNull
+    @Column(name = "valor_cliente_unitario")
+    private BigDecimal unitCustomerCost;
+
+    @NotNull
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tipo_cobranca_cliente")
+    private CustomerPayTypeEnum customerPayType;
 
 
     @PreUpdate

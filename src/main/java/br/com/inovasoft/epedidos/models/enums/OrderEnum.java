@@ -8,6 +8,7 @@ public enum OrderEnum {
     PURCHASE("COMPRA"),
     DISTRIBUTED("DISTRIBUIDO"),
     FINISHED("FECHADO"),
+    BILLED("FATURADO"),
     CANCELED("CANCELADO");
 
     @Getter
