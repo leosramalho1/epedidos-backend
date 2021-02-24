@@ -195,8 +195,6 @@ public class PurchaseDistributionService extends BaseService<PurchaseDistributio
                         purchase.persist();
                     }
 
-                    packageLoanService.registryPackageLoan(orderItem);
-
                     entity.setAccountToReceive(accountToReceive);
                     entity.persist();
 

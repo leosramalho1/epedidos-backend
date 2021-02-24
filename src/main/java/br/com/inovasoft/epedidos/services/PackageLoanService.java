@@ -131,6 +131,9 @@ public class PackageLoanService extends BaseService<PackageLoan> {
         entity.persist();
     }
 
+    public void registryPackageLoan(List<OrderItem> orderItem) {
+        orderItem.forEach(this::registryPackageLoan);
+    }
 
     public void registryPackageLoan(OrderItem orderItem) {
         Product product = orderItem.getProduct();

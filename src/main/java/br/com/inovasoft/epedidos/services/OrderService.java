@@ -48,6 +48,9 @@ public class OrderService extends BaseService<Order> {
     @Inject
     Scheduler quartz;
 
+    @Inject
+    PackageLoanService packageLoanService;
+
     final CronParser unixParser = new CronParser(CronDefinitionBuilder.instanceDefinitionFor(CronType.UNIX));
 
     public PaginationDataResponse<OrderDto> listAll(int page, List<OrderEnum> orderEnums) {
@@ -188,6 +191,7 @@ public class OrderService extends BaseService<Order> {
                 .flatMap(Collection::stream)
                 .forEach(purchaseDistributionDto -> {
                     Order order = Order.findById(purchaseDistributionDto.getIdOrder());
+                    packageLoanService.registryPackageLoan(order.getOrderItems());
                     order.setStatus(OrderEnum.FINISHED);
                     order.persist();
                 });
