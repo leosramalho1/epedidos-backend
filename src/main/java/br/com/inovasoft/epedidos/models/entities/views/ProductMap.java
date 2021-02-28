@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import org.apache.commons.collections.CollectionUtils;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
@@ -15,7 +16,9 @@ import java.util.stream.Collectors;
 
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class ProductMap {
+public class ProductMap implements Serializable {
+
+    private static final long serialVersionUID = -6285155077553460264L;
 
     private Long id;
     @JsonProperty(value = "nome")

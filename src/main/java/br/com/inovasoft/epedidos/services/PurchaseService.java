@@ -60,9 +60,9 @@ public class PurchaseService extends BaseService<Purchase> {
 
         PanacheQuery<Purchase> listPurchases = Purchase.find(query, Sort.by("id").descending(), parameters);
 
-        List<Purchase> dataList = listPurchases.page(Page.of(page - 1, limitPerPage)).list();
+        List<Purchase> dataList = listPurchases.page(Page.of(page - 1, LIMIT_PER_PAGE)).list();
 
-        return new PaginationDataResponse<>(mapper.toDto(dataList), limitPerPage,
+        return new PaginationDataResponse<>(mapper.toDto(dataList), LIMIT_PER_PAGE,
                 (int) Purchase.count(query, parameters));
     }
 
@@ -93,9 +93,9 @@ public class PurchaseService extends BaseService<Purchase> {
         where += "group by pr.id ";
         PanacheQuery<PurchaseItem> list = PurchaseItem.find(String.format(select, where), Sort.by("pr.name"), parameters);
 
-        List<PurchaseItem> dataList = list.page(Page.of(page - 1, limitPerPage)).list();
+        List<PurchaseItem> dataList = list.page(Page.of(page - 1, LIMIT_PER_PAGE)).list();
 
-        return new PaginationDataResponse<>(purchaseItemMapper.toDto(dataList), limitPerPage,
+        return new PaginationDataResponse<>(purchaseItemMapper.toDto(dataList), LIMIT_PER_PAGE,
                 dataList.size() > 0 ? (int) Purchase.count(where, parameters) : 0);
     }
 

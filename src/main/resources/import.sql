@@ -4,12 +4,12 @@ insert into public.empresa_sistema values (nextval('public.empresa_sistema_seque
 insert into public.usuario_admin values (nextval('public.usuario_admin_sequence'), now(), null, now(), 'admin@epedidos.com.br', 'Admin', '123');
 insert into public.usuario_portal values (nextval('public.usuario_portal_sequence'), now(), null, now(), 'admin@epedidos.com.br', null, '123', 'ADMIN', 'ACTIVE', 1);
 
--- View: public.mapa_pedidos
+-- View: public.mapa_distribuicao
 DROP TABLE IF EXISTS public.mapa_distribuicao;
 DROP VIEW IF EXISTS public.mapa_distribuicao;
 CREATE OR REPLACE VIEW public.mapa_distribuicao
     AS
-     SELECT ci.produto_id AS id,
+ SELECT ci.produto_id AS id,
     p.createdon,
     p.updatedon,
     p.deletedon,
@@ -27,12 +27,38 @@ CREATE OR REPLACE VIEW public.mapa_distribuicao
      JOIN compra_item ci ON ci.produto_id = p.id
      JOIN compra co ON ci.compra_id = co.id AND co.situacao::text = 'OPEN'::text
      JOIN pedido_item pi ON p.id = pi.produto_id
-     JOIN pedido pe ON pe.id = pi.pedido_id
+     JOIN pedido pe ON pe.id = pi.pedido_id AND pe.situacao::text = 'PURCHASE'::text
      JOIN cliente c ON c.id = pe.cliente_id
      LEFT JOIN produto_categoria pc ON pc.produto_id = p.id
      LEFT JOIN categoria cat ON cat.id = pc.categoria_id
   WHERE p.deletedon IS NULL
   GROUP BY ci.produto_id, p.id
+  ORDER BY p.nome;
+
+-- View: public.mapa_pedido
+DROP TABLE IF EXISTS public.mapa_pedido;
+DROP VIEW IF EXISTS public.mapa_pedido;
+CREATE OR REPLACE VIEW public.mapa_pedido
+    AS
+ SELECT pi.produto_id AS id,
+    p.createdon,
+    p.updatedon,
+    p.deletedon,
+    p.sistema_id,
+    jsonb_build_object('id', pi.produto_id, 'nome', p.nome, 'tipoEmbalagem', p.tipo_embalagem, 'peso', p.peso, 'pedidos', json_agg(DISTINCT jsonb_build_object('id', pi.id, 'cliente', ( SELECT pedido.cliente_id
+           FROM pedido
+          WHERE pedido.id = pi.pedido_id))), 'categorias', json_agg(DISTINCT jsonb_build_object('id', pc.categoria_id, 'nome', cat.nome)), 'clientes', jsonb_agg(DISTINCT jsonb_build_object('id', c.id, 'nome', c.nome, 'totalPedido', ( SELECT COALESCE(sum(it.quantidade_adiquirida), sum(it.quantidade)) AS sum
+           FROM pedido_item it
+             JOIN pedido ped ON ped.id = it.pedido_id
+          WHERE it.produto_id = p.id AND ped.cliente_id = pe.cliente_id)))) AS mapa
+   FROM produto p
+     JOIN pedido_item pi ON p.id = pi.produto_id
+     JOIN pedido pe ON pe.id = pi.pedido_id AND pe.situacao::text = 'PURCHASE'::text
+     JOIN cliente c ON c.id = pe.cliente_id
+     LEFT JOIN produto_categoria pc ON pc.produto_id = p.id
+     LEFT JOIN categoria cat ON cat.id = pc.categoria_id
+  WHERE p.deletedon IS NULL
+  GROUP BY pi.produto_id, p.id
   ORDER BY p.nome;
 
 

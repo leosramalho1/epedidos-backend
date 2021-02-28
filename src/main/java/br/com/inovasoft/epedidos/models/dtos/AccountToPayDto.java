@@ -27,5 +27,6 @@ public class AccountToPayDto implements BillingDto {
     private List<AccountToPayDto> history = new ArrayList<>();
     private PurchaseDto purchaseDto;
     private PayMethodEnum payMethod;
+    private Long purchaseId;
 
 }

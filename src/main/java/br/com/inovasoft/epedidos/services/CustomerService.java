@@ -26,13 +26,13 @@ public class CustomerService extends BaseService<Customer> {
     @Inject
     CustomerMapper mapper;
 
-    public PaginationDataResponse listAll(int page) {
+    public PaginationDataResponse<CustomerDto> listAll(int page) {
         PanacheQuery<Customer> listCustomers = Customer.find(
                 "select p from Customer p where p.systemId = ?1 and p.deletedOn is null", tokenService.getSystemId());
 
-        List<Customer> dataList = listCustomers.page(Page.of(page - 1, limitPerPage)).list();
+        List<Customer> dataList = listCustomers.page(Page.of(page - 1, LIMIT_PER_PAGE)).list();
 
-        return new PaginationDataResponse(mapper.toDto(dataList), limitPerPage, (int) Customer.count());
+        return new PaginationDataResponse<>(mapper.toDto(dataList), LIMIT_PER_PAGE, (int) Customer.count());
     }
 
     public List<CustomerDto> listActive() {
@@ -48,7 +48,7 @@ public class CustomerService extends BaseService<Customer> {
     public List<CustomerDto> getSuggestions(String query) {
         List<Customer> dataList = Customer.list(
                 "systemId = ?1 and upper(name) like ?2 and status = ?3 and deletedOn is null", Sort.by("name"),
-                tokenService.getSystemId(), query.toUpperCase() + "%", StatusEnum.ACTIVE);
+                tokenService.getSystemId(), "%" + query.toUpperCase() + "%", StatusEnum.ACTIVE);
 
         return mapper.toDto(dataList);
     }

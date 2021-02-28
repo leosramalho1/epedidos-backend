@@ -22,20 +22,20 @@ public class CategoryService extends BaseService<Category> {
     @Inject
     CategoryMapper mapper;
 
-    public PaginationDataResponse listBySystemKey(String systemKey, int page) {
+    public PaginationDataResponse<CategoryDto> listBySystemKey(String systemKey, int page) {
         PanacheQuery<Category> listProducts = Category.find(
                 "select p from Category p, CompanySystem c where p.systemId = c.id and c.systemKey = ?1 and p.deletedOn is null",
                 systemKey);
 
-        List<Category> dataList = listProducts.page(Page.of(page - 1, limitPerPage)).list();
+        List<Category> dataList = listProducts.page(Page.of(page - 1, LIMIT_PER_PAGE)).list();
 
-        return new PaginationDataResponse(mapper.toDto(dataList), limitPerPage, (int) Category.count(
+        return new PaginationDataResponse<>(mapper.toDto(dataList), LIMIT_PER_PAGE, (int) Category.count(
                 "from Category p, CompanySystem c where p.systemId = c.id and c.systemKey = ?1 and p.deletedOn is null",
                 systemKey));
     }
 
     public PaginationDataResponse<CategoryDto> listAll(Integer page) {
-        int limitPerPageCategory = BaseService.limitPerPage;
+        int limitPerPageCategory = BaseService.LIMIT_PER_PAGE;
         Long systemId = tokenService.getSystemId();
         PanacheQuery<Category> list = Category.find("select c from Category c where c.systemId = ?1", systemId);
         List<Category> dataList;

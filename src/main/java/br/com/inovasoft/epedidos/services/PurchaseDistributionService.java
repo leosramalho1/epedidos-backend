@@ -66,7 +66,7 @@ public class PurchaseDistributionService extends BaseService<PurchaseDistributio
 
         PanacheQuery<PurchaseDistribution> list = PurchaseDistribution.find(select + where, parameters);
 
-        List<PurchaseDistribution> dataList = list.page(Page.of(page - 1, limitPerPage)).list();
+        List<PurchaseDistribution> dataList = list.page(Page.of(page - 1, LIMIT_PER_PAGE)).list();
 
         Map<Customer, List<PurchaseDistribution>> ordersByCustomer = dataList.stream()
                 .collect(Collectors.groupingBy(PurchaseDistribution::getCustomer));
@@ -96,7 +96,7 @@ public class PurchaseDistributionService extends BaseService<PurchaseDistributio
                 .sorted(Comparator.comparing(CustomerBillingDto::getName))
                 .collect(Collectors.toList());
 
-        return new PaginationDataResponse<>(collect, limitPerPage, (int) Customer.count(where, parameters));
+        return new PaginationDataResponse<>(collect, LIMIT_PER_PAGE, (int) Customer.count(where, parameters));
     }
 
     private List<PurchaseDistributionDto> mapPurchasesDistributionsByProduct(List<PurchaseDistribution> purchaseDistributionList) {

@@ -38,9 +38,9 @@ public class PackageLoanService extends BaseService<PackageLoan> {
         String query = "select p from PackageLoan p where p.systemId = ?1 and p.deletedOn is null";
         PanacheQuery<PackageLoan> list = PackageLoan.find(query, tokenService.getSystemId());
 
-        List<PackageLoan> dataList = list.page(Page.of(page - 1, limitPerPage)).list();
+        List<PackageLoan> dataList = list.page(Page.of(page - 1, LIMIT_PER_PAGE)).list();
 
-        return new PaginationDataResponse<>(mapper.toDto(dataList), limitPerPage, (int) PackageLoan.count(query, tokenService.getSystemId()));
+        return new PaginationDataResponse<>(mapper.toDto(dataList), LIMIT_PER_PAGE, (int) PackageLoan.count(query, tokenService.getSystemId()));
     }
 
 
@@ -81,9 +81,9 @@ public class PackageLoanService extends BaseService<PackageLoan> {
         String order = " order by p.createdOn desc";
 
         List<PackageLoan> dataList = PackageLoan.find(query + order, parameters)
-                .page(Page.of(page - 1, limitPerPage)).list();
+                .page(Page.of(page - 1, LIMIT_PER_PAGE)).list();
 
-        return new PaginationDataResponse<>(mapper.toDto(dataList), limitPerPage, (int) PackageLoan.count(query, parameters));
+        return new PaginationDataResponse<>(mapper.toDto(dataList), LIMIT_PER_PAGE, (int) PackageLoan.count(query, parameters));
     }
 
     public PackageLoan findById(Long id) {

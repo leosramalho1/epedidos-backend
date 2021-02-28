@@ -5,7 +5,6 @@ import br.com.inovasoft.epedidos.models.dtos.SetupDto;
 import br.com.inovasoft.epedidos.models.entities.Setup;
 import br.com.inovasoft.epedidos.models.enums.SetupEnum;
 import br.com.inovasoft.epedidos.security.TokenService;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.quartz.SchedulerException;
 
@@ -15,7 +14,6 @@ import javax.transaction.Transactional;
 import java.util.List;
 import java.util.Optional;
 
-@Slf4j
 @ApplicationScoped
 public class SetupService extends BaseService<Setup> {
 

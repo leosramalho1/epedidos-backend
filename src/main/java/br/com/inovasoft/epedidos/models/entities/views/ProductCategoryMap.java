@@ -6,14 +6,17 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
+import java.io.Serializable;
 import java.util.Objects;
 
 @Data
 @SuperBuilder
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class ProductCategoryMap {
+public class ProductCategoryMap implements Serializable {
 
+    private static final long serialVersionUID = -577536979725227161L;
+    
     private Long id;
     @JsonProperty(value = "nome")
     private String name;

@@ -5,7 +5,7 @@ import br.com.inovasoft.epedidos.models.dtos.OrderDto;
 import br.com.inovasoft.epedidos.models.entities.views.ProductMap;
 import br.com.inovasoft.epedidos.models.enums.OrderEnum;
 import br.com.inovasoft.epedidos.security.jwt.JwtRoles;
-import br.com.inovasoft.epedidos.services.OrderDistributionService;
+import br.com.inovasoft.epedidos.services.OrderMapService;
 import br.com.inovasoft.epedidos.services.OrderService;
 import br.com.inovasoft.epedidos.services.PurchaseDistributionService;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
@@ -30,7 +30,7 @@ public class OrderResources {
     OrderService service;
 
     @Inject
-    OrderDistributionService orderDistributionService;
+    OrderMapService orderMapService;
 
     @Inject
     PurchaseDistributionService purchaseDistributionService;
@@ -75,17 +75,24 @@ public class OrderResources {
     @GET
     @Path("/map")
     @RolesAllowed(JwtRoles.USER_BACKOFFICE)
-    public Response listAll(@QueryParam("page") int page, @QueryParam("category") Long category) {
+    public Response listAllOrdersMap(@QueryParam("page") int page, @QueryParam("category") Long category) {
         return Response.status(Response.Status.OK)
-                .entity(orderDistributionService.listAll(page, Optional.ofNullable(category))).build();
+                .entity(orderMapService.listAllOrdersMap(page, Optional.ofNullable(category))).build();
+    }
+    @GET
+    @Path("/distributions")
+    @RolesAllowed(JwtRoles.USER_BACKOFFICE)
+    public Response listAllDistributions(@QueryParam("page") int page, @QueryParam("category") Long category) {
+        return Response.status(Response.Status.OK)
+                .entity(orderMapService.listAllDistributions(page, Optional.ofNullable(category))).build();
     }
 
     @PUT
-    @Path("/map")
+    @Path("/distributions")
     @Transactional
     @RolesAllowed(JwtRoles.USER_BACKOFFICE)
     public void update(List<ProductMap> produtosCorrecao) {
-        orderDistributionService.update(produtosCorrecao);
+        orderMapService.update(produtosCorrecao);
     }
 
     @POST

@@ -25,7 +25,6 @@ import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 import br.com.inovasoft.epedidos.models.dtos.ChangePassDto;
 import br.com.inovasoft.epedidos.models.dtos.LoginDto;
 import br.com.inovasoft.epedidos.models.dtos.PurchaseAppDto;
-import br.com.inovasoft.epedidos.models.dtos.PurchaseDto;
 import br.com.inovasoft.epedidos.models.dtos.SupplierDto;
 import br.com.inovasoft.epedidos.models.entities.Company;
 import br.com.inovasoft.epedidos.models.entities.CompanySystem;

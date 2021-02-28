@@ -34,6 +34,7 @@ public class PurchaseItemDto {
         this.idProduct = idProduct;
         this.nameProduct = nameProduct;
         this.quantity = quantity;
+        this.totalValue = BigDecimal.ZERO;
     }
 
 

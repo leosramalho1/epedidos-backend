@@ -13,7 +13,6 @@ import br.com.inovasoft.epedidos.services.AccountToReceiveService;
 import br.com.inovasoft.epedidos.services.CustomerService;
 import br.com.inovasoft.epedidos.services.OrderService;
 import br.com.inovasoft.epedidos.services.ProductService;
-import br.com.inovasoft.epedidos.services.UserService;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 

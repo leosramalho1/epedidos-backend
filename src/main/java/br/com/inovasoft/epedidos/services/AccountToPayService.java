@@ -38,9 +38,9 @@ public class AccountToPayService extends BillingService<AccountToPay, AccountToP
     public PaginationDataResponse<AccountToPayDto> queryList(int page, String query, Parameters params) {
         PanacheQuery<AccountToPay> list = AccountToPay.find(query, Sort.by("dueDate").and("supplier.name"), params);
 
-        List<AccountToPay> dataList = list.page(Page.of(page - 1, limitPerPage)).list();
+        List<AccountToPay> dataList = list.page(Page.of(page - 1, LIMIT_PER_PAGE)).list();
 
-        return new PaginationDataResponse<>(mapper.toDto(dataList), limitPerPage,
+        return new PaginationDataResponse<>(mapper.toDto(dataList), LIMIT_PER_PAGE,
                 (int) AccountToPay.count(query, params));
     }
     

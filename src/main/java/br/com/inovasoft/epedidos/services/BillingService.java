@@ -27,9 +27,9 @@ public abstract class BillingService<T extends BaseEntity, D extends BillingDto>
 
     private Class<T> entityType;
 
-    protected static final int limitPerPage = 31;
+    protected static final int LIMIT_PER_PAGE = 31;
 
-    public BillingService(BaseMapper<T, D> mapper, TokenService tokenService, Class<T> entityType) {
+    protected BillingService(BaseMapper<T, D> mapper, TokenService tokenService, Class<T> entityType) {
         this.mapper = mapper;
         this.tokenService = tokenService;
         this.entityType = entityType;

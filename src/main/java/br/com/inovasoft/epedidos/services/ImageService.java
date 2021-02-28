@@ -6,12 +6,10 @@ import br.com.inovasoft.epedidos.models.dtos.ImageDto;
 import br.com.inovasoft.epedidos.models.entities.CompanySystem;
 import br.com.inovasoft.epedidos.models.entities.Image;
 import br.com.inovasoft.epedidos.security.TokenService;
-import br.com.inovasoft.epedidos.security.jwt.JwtCustomClaims;
 import br.com.inovasoft.epedidos.services.s3.S3Service;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import javax.json.JsonNumber;
 import java.util.StringJoiner;
 import java.util.UUID;
 

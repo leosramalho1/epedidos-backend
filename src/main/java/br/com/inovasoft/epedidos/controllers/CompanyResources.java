@@ -1,6 +1,5 @@
 package br.com.inovasoft.epedidos.controllers;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 
 import javax.annotation.security.RolesAllowed;
@@ -48,7 +47,7 @@ public class CompanyResources {
 
         List<Company> dataList = listCompanies.page(Page.of(page - 1, limitPerPage)).list();
 
-        PaginationDataResponse result = new PaginationDataResponse(dataList, limitPerPage, (int) Company.count());
+        PaginationDataResponse<Company> result = new PaginationDataResponse<>(dataList, limitPerPage, (int) Company.count());
         return Response.status(Response.Status.OK).entity(result).build();
 
     }
@@ -73,8 +72,7 @@ public class CompanyResources {
     @Path("/{id}")
     @RolesAllowed(JwtRoles.USER_ADMIN)
     @Transactional
-    public Response change(@PathParam("id") Long idCompany, @Valid CompanyDto company)
-            throws IllegalAccessException, InvocationTargetException {
+    public Response change(@PathParam("id") Long idCompany, @Valid CompanyDto company) {
 
         CompanyDto entityResponse = service.update(idCompany, company);
 

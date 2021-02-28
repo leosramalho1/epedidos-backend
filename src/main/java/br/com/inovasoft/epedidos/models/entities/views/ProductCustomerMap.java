@@ -4,12 +4,15 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
+import java.io.Serializable;
 import java.util.Comparator;
 
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class ProductCustomerMap implements Comparable<ProductCustomerMap> {
+public class ProductCustomerMap implements Comparable<ProductCustomerMap>, Serializable {
 
+    private static final long serialVersionUID = -1233342758358021560L;
+    
     private Long id;
     @JsonProperty(value = "nome")
     private String name;

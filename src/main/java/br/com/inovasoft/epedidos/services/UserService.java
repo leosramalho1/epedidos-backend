@@ -33,9 +33,9 @@ public class UserService extends BaseService<UserPortal> {
 		String query = "systemId = ?1 and deletedOn is null";
 		PanacheQuery<UserPortal> listProducts = UserPortal.find(query, tokenService.getSystemId());
 
-		List<UserPortal> dataList = listProducts.page(Page.of(page - 1, limitPerPage)).list();
+		List<UserPortal> dataList = listProducts.page(Page.of(page - 1, LIMIT_PER_PAGE)).list();
 
-		return new PaginationDataResponse<>(dataList, limitPerPage,
+		return new PaginationDataResponse<>(dataList, LIMIT_PER_PAGE,
 				(int) UserPortal.count(query, tokenService.getSystemId()));
 	}
 
@@ -71,10 +71,7 @@ public class UserService extends BaseService<UserPortal> {
 		userBase.persist();
 	}
 
-	
-
-	
-
+	@Override
 	@Transactional
 	public void save(UserPortal entity) {
 		checkPassword(entity.getPassword(), entity.getConfirmPassword());

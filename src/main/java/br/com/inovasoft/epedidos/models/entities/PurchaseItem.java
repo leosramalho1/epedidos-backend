@@ -109,10 +109,10 @@ public class PurchaseItem extends BaseEntity {
     }
 
     public boolean hasQuantityToDistributed() {
-        return calculateAvaliableQuantity() > 0;
+        return calculateAvailableQuantity() > 0;
     }
 
-    public Integer calculateAvaliableQuantity() {
+    public Integer calculateAvailableQuantity() {
         return quantity - distributedQuantity;
     }
 

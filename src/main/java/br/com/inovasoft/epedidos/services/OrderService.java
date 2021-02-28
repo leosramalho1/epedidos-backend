@@ -63,9 +63,9 @@ public class OrderService extends BaseService<Order> {
         PanacheQuery<Order> listOrders = Order.find(
                 query, Sort.by("id").descending(), tokenService.getSystemId(), orderEnums);
 
-        List<Order> dataList = listOrders.page(Page.of(page - 1, limitPerPage)).list();
+        List<Order> dataList = listOrders.page(Page.of(page - 1, LIMIT_PER_PAGE)).list();
 
-        return new PaginationDataResponse<>(mapper.toDto(dataList), limitPerPage,
+        return new PaginationDataResponse<>(mapper.toDto(dataList), LIMIT_PER_PAGE,
                 (int) Order.count(query, tokenService.getSystemId(), orderEnums));
     }
 

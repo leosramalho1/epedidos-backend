@@ -31,9 +31,9 @@ public class ProductService extends BaseService<Product> {
         PanacheQuery<Product> listProducts = Product.find(
                 "select p from Product p where p.systemId = ?1 and p.deletedOn is null", tokenService.getSystemId());
 
-        List<Product> dataList = listProducts.page(Page.of(page - 1, limitPerPage)).list();
+        List<Product> dataList = listProducts.page(Page.of(page - 1, LIMIT_PER_PAGE)).list();
 
-        return new PaginationDataResponse<>(mapper.toDto(dataList), limitPerPage, (int) Product.count());
+        return new PaginationDataResponse<>(mapper.toDto(dataList), LIMIT_PER_PAGE, (int) Product.count());
     }
 
     public List<OrderItemDto> listProductsToGrid() {
