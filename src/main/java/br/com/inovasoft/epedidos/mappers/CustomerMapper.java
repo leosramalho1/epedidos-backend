@@ -5,7 +5,7 @@ import br.com.inovasoft.epedidos.models.dtos.CustomerDto;
 import br.com.inovasoft.epedidos.models.entities.Customer;
 import org.mapstruct.Mapper;
 
-@Mapper(componentModel = "cdi", uses = { CustomerUserMapper.class, AddressMapper.class })
+@Mapper(componentModel = "cdi", uses = { CustomerUserMapper.class, CustomerAddressMapper.class })
 public interface CustomerMapper extends BaseMapper<Customer, CustomerDto> {
 
     CustomerBillingDto toBillingClosingDto(Customer entity);

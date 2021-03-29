@@ -74,7 +74,7 @@ public class CustomerAddressService extends BaseService<CustomerAddress> {
     }
 
     public CustomerAddressDto update(Long id, CustomerAddressDto dto) {
-        CustomerAddress entity = findById(dto.getCustomer().getId(), id);
+        CustomerAddress entity = CustomerAddress.findById( id);
         mapper.updateEntityFromDto(dto, entity);
         entity.persist();
         return mapper.toDto(entity);
@@ -86,7 +86,7 @@ public class CustomerAddressService extends BaseService<CustomerAddress> {
 
         if (isDeliveryAddressChangedToTrue(dto, entity)
                 || isPrimaryAddressChangedToTrue(dto, entity)) {
-            findAddressesByCustomerAndSystemId(dto.getCustomer().getId(), tokenService.getSystemId()).stream()
+            findAddressesByCustomerAndSystemId(idCustomer, tokenService.getSystemId()).stream()
                     .filter(i -> !i.getId().equals(entity.getId())).forEach(i -> {
                 if (isDeliveryAddressChangedToTrue(dto, entity)) {
                     i.setDeliveryAddress(false);

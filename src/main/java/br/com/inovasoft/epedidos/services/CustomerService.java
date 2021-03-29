@@ -1,5 +1,14 @@
 package br.com.inovasoft.epedidos.services;
 
+import java.util.List;
+import java.util.Objects;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+import javax.transaction.Transactional;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Response;
+
 import br.com.inovasoft.epedidos.mappers.CustomerMapper;
 import br.com.inovasoft.epedidos.models.dtos.CustomerDto;
 import br.com.inovasoft.epedidos.models.dtos.PaginationDataResponse;
@@ -10,13 +19,6 @@ import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import io.quarkus.panache.common.Page;
 import io.quarkus.panache.common.Sort;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-import javax.transaction.Transactional;
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Response;
-import java.util.List;
-
 @ApplicationScoped
 public class CustomerService extends BaseService<Customer> {
 
@@ -25,6 +27,9 @@ public class CustomerService extends BaseService<Customer> {
 
     @Inject
     CustomerMapper mapper;
+
+    @Inject
+    CustomerAddressService addressService;
 
     public PaginationDataResponse<CustomerDto> listAll(int page) {
         PanacheQuery<Customer> listCustomers = Customer.find(
@@ -64,11 +69,17 @@ public class CustomerService extends BaseService<Customer> {
 
     public CustomerDto saveDto(CustomerDto dto) {
         Customer entity = mapper.toEntity(dto);
-        entity.setPassword("123");
+        entity.setPassword(entity.getCpfCnpj());
         entity.setSystemId(tokenService.getSystemId());
 
         super.save(entity);
 
+        //Save new address
+        dto.getAddress().stream().filter(item -> Objects.isNull(item.getId())).forEach(dtoAddress -> {
+
+            addressService.saveDto(entity.getId(), dtoAddress);
+        });
+        
         return mapper.toDto(entity);
     }
 

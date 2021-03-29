@@ -26,7 +26,7 @@ public class CustomerDto {
     private StatusEnum status;
     private CustomerPayTypeEnum payType;
     private BigDecimal payValue;
-    private List<AddressDto> address = new ArrayList<>();
+    private List<CustomerAddressDto> address = new ArrayList<>();
     private List<CustomerUserDto> users = new ArrayList<>();
 
 }

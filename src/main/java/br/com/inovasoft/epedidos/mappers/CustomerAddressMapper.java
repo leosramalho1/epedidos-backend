@@ -4,7 +4,7 @@ import br.com.inovasoft.epedidos.models.dtos.CustomerAddressDto;
 import br.com.inovasoft.epedidos.models.entities.CustomerAddress;
 import org.mapstruct.Mapper;
 
-@Mapper(componentModel = "cdi", uses = { AddressMapper.class, CustomerMapper.class })
+@Mapper(componentModel = "cdi", uses = { AddressMapper.class })
 public interface CustomerAddressMapper extends BaseMapper<CustomerAddress, CustomerAddressDto> {
 
 }
