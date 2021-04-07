@@ -1,6 +1,7 @@
 package br.com.inovasoft.epedidos.models.entities;
 
 import br.com.inovasoft.epedidos.models.BaseEntity;
+import br.com.inovasoft.epedidos.models.enums.PackageTypeEnum;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -64,6 +65,10 @@ public class PurchaseItem extends BaseEntity {
     @NotNull
     @Column(name = "quantidade_distribuida")
     private Integer distributedQuantity;
+
+    @Column(name = "tipo_embalagem")
+    @Enumerated(EnumType.STRING)
+    private PackageTypeEnum packageType;
 
     @Transient
     private BigDecimal averageValue;

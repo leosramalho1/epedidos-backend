@@ -1,10 +1,12 @@
 package br.com.inovasoft.epedidos.services;
 
+import br.com.inovasoft.epedidos.mappers.PaymentMethodMapper;
 import br.com.inovasoft.epedidos.mappers.PurchaseAppMapper;
 import br.com.inovasoft.epedidos.mappers.PurchaseItemMapper;
 import br.com.inovasoft.epedidos.mappers.PurchaseMapper;
 import br.com.inovasoft.epedidos.models.dtos.*;
 import br.com.inovasoft.epedidos.models.entities.*;
+import br.com.inovasoft.epedidos.models.entities.references.PaymentMethod;
 import br.com.inovasoft.epedidos.models.enums.OrderEnum;
 import br.com.inovasoft.epedidos.models.enums.PurchaseEnum;
 import br.com.inovasoft.epedidos.security.TokenService;
@@ -12,6 +14,8 @@ import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import io.quarkus.panache.common.Page;
 import io.quarkus.panache.common.Parameters;
 import io.quarkus.panache.common.Sort;
+import lombok.extern.slf4j.Slf4j;
+
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -26,6 +30,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Slf4j
 @ApplicationScoped
 public class PurchaseService extends BaseService<Purchase> {
 
@@ -40,6 +45,9 @@ public class PurchaseService extends BaseService<Purchase> {
 
     @Inject
     PurchaseItemMapper purchaseItemMapper;
+
+    @Inject
+    PaymentMethodMapper paymentMethodMapper;
 
     @Inject
     PackageLoanService packageLoanService;
@@ -173,10 +181,10 @@ public class PurchaseService extends BaseService<Purchase> {
     }
 
     public PurchaseDto getProductsToBuy(Long buyerId) {
-        List<Product> products = Product.list("buyerId=?1 order by name", buyerId);
+        List<Product> products = Product.list("buyerId = ?1", Sort.by("name"), buyerId);
 
         List<PurchaseItemDto> items = products.stream()
-                .map(product -> new PurchaseItemDto(product.getId(), product.getName(), 0))
+                .map(product -> new PurchaseItemDto(product.getId(), product.getName(), 0, product.getPackageType()))
                 .collect(Collectors.toList());
 
         PurchaseDto result = new PurchaseDto();
@@ -247,7 +255,11 @@ public class PurchaseService extends BaseService<Purchase> {
 
         purchase.setItens(purchaseItemMapper
                 .toDto(PurchaseItem.list("purchase.id = ?1 order by product.name", purchase.getId())));
-
+        if(purchase.getPaymentMethod() != null) {
+            PaymentMethod paymentMethod = (PaymentMethod) PaymentMethod.find("id", purchase.getPaymentMethod().getId()).firstResult();
+            purchase.setPaymentMethod(paymentMethodMapper.toDto(paymentMethod));
+        }
+        log.info("##### {}", purchase);
         return purchase;
     }
 
@@ -262,6 +274,7 @@ public class PurchaseService extends BaseService<Purchase> {
         purchase.setSystemId(tokenService.getSystemId());
         purchase.setTotalValue(Purchase.calculateTotalValue(purchaseItems, BigDecimal.ZERO));
         purchase.setTotalQuantity(Purchase.calculateQuantity(purchaseItems, 0));
+        purchase.setPaymentMethod(PaymentMethod.find("id", dto.getPaymentMethod().getId()).firstResult());
         purchase.persist();
 
         if(CollectionUtils.isNotEmpty(purchaseItems)) {
@@ -293,7 +306,7 @@ public class PurchaseService extends BaseService<Purchase> {
                 accountToPay.setOriginalValue(partialValue);
                 accountToPay.setDueDate(purchase.getDueDate().plusMonths(i));
                 accountToPay.setPurchase(purchase);
-                accountToPay.setPayMethod(purchase.getPayMethod());
+                accountToPay.setPaymentMethod(purchase.getPaymentMethod());
                 accountToPay.persist();
             }
 

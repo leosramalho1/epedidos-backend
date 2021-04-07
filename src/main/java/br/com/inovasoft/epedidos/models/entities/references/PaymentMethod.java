@@ -1,11 +1,14 @@
 package br.com.inovasoft.epedidos.models.entities.references;
 
 import br.com.inovasoft.epedidos.models.BaseEntity;
+import br.com.inovasoft.epedidos.models.enums.StatusEnum;
+import io.smallrye.common.constraint.NotNull;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
+import java.util.Objects;
 
 @Data
 @Entity
@@ -21,7 +24,28 @@ public class PaymentMethod extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "payment-method-sequence")
     private Long id;
 
+    @NotNull
     @Column(name = "nome")
     private String name;
+    
+    @NotNull
+    @Column(name = "sistema_id")
+    private Long systemId;
+
+    @NotNull
+    @Enumerated(EnumType.STRING)
+    @Column(name = "situacao")
+    private StatusEnum status;
+
+    @NotNull
+    @Column(name = "prazo")
+    private Integer deadline;
+
+    @PrePersist
+    public void prePersist() {
+        if(Objects.isNull(deadline)) {
+            deadline = 0;
+        }
+    }
 
 }

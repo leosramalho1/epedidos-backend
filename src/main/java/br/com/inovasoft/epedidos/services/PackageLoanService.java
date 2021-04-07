@@ -124,7 +124,6 @@ public class PackageLoanService extends BaseService<PackageLoan> {
         return mapper.toDto(entity);
     }
 
-    @Override
     public void softDelete(Long id) {
         PackageLoan entity = findById(id);
         entity.setDeletedOn(LocalDateTime.now());

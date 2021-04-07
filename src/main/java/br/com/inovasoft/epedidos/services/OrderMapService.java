@@ -42,22 +42,6 @@ public class OrderMapService extends BaseService<OrderDistributionMap> {
         return new PaginationDataResponse<>(dataList, limitPerPage, (int) OrderDistributionMap.count("systemId", systemId));
     }
 
-    public PaginationDataResponse<OrderMap> listAllOrdersMap(Integer page, @NotNull Optional<Long> category) {
-
-        Long systemId = tokenService.getSystemId();
-        PanacheQuery<OrderMap> list = OrderMap.find("systemId", Sort.by("id").descending(), systemId);
-
-        List<OrderMap> dataList = list.page(Page.of(page - 1, limitPerPage)).list();
-
-        if(category.isPresent()) {
-            ProductCategoryMap categoriaFiltro = ProductCategoryMap.builder().id(category.get()).build();
-            dataList = dataList.stream()
-                    .filter(d -> d.getProductMap().getCategoryMaps().contains(categoriaFiltro))
-                    .collect(Collectors.toList());
-        }
-
-        return new PaginationDataResponse<>(dataList, limitPerPage, (int) OrderMap.count("systemId", systemId));
-    }
 
     public void update2(List<ProductMap> productsMap) {
 

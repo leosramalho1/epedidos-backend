@@ -1,6 +1,5 @@
 package br.com.inovasoft.epedidos.models.entities.views;
 
-import br.com.inovasoft.epedidos.models.enums.PackageTypeEnum;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
@@ -27,8 +26,6 @@ public class ProductMap implements Serializable {
     private BigDecimal weidth;
     @JsonProperty(value = "totalComprado")
     private Long totalPurchaseValue;
-    @JsonProperty(value = "tipoEmbalagem")
-    private PackageTypeEnum packageType;
     @JsonProperty(value = "clientes")
     private SortedSet<ProductCustomerMap> customerMaps;
     @JsonProperty(value = "pedidos")
@@ -39,6 +36,8 @@ public class ProductMap implements Serializable {
     private Integer totalOrderValue;
     @JsonProperty(value = "compras")
     private Set<ProductPurchaseMap> purchaseMaps;
+    @JsonProperty(value = "embalagens")
+    private Set<PackageTypeMap> packageTypeMaps;
     private boolean changed;
 
     public Integer getTotalOrderValue() {

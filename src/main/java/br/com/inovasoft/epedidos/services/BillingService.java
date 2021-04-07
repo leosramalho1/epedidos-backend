@@ -21,6 +21,9 @@ import java.util.List;
 @NoArgsConstructor
 public abstract class BillingService<T extends BaseEntity, D extends BillingDto> extends BaseService<T> {
 
+    @Inject
+    EntityManager em;
+
     TokenService tokenService;
 
     BaseMapper<T, D> mapper;
@@ -81,10 +84,6 @@ public abstract class BillingService<T extends BaseEntity, D extends BillingDto>
         return queryList(page, query, parameters);
 
     }
-
-    @Inject
-    EntityManager em;
-
 
     public List<D> listHistoryDto(Long id) {
 

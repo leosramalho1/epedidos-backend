@@ -8,7 +8,7 @@ import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.Mappings;
 
-@Mapper(componentModel = "cdi", uses = { SupplierMapper.class, PurchaseItemMapper.class, UserPortalMapper.class })
+@Mapper(componentModel = "cdi", uses = { SupplierMapper.class, PurchaseItemMapper.class, UserPortalMapper.class, PaymentMethodMapper.class })
 public interface PurchaseMapper extends BaseMapper<Purchase, PurchaseDto> {
 
     @Mappings({                                   

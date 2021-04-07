@@ -5,7 +5,7 @@ import br.com.inovasoft.epedidos.models.entities.AccountToPay;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-@Mapper(componentModel = "cdi", uses = { SupplierMapper.class, PurchaseMapper.class, PurchaseItemMapper.class })
+@Mapper(componentModel = "cdi", uses = { SupplierMapper.class, PurchaseMapper.class, PurchaseItemMapper.class, PaymentMethodMapper.class })
 public interface AccountToPayMapper extends BaseMapper<AccountToPay, AccountToPayDto> {
 
     @Override

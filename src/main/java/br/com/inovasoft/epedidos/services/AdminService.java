@@ -15,4 +15,8 @@ public class AdminService extends BaseService<UserAdmin> {
 		userBase.persist();
 	}
 
+	@Transactional
+	public void softDelete(Long id) {
+		UserAdmin.update("set deletedOn = now() where id = ?1", id);
+	}
 }

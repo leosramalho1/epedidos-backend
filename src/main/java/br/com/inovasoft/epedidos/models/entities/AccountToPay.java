@@ -1,6 +1,7 @@
 package br.com.inovasoft.epedidos.models.entities;
 
 import br.com.inovasoft.epedidos.models.BaseEntity;
+import br.com.inovasoft.epedidos.models.entities.references.PaymentMethod;
 import br.com.inovasoft.epedidos.models.enums.PayMethodEnum;
 import br.com.inovasoft.epedidos.models.enums.PayStatusEnum;
 import br.com.inovasoft.epedidos.models.enums.converters.PayMethodEnumConverter;
@@ -78,10 +79,11 @@ public class AccountToPay extends BaseEntity implements Billing {
     @ManyToOne(targetEntity = Purchase.class)
     private Purchase purchase;
 
-    @NotNull
-    @Convert(converter = PayMethodEnumConverter.class)
-    @Column(name = "forma_pagamento")
-    private PayMethodEnum payMethod;
+    @NotNull(message = "Payment method is required")
+    @Audited(targetAuditMode = NOT_AUDITED)
+    @JoinColumn(name = "forma_pagamento")
+    @ManyToOne(targetEntity = PaymentMethod.class)
+    private PaymentMethod paymentMethod;
 
     @PrePersist
     @PreUpdate

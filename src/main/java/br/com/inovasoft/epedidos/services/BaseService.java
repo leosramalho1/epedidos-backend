@@ -27,9 +27,4 @@ public abstract class BaseService<E extends BaseEntity> {
 		E.deleteById(id);
 	}
 
-	@Transactional
-	public void softDelete(Long id) {
-		E.update("set deletedOn = now() where id = ?1", id);
-	}
-
 }

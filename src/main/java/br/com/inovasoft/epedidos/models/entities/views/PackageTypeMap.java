@@ -9,11 +9,10 @@ import java.io.Serializable;
 
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class ProductPurchaseMap implements Serializable {
+public class PackageTypeMap implements Serializable {
 
     private static final long serialVersionUID = -498163837314213415L;
-    
-    private Long id;
+
     @JsonProperty(value = "tipoEmbalagem")
     private PackageTypeEnum packageType;
     private Integer totalComprado;

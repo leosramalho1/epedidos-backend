@@ -73,13 +73,6 @@ public class OrderResources {
     }
 
     @GET
-    @Path("/map")
-    @RolesAllowed(JwtRoles.USER_BACKOFFICE)
-    public Response listAllOrdersMap(@QueryParam("page") int page, @QueryParam("category") Long category) {
-        return Response.status(Response.Status.OK)
-                .entity(orderMapService.listAllOrdersMap(page, Optional.ofNullable(category))).build();
-    }
-    @GET
     @Path("/distributions")
     @RolesAllowed(JwtRoles.USER_BACKOFFICE)
     public Response listAllDistributions(@QueryParam("page") int page, @QueryParam("category") Long category) {

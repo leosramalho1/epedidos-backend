@@ -106,4 +106,9 @@ public class UserService extends BaseService<UserPortal> {
 					Response.status(400).entity("Confirmação senha deve ser igual a senha.").build());
 		}
 	}
+
+	@Transactional
+	public void softDelete(Long id) {
+		UserPortal.update("set deletedOn = now() where id = ?1", id);
+	}
 }
