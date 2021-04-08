@@ -9,6 +9,7 @@ import br.com.inovasoft.epedidos.models.enums.RoleEnum;
 import br.com.inovasoft.epedidos.security.TokenService;
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import io.quarkus.panache.common.Page;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.beanutils.BeanUtils;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -20,6 +21,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @ApplicationScoped
 public class UserService extends BaseService<UserPortal> {
 
@@ -89,12 +91,8 @@ public class UserService extends BaseService<UserPortal> {
 			BeanUtils.copyProperties(entity, dto);
 			entity.setSystemId(tokenService.getSystemId());
 			UserPortal.persist(entity);
-		} catch (IllegalAccessException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (InvocationTargetException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		} catch (IllegalAccessException | InvocationTargetException e) {
+			log.error("Erro ao atualizar usuario", e);
 		}
 
 		return entity;
