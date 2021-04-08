@@ -1,1 +1,1 @@
-web: java -Djava.net.preferIPv4Stack=true -Dquarkus.http.port=$PORT $JAVA_OPTS -jar target/*-runner.jar
+web: java -Djava.net.preferIPv4Stack=true -Dquarkus.http.port=$PORT $JAVA_OPTS -jar target/*.jar

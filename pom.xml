@@ -8,6 +8,7 @@
 		<quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
 		<quarkus.platform.group-id>io.quarkus</quarkus.platform.group-id>
 		<quarkus.platform.version>1.13.0.Final</quarkus.platform.version>
+		<quarkus-plugin.version>1.13.0.Final</quarkus-plugin.version>
 		<surefire-plugin.version>2.22.1</surefire-plugin.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<maven.compiler.source>11</maven.compiler.source>
@@ -164,7 +165,7 @@
 			<plugin>
 				<groupId>io.quarkus</groupId>
 				<artifactId>quarkus-maven-plugin</artifactId>
-				<version>${quarkus.platform.version}</version>
+				<version>${quarkus-plugin.version}</version>
 				<executions>
 					<execution>
 						<goals>
@@ -188,7 +189,7 @@
 					<plugin>
 						<groupId>io.quarkus</groupId>
 						<artifactId>quarkus-maven-plugin</artifactId>
-						<version>${quarkus.platform.version}</version>
+						<version>${quarkus-plugin.version}</version>
 						<executions>
 							<execution>
 								<goals>
