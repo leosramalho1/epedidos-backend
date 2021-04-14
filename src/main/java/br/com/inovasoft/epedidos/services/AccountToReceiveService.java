@@ -37,7 +37,9 @@ public class AccountToReceiveService extends BillingService<AccountToReceive, Ac
 
     @Override
     public PaginationDataResponse<AccountToReceiveDto> queryList(int page, String query, Parameters params) {
-        PanacheQuery<AccountToReceive> list = AccountToReceive.find(query, Sort.by("dueDate").and("customer.name").descending(), params);
+        PanacheQuery<AccountToReceive> list = AccountToReceive.find(query,
+                Sort.by("dueDate").descending().and("customer.name").descending(),
+                params);
 
         List<AccountToReceive> dataList = list.page(Page.of(page - 1, LIMIT_PER_PAGE)).list();
 

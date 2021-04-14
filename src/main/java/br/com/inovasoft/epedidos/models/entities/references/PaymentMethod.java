@@ -41,6 +41,9 @@ public class PaymentMethod extends BaseEntity {
     @Column(name = "prazo")
     private Integer deadline;
 
+    @Column(name = "baixa_automatica")
+    private boolean autoPayment;
+
     @PrePersist
     public void prePersist() {
         if(Objects.isNull(deadline)) {

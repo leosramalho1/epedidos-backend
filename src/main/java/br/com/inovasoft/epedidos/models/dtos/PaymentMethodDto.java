@@ -10,5 +10,6 @@ public class PaymentMethodDto {
     private String name;
     private StatusEnum status;
     private Integer deadline;
+    private boolean autoPayment;
     
 }
