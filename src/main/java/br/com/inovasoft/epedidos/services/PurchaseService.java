@@ -15,7 +15,6 @@ import io.quarkus.panache.common.Page;
 import io.quarkus.panache.common.Parameters;
 import io.quarkus.panache.common.Sort;
 import lombok.extern.slf4j.Slf4j;
-
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -267,6 +266,7 @@ public class PurchaseService extends BaseService<Purchase> {
     @Transactional
     public PurchaseDto saveDto(PurchaseDto dto, UserPortal buyer, Supplier supplier) {
         List<PurchaseItem> purchaseItems = purchaseItemMapper.toEntity(dto.getItens());
+        PaymentMethod paymentMethod = PaymentMethod.find("id", dto.getPaymentMethod().getId()).firstResult();
 
         Purchase purchase = mapper.toEntity(dto);
         purchase.setBuyer(buyer);
@@ -274,7 +274,7 @@ public class PurchaseService extends BaseService<Purchase> {
         purchase.setSystemId(tokenService.getSystemId());
         purchase.setTotalValue(Purchase.calculateTotalValue(purchaseItems, BigDecimal.ZERO));
         purchase.setTotalQuantity(Purchase.calculateQuantity(purchaseItems, 0));
-        purchase.setPaymentMethod(PaymentMethod.find("id", dto.getPaymentMethod().getId()).firstResult());
+        purchase.setPaymentMethod(paymentMethod);
         purchase.persist();
 
         if(CollectionUtils.isNotEmpty(purchaseItems)) {
@@ -307,6 +307,10 @@ public class PurchaseService extends BaseService<Purchase> {
                 accountToPay.setDueDate(purchase.getDueDate().plusMonths(i));
                 accountToPay.setPurchase(purchase);
                 accountToPay.setPaymentMethod(purchase.getPaymentMethod());
+                if(paymentMethod.isAutoPayment()) {
+                    accountToPay.setPaidOutDate(LocalDate.now());
+                    accountToPay.setPaidOutValue(accountToPay.getOriginalValue());
+                }
                 accountToPay.persist();
             }
 
@@ -321,18 +325,16 @@ public class PurchaseService extends BaseService<Purchase> {
         UserPortal buyer = UserPortal.findById(dto.getBuyer().getId());
         Supplier supplier = Supplier.findById(dto.getSupplier().getId());
 
-        return  saveDto( dto,  buyer,  supplier);
+        return saveDto(dto, buyer, supplier);
     }
 
     @Transactional
     public PurchaseAppDto saveDtoFromApp(PurchaseAppDto appDto) {
 
-        UserPortal buyer = appDto.getIdBuyer() !=null?UserPortal.findById(appDto.getIdBuyer()):UserPortal.find("email", tokenService.getUserEmail()).firstResult();
+        UserPortal buyer = appDto.getIdBuyer() != null ? UserPortal.findById(appDto.getIdBuyer()) : UserPortal.find("email", tokenService.getUserEmail()).firstResult();
         Supplier supplier = Supplier.findById(appDto.getIdSupplier());
 
-        
-
-        PurchaseDto purchaseDto = saveDto( purchaseAppMapper.from(appDto),  buyer,  supplier);
+        PurchaseDto purchaseDto = saveDto(purchaseAppMapper.from(appDto), buyer, supplier);
 
         return purchaseAppMapper.to(purchaseDto);
     }
