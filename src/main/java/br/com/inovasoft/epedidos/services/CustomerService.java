@@ -68,22 +68,42 @@ public class CustomerService extends BaseService<Customer> {
     }
 
     public CustomerDto saveDto(CustomerDto dto) {
+
+        // Check if exists cpf or email
+        if (Customer.count("cpfCnpj=?1 and deletedOn is null", dto.getCpfCnpj()) > 0)
+            throw new WebApplicationException(Response.status(400)
+                    .entity("Atenção, já existe um cliente cadastrado com o CPF/CNPJ, favor informar outro.").build());
+
+        if (Customer.count("email=?1 and deletedOn is null", dto.getEmail()) > 0)
+            throw new WebApplicationException(Response.status(400)
+                    .entity("Atenção, já existe um cliente cadastrado com o E-mail, favor informar outro.").build());
+
         Customer entity = mapper.toEntity(dto);
         entity.setPassword(entity.getCpfCnpj());
         entity.setSystemId(tokenService.getSystemId());
 
         super.save(entity);
 
-        //Save new address
+        // Save new address
         dto.getAddress().stream().filter(item -> Objects.isNull(item.getId())).forEach(dtoAddress -> {
 
             addressService.saveDto(entity.getId(), dtoAddress);
         });
-        
+
         return mapper.toDto(entity);
     }
 
     public CustomerDto update(Long id, CustomerDto dto) {
+
+        // Check if exists cpf or email
+        if (Customer.count("cpfCnpj=?1 and id !=?2  and deletedOn is null", dto.getCpfCnpj(), id) > 0)
+            throw new WebApplicationException(Response.status(400)
+                    .entity("Atenção, já existe um cliente cadastrado com o CPF/CNPJ, favor informar outro.").build());
+
+        if (Customer.count("email=?1 and id !=?2 and deletedOn is null", dto.getEmail(), id) > 0)
+            throw new WebApplicationException(Response.status(400)
+                    .entity("Atenção, já existe um cliente cadastrado com o E-mail, favor informar outro.").build());
+
         Customer entity = findById(id);
 
         mapper.updateEntityFromDto(dto, entity);
@@ -97,16 +117,14 @@ public class CustomerService extends BaseService<Customer> {
         Customer.update("set deletedOn = now() where id = ?1 and systemId = ?2", id, tokenService.getSystemId());
     }
 
-
-
-	@Transactional
-	public void changePassword(String pass, String confirmPass) {
-		if (!pass.equals(confirmPass)) {
-			throw new WebApplicationException(
-					Response.status(400).entity("Confirmação senha deve ser igual a senha.").build());
-		}
-		Customer customer = Customer.find("cpfCnpj", tokenService.getJsonWebToken().getSubject()).firstResult();
-		customer.setPassword(pass);
-		customer.persist();
-	}
+    @Transactional
+    public void changePassword(String pass, String confirmPass) {
+        if (!pass.equals(confirmPass)) {
+            throw new WebApplicationException(
+                    Response.status(400).entity("Confirmação senha deve ser igual a senha.").build());
+        }
+        Customer customer = Customer.find("cpfCnpj", tokenService.getJsonWebToken().getSubject()).firstResult();
+        customer.setPassword(pass);
+        customer.persist();
+    }
 }
