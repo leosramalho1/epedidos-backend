@@ -14,6 +14,7 @@ import org.hibernate.envers.query.AuditEntity;
 
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
@@ -96,7 +97,18 @@ public abstract class BillingService<T extends BaseEntity, D extends BillingDto>
 
         dataList.sort(Comparator.comparing(BaseEntity::getUpdatedOn).reversed());
 
-        return mapper.toDto(dataList);
+        List<D> list = mapper.toDto(dataList);
+        if(CollectionUtils.isNotEmpty(list)) {
+            BillingDto dto = list.get(list.size() - 1);
+            dto.setAmountPaid(dto.getPaidOutValue());
+            for (int i = list.size() - 1; i > 0; i--){
+                BillingDto currentHistory = list.get(i - 1);
+                BillingDto previousHistory = list.get(i);
+                BigDecimal amountPaid = currentHistory.getPaidOutValue().subtract(previousHistory.getPaidOutValue());
+                currentHistory.setAmountPaid(amountPaid);
+            }
+        }
+        return list;
 
     }
 

@@ -1,6 +1,5 @@
 package br.com.inovasoft.epedidos.models.dtos;
 
-import br.com.inovasoft.epedidos.models.enums.PayMethodEnum;
 import br.com.inovasoft.epedidos.models.enums.PayStatusEnum;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
@@ -28,5 +27,6 @@ public class AccountToPayDto implements BillingDto {
     private PurchaseDto purchaseDto;
     private PaymentMethodDto paymentMethod;
     private Long purchaseId;
+    private BigDecimal amountPaid;
 
 }

@@ -30,5 +30,6 @@ public class AccountToReceiveDto implements BillingDto {
     private String createdOn;
     private String updatedOn;
     private List<AccountToReceiveDto> history = new ArrayList<>();
+    private BigDecimal amountPaid;
 
 }

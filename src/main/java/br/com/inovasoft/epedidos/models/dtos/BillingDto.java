@@ -15,4 +15,5 @@ public interface BillingDto {
 
     LocalDate getPaidOutDate();
 
+    void setAmountPaid(BigDecimal amountPaid);
 }
