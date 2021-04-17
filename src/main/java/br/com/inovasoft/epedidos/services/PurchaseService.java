@@ -182,8 +182,17 @@ public class PurchaseService extends BaseService<Purchase> {
     public PurchaseDto getProductsToBuy(Long buyerId) {
         List<Product> products = Product.list("buyerId = ?1", Sort.by("name"), buyerId);
 
+        PurchaseGroupDto itensToBuy = getOpenOrderAndGroupByIdBuyer(buyerId);
+        
+        final Map<Long, Integer> productToBuyMap = new HashMap<Long, Integer>();
+        if(itensToBuy != null && itensToBuy.getItens() != null){
+            productToBuyMap.putAll(itensToBuy.getItens().stream()
+            .collect(Collectors.toMap(PurchaseItemDto::getIdProduct, item -> item.getQuantity())));
+        }
+        
+
         List<PurchaseItemDto> items = products.stream()
-                .map(product -> new PurchaseItemDto(product.getId(), product.getName(), 0, product.getPackageType()))
+                .map(product -> new PurchaseItemDto(product.getId(), product.getName(), 0, productToBuyMap.get(product.getId()),product.getPackageType(), false))
                 .collect(Collectors.toList());
 
         PurchaseDto result = new PurchaseDto();

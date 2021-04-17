@@ -24,6 +24,8 @@ public class PurchaseItemDto {
     private Long id;
     private Long idProduct;
     private String nameProduct;
+    private Integer quantityToBuy;
+    private boolean blockAdd;
     private Integer quantity;
     @JsonSerialize(using = MoneySerializer.class)
     private BigDecimal unitValue;
@@ -35,12 +37,14 @@ public class PurchaseItemDto {
     private BigDecimal valueCharged;
     private PackageTypeEnum packageType;
 
-    public PurchaseItemDto(Long idProduct, String nameProduct, Integer quantity, PackageTypeEnum packageType) {
+    public PurchaseItemDto(Long idProduct, String nameProduct, Integer quantity, Integer quantityToBuy, PackageTypeEnum packageType, boolean blockAdd) {
         this.idProduct = idProduct;
         this.nameProduct = nameProduct;
         this.quantity = quantity;
+        this.quantityToBuy = quantityToBuy!=null?quantityToBuy:0;
         this.totalValue = BigDecimal.ZERO;
         this.packageType = packageType;
+        this.blockAdd = blockAdd;
     }
 
 
