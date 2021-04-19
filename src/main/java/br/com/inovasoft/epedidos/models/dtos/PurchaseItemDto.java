@@ -42,6 +42,7 @@ public class PurchaseItemDto {
         this.nameProduct = nameProduct;
         this.quantity = quantity;
         this.quantityToBuy = quantityToBuy!=null?quantityToBuy:0;
+        this.unitValue = BigDecimal.ZERO;
         this.totalValue = BigDecimal.ZERO;
         this.packageType = packageType;
         this.blockAdd = blockAdd;
