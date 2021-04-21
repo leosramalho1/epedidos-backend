@@ -12,6 +12,9 @@ import io.quarkus.panache.common.Sort;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Response;
+
 import java.util.List;
 
 @ApplicationScoped
@@ -60,7 +63,12 @@ public class SupplierService extends BaseService<Supplier> {
     }
 
     public SupplierDto saveDto(SupplierDto dto) {
-        Supplier entity = mapper.toEntity(dto);
+        Supplier entity = mapper.toEntity(dto); 
+
+        if (Supplier.count("cpfCnpj=?1 and deletedOn is null", dto.getCpfCnpj()) > 0)
+        throw new WebApplicationException(Response.status(400)
+                .entity("Atenção, já existe um fornecedor cadastrado com o CPF/CNPJ, favor informar outro.").build());
+
 
         entity.setSystemId(tokenService.getSystemId());
 
@@ -71,6 +79,11 @@ public class SupplierService extends BaseService<Supplier> {
 
     public SupplierDto update(Long id, SupplierDto dto) {
         Supplier entity = findById(id);
+
+        if (Supplier.count("cpfCnpj=?1 and id !=?2 deletedOn is null", dto.getCpfCnpj(), id) > 0)
+        throw new WebApplicationException(Response.status(400)
+                .entity("Atenção, já existe um fornecedor cadastrado com o CPF/CNPJ, favor informar outro.").build());
+
 
         mapper.updateEntityFromDto(dto, entity);
 

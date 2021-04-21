@@ -19,8 +19,7 @@ import javax.validation.constraints.Size;
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
 @Table(name = "fornecedor", indexes = { @Index(name = "fornecedor_index_sistema", columnList = "sistema_id"),
-        @Index(name = "fornecedor_index_cpfCnpj", columnList = "cpfCnpj", unique = true),
-        @Index(name = "fornecedor_index_email", columnList = "email", unique = true) })
+        @Index(name = "fornecedor_index_cpfCnpj", columnList = "cpfCnpj", unique = true) })
 public class Supplier extends BaseEntity {
 
     private static final long serialVersionUID = 90464850752358765L;

@@ -192,7 +192,7 @@ public class PurchaseService extends BaseService<Purchase> {
         
 
         List<PurchaseItemDto> items = products.stream()
-                .map(product -> new PurchaseItemDto(product.getId(), product.getName(), 0, productToBuyMap.get(product.getId()),product.getPackageType(), false))
+                .map(product -> new PurchaseItemDto(product.getId(), product.getName(), 0, productToBuyMap.get(product.getId()),product.getPackageType(), false, product.getWeidth()))
                 .collect(Collectors.toList());
 
         PurchaseDto result = new PurchaseDto();
