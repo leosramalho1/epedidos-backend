@@ -13,6 +13,7 @@ import br.com.inovasoft.epedidos.mappers.CustomerMapper;
 import br.com.inovasoft.epedidos.models.dtos.CustomerDto;
 import br.com.inovasoft.epedidos.models.dtos.PaginationDataResponse;
 import br.com.inovasoft.epedidos.models.entities.Customer;
+import br.com.inovasoft.epedidos.models.entities.CustomerUser;
 import br.com.inovasoft.epedidos.models.enums.StatusEnum;
 import br.com.inovasoft.epedidos.security.TokenService;
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
@@ -30,6 +31,9 @@ public class CustomerService extends BaseService<Customer> {
 
     @Inject
     CustomerAddressService addressService;
+
+    @Inject
+    CustomerUserService customerUserService;
 
     public PaginationDataResponse<CustomerDto> listAll(int page) {
         PanacheQuery<Customer> listCustomers = Customer.find(
@@ -90,6 +94,12 @@ public class CustomerService extends BaseService<Customer> {
             addressService.saveDto(entity.getId(), dtoAddress);
         });
 
+        // Save new users
+        dto.getUsers().stream().filter(item -> Objects.isNull(item.getId())).forEach(dtoUser -> {
+
+            customerUserService.saveDto(entity.getId(), dtoUser);
+        });
+
         return mapper.toDto(entity);
     }
 
@@ -110,6 +120,18 @@ public class CustomerService extends BaseService<Customer> {
 
         entity.persist();
 
+               // Save new address
+               dto.getAddress().stream().filter(item -> Objects.isNull(item.getId())).forEach(dtoAddress -> {
+
+                addressService.saveDto(entity.getId(), dtoAddress);
+            });
+    
+            // Save new users
+            dto.getUsers().stream().filter(item -> Objects.isNull(item.getId())).forEach(dtoUser -> {
+    
+                customerUserService.saveDto(entity.getId(), dtoUser);
+            });
+
         return mapper.toDto(entity);
     }
 
@@ -123,8 +145,8 @@ public class CustomerService extends BaseService<Customer> {
             throw new WebApplicationException(
                     Response.status(400).entity("Confirmação senha deve ser igual a senha.").build());
         }
-        Customer customer = Customer.find("cpfCnpj", tokenService.getJsonWebToken().getSubject()).firstResult();
-        customer.setPassword(pass);
-        customer.persist();
+        CustomerUser customerUser = CustomerUser.find("cpfCnpj", tokenService.getJsonWebToken().getSubject()).firstResult();
+        customerUser.setPassword(pass);
+        customerUser.persist();
     }
 }

@@ -2,10 +2,13 @@ package br.com.inovasoft.epedidos.controllers;
 
 import br.com.inovasoft.epedidos.models.dtos.CustomerAddressDto;
 import br.com.inovasoft.epedidos.models.dtos.CustomerDto;
+import br.com.inovasoft.epedidos.models.dtos.CustomerUserDto;
 import br.com.inovasoft.epedidos.security.TokenService;
 import br.com.inovasoft.epedidos.security.jwt.JwtRoles;
 import br.com.inovasoft.epedidos.services.CustomerAddressService;
 import br.com.inovasoft.epedidos.services.CustomerService;
+import br.com.inovasoft.epedidos.services.CustomerUserService;
+
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 
 import javax.annotation.security.RolesAllowed;
@@ -32,6 +35,9 @@ public class CustomerResources {
 
     @Inject
     CustomerAddressService customerAddressService;
+
+    @Inject
+    CustomerUserService customerUserService;
 
     @GET
     @RolesAllowed(JwtRoles.USER_BACKOFFICE)
@@ -118,5 +124,40 @@ public class CustomerResources {
     public void deleteCustomerAddress(@PathParam("id") Long id, @PathParam("idAddress") Long idAddress) {
         customerAddressService.softDelete(idAddress, id);
     }
+
+    @GET
+    @Path("/{id}/users")
+    @RolesAllowed(JwtRoles.USER_BACKOFFICE)
+    public List<CustomerUserDto> getCustomerUsers(@PathParam("id") Long id) {
+        return customerUserService.findUsersDtoById(id, tokenService.getSystemId());
+    }
+
+    @POST
+    @Path("/{id}/users")
+    @RolesAllowed(JwtRoles.USER_BACKOFFICE)
+    @Transactional
+    public CustomerUserDto postCustomerUser(@PathParam("id") Long idCustomer,
+    CustomerUserDto customerUserDto) {
+        return customerUserService.saveDto(idCustomer, customerUserDto);
+    }
+
+    @PUT
+    @Path("/{id}/users")
+    @RolesAllowed(JwtRoles.USER_BACKOFFICE)
+    @Transactional
+    public CustomerUserDto putCustomerUser(@PathParam("id") Long idCustomer,
+    CustomerUserDto customerUserDto) {
+        return customerUserService.update(idCustomer, customerUserDto);
+    }
+
+    
+    @DELETE
+    @Path("/{id}/users/{idUser}")
+    @RolesAllowed(JwtRoles.USER_BACKOFFICE)
+    @Transactional
+    public void deleteCustomerUser(@PathParam("id") Long id, @PathParam("idUser") Long idUser) {
+        customerUserService.softDelete(idUser, id);
+    }
+
 
 }

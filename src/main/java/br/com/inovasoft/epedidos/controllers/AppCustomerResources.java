@@ -5,6 +5,7 @@ import br.com.inovasoft.epedidos.models.dtos.OrderDto;
 import br.com.inovasoft.epedidos.models.entities.Company;
 import br.com.inovasoft.epedidos.models.entities.CompanySystem;
 import br.com.inovasoft.epedidos.models.entities.Customer;
+import br.com.inovasoft.epedidos.models.entities.CustomerUser;
 import br.com.inovasoft.epedidos.models.entities.UserPortal;
 import br.com.inovasoft.epedidos.models.enums.StatusEnum;
 import br.com.inovasoft.epedidos.security.TokenService;
@@ -138,7 +139,7 @@ public class AppCustomerResources {
     @Operation(operationId = "login")
     @PermitAll
     public LoginDto login(LoginDto login) {
-        Customer existingUser = Customer.find("cpfCnpj", login.getCpfCnpj()).firstResult();
+        CustomerUser existingUser = CustomerUser.find("cpfCnpj", login.getCpfCnpj()).firstResult();
 
         if (existingUser == null) {
             throw new WebApplicationException(Response.status(403).entity("Usuário ou senha inválido!").build());
@@ -146,11 +147,11 @@ public class AppCustomerResources {
         if (!existingUser.getPassword().equals(login.getPassword())) {
             throw new WebApplicationException(Response.status(403).entity("Usuário ou senha inválido!").build());
         }
-        if(existingUser.getStatus() != StatusEnum.ACTIVE){
-            throw new WebApplicationException(Response.status(403).entity("O usuário inativo no sistema, entre em contato com o administrador.").build());
+        if(existingUser.getDeletedOn()  != null){
+            throw new WebApplicationException(Response.status(403).entity("Usuário ou senha inválido!").build());
         }
 
-        CompanySystem system = CompanySystem.findById(existingUser.getSystemId());
+        CompanySystem system = CompanySystem.findById(existingUser.getCustomer().getSystemId());
 
         if (!system.getStatus().equals("A")) {
             throw new WebApplicationException(Response.status(403)
