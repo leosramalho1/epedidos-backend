@@ -9,14 +9,16 @@ import br.com.inovasoft.epedidos.security.TokenService;
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import io.quarkus.panache.common.Page;
 import io.quarkus.panache.common.Sort;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import javax.transaction.Transactional;
 import javax.validation.constraints.NotNull;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
+@Slf4j
 @ApplicationScoped
 public class OrderMapService extends BaseService<OrderDistributionMap> {
 
@@ -25,10 +27,10 @@ public class OrderMapService extends BaseService<OrderDistributionMap> {
 
     protected int limitPerPage = 50;
 
-    public PaginationDataResponse<OrderDistributionMap> listAllDistributions(Integer page, @NotNull Optional<Long> category) {
+    public PaginationDataResponse<ProductMap> listAllDistributions(Integer page, @NotNull Optional<Long> category) {
 
         Long systemId = tokenService.getSystemId();
-        PanacheQuery<OrderDistributionMap> list = OrderDistributionMap.find("systemId", Sort.by("id").descending(), systemId);
+        PanacheQuery<OrderDistributionMap> list = OrderDistributionMap.find("systemId", Sort.by("name"), systemId);
 
         List<OrderDistributionMap> dataList = list.page(Page.of(page - 1, limitPerPage)).list();
 
@@ -39,7 +41,11 @@ public class OrderMapService extends BaseService<OrderDistributionMap> {
                     .collect(Collectors.toList());
         }
 
-        return new PaginationDataResponse<>(dataList, limitPerPage, (int) OrderDistributionMap.count("systemId", systemId));
+        List<ProductMap> productMapList = dataList.stream()
+                .map(OrderDistributionMap::getProductMap)
+                .collect(Collectors.toList());
+
+        return new PaginationDataResponse<>(productMapList, limitPerPage, (int) OrderDistributionMap.count("systemId", systemId));
     }
 
 
@@ -53,7 +59,7 @@ public class OrderMapService extends BaseService<OrderDistributionMap> {
                                 List<ProductOrderItemCustomerMap> orderItemsCustomer = productMap.pedidosByCliente(customer);
                                 ProductOrderItemCustomerMap productOrderMap = orderItemsCustomer.remove(0);
                                 // Adiciona o valor atualizado no primeiro pedido e zera os valores nos demais pedidos
-                                changeOrderItem(productOrderMap.getId(), customer.getTotalQuantity(), productMap);
+                                changeOrderItem(productOrderMap.getId(), customer.getTotalDistributed());
                                 // Zera os valores realizados nos demais pedidos
                                 orderItemsCustomer.forEach(orderItem -> OrderItem.deleteById(orderItem.getId()));
 
@@ -61,42 +67,69 @@ public class OrderMapService extends BaseService<OrderDistributionMap> {
                 });
 
     }
+
+    @Transactional
     public void update(List<ProductMap> productsMap) {
 
+        Map<Long, List<ProductCustomerMap>> customersByProducts = productsMap.stream()
+                .collect(Collectors.groupingBy(ProductMap::getId, Collectors.mapping(ProductMap::getCustomerMaps, Collectors.toList())))
+                .entrySet().stream()//.filter(e -> e.getValue().size() > 1)
+                .flatMap(e -> e.getValue().stream().flatMap(Collection::stream)
+                        .map(v -> new AbstractMap.SimpleEntry<>(e.getKey(), v)))
+                .collect(Collectors.groupingBy(Map.Entry::getKey, Collectors.mapping(AbstractMap.SimpleEntry::getValue, Collectors.toList())));
+
         productsMap
-                .forEach(productMap -> {
-                    productMap.getCustomerMaps()
-                            .forEach(customer -> {
+                .forEach(productMap -> productMap.getCustomerMaps()
+                        .forEach(customer -> {
+
+                            Integer totalDistributed = customersByProducts.get(productMap.getId())
+                                    .stream()
+                                    .filter(c -> c.getId().equals(customer.getId()))
+                                    .map(ProductCustomerMap::getTotalDistributed)
+                                    .reduce(0, Integer::sum);
+
+                            Integer totalQuantity = customersByProducts.get(productMap.getId())
+                                    .stream()
+                                    .filter(c -> c.getId().equals(customer.getId()))
+                                    .findFirst().orElse(new ProductCustomerMap())
+                                    .getTotalQuantity();
+
+                            if(totalDistributed > totalQuantity) {
+                                log.warn("Produto: {}, Cliente: {}", productMap.getName(), customer.getName());
+                            } else {
 
                                 List<ProductOrderItemCustomerMap> orderItemsCustomer = productMap.pedidosByCliente(customer);
                                 ProductOrderItemCustomerMap orderMap = orderItemsCustomer.remove(0);
                                 // Adiciona o valor atualizado no primeiro pedido e zera os valores nos demais pedidos
-                                OrderItem orderItemMaster = changeOrderItem(orderMap.getId(),
-                                    customer.getTotalQuantity(), productMap);
+                                OrderItem orderItemMaster = changeOrderItem(orderMap.getId(), customer.getTotalDistributed());
                                 // Zera os valores realizados nos demais pedidos
                                 orderItemsCustomer.forEach(orderItem -> OrderItem.deleteById(orderItem.getId()));
 
-                                productMap.getPurchaseMaps()
-                                        .forEach(purchase -> registryPurchaseDistribution(productMap, orderItemMaster, purchase));
+                                if(!Objects.isNull(orderItemMaster)) {
+                                    productMap.getPurchaseMaps()
+                                            .forEach(purchase -> registryPurchaseDistribution(productMap, orderItemMaster, purchase));
 
-                                Order order = orderItemMaster.getOrder();
-                                order.setStatus(OrderEnum.DISTRIBUTED);
-                                order.persistAndFlush();
-
-                            });
-                });
+                                    Order order = orderItemMaster.getOrder();
+                                    if (!orderItemMaster.hasQuantityToBilled()) {
+                                        order.setStatus(OrderEnum.DISTRIBUTED);
+                                        order.persistAndFlush();
+                                    }
+                                }
+                            }
+                        }));
 
     }
 
     private void registryPurchaseDistribution(ProductMap productMap, OrderItem orderItemMaster, ProductPurchaseMap productPurchase) {
         // Verifica se há itens para faturar no pedido atual
-        if(orderItemMaster.hasQuantityToBilled()) {
+        if(!Objects.isNull(orderItemMaster) && orderItemMaster.hasQuantityToBilled()) {
             PurchaseItem purchaseItem = PurchaseItem
                     .find("purchase.id = ?1 and product.id = ?2 " +
-                                    "and distributedQuantity < quantity "
-//                                   + "and purchase.status = ?3"
+                                    "and (distributedQuantity is null or distributedQuantity < quantity) " +
+                            "and packageType = ?3 "
                             ,
-                            productPurchase.getId(), productMap.getId()).firstResult();
+                            productPurchase.getId(), productMap.getId(), productMap.getPackageType())
+                    .firstResult();
 
             // Verifica se existe compra disponível para o produto atual.
             if (purchaseItem != null) {
@@ -124,6 +157,7 @@ public class OrderMapService extends BaseService<OrderDistributionMap> {
                         .valueCharged(purchaseItem.getValueCharged())
                         .unitCustomerCost(customer.getPayValue())
                         .customerPayType(customer.getPayType())
+                        .packageType(purchaseItem.getPackageType())
                         .build();
 
                 Purchase purchase = purchaseItem.getPurchase();
@@ -141,11 +175,13 @@ public class OrderMapService extends BaseService<OrderDistributionMap> {
         }
     }
 
-    public OrderItem changeOrderItem(Long id, Integer realizedAmount, ProductMap productMap) {
-        OrderItem orderItem = OrderItem.findById(id);
-        orderItem.setRealizedAmount(realizedAmount);
-        orderItem.setWeidth(productMap.getWeidth());
-        orderItem.persist();
+    public OrderItem changeOrderItem(Long id, Integer realizedAmount) {
+        OrderItem orderItem = OrderItem.find("id = ?1 and (billedQuantity is null or quantity > billedQuantity)", id).firstResult();
+        if(!Objects.isNull(orderItem)) {
+            orderItem.setRealizedAmount(realizedAmount);
+            orderItem.persist();
+        }
+
         return orderItem;
     }
 

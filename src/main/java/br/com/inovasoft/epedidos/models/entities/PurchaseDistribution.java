@@ -2,6 +2,7 @@ package br.com.inovasoft.epedidos.models.entities;
 
 import br.com.inovasoft.epedidos.models.BaseEntity;
 import br.com.inovasoft.epedidos.models.enums.CustomerPayTypeEnum;
+import br.com.inovasoft.epedidos.models.enums.PackageTypeEnum;
 import lombok.*;
 
 import javax.persistence.*;
@@ -70,6 +71,9 @@ public class PurchaseDistribution extends BaseEntity {
     @Column(name = "tipo_cobranca_cliente")
     private CustomerPayTypeEnum customerPayType;
 
+    @Column(name = "tipo_embalagem")
+    @Enumerated(EnumType.STRING)
+    private PackageTypeEnum packageType;
 
     @PreUpdate
     @PrePersist

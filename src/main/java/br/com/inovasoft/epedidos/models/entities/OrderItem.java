@@ -48,9 +48,6 @@ public class OrderItem extends BaseEntity {
     @Column(name = "quantidade_adiquirida")
     private Integer realizedAmount;
 
-    @Column(name = "peso")
-    private BigDecimal weidth;
-
     @Column(name = "quantidade_faturada")
     private Integer billedQuantity;
 
@@ -58,10 +55,6 @@ public class OrderItem extends BaseEntity {
     @PreUpdate
     @PrePersist
     public void prePersist() {
-        if(Objects.isNull(weidth)) {
-            weidth = Objects.isNull(product) ? null : product.getWeidth();
-        }
-
         if(Objects.isNull(billedQuantity)) {
             addBilledQuantity(0);
         } else if(billedQuantity > Optional.ofNullable(realizedAmount).orElse(quantity)){
@@ -83,6 +76,13 @@ public class OrderItem extends BaseEntity {
             this.billedQuantity = 0;
         }
         this.billedQuantity += billedQuantity;
+    }
+
+    public void addRealizedAmount(Integer realizedAmount) {
+        if(Objects.isNull(this.realizedAmount)) {
+            this.realizedAmount = 0;
+        }
+        this.realizedAmount += realizedAmount;
     }
 
 }

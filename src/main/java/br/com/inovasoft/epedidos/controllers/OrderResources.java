@@ -82,7 +82,6 @@ public class OrderResources {
 
     @PUT
     @Path("/distributions")
-    @Transactional
     @RolesAllowed(JwtRoles.USER_BACKOFFICE)
     public void update(List<ProductMap> produtosCorrecao) {
         orderMapService.update(produtosCorrecao);

@@ -97,13 +97,13 @@ public class PurchaseService extends BaseService<Purchase> {
             where += " and upper(pr.name) like :nameProduct ";
             parameters.and("nameProduct", "%" + nameProduct.toUpperCase() + "%");
         }
-        where += "group by pr.id ";
-        PanacheQuery<PurchaseItem> list = PurchaseItem.find(String.format(select, where), Sort.by("pr.name"), parameters);
+
+        PanacheQuery<PurchaseItem> list = PurchaseItem.find(String.format(select, where + "group by pr.id "), Sort.by("pr.name"), parameters);
 
         List<PurchaseItem> dataList = list.page(Page.of(page - 1, LIMIT_PER_PAGE)).list();
 
         return new PaginationDataResponse<>(purchaseItemMapper.toDto(dataList), LIMIT_PER_PAGE,
-                dataList.size() > 0 ? (int) Purchase.count(where, parameters) : 0);
+                dataList.size() > 0 ? (int) PurchaseItem.count(where, parameters) : 0);
     }
 
     @Transactional

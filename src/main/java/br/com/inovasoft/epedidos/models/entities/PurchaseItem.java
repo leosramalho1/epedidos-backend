@@ -122,7 +122,7 @@ public class PurchaseItem extends BaseEntity {
     }
 
     public Integer calculateAvailableQuantity() {
-        return quantity - distributedQuantity;
+        return quantity - Optional.ofNullable(distributedQuantity).orElse(0);
     }
 
     public void addDistributedQuantity(Integer distributedQuantity) {

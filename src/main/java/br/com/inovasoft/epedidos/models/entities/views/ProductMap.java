@@ -1,12 +1,12 @@
 package br.com.inovasoft.epedidos.models.entities.views;
 
+import br.com.inovasoft.epedidos.models.enums.PackageTypeEnum;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import org.apache.commons.collections.CollectionUtils;
 
 import java.io.Serializable;
-import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -22,8 +22,6 @@ public class ProductMap implements Serializable {
     private Long id;
     @JsonProperty(value = "nome")
     private String name;
-    @JsonProperty(value = "peso")
-    private BigDecimal weidth;
     @JsonProperty(value = "totalComprado")
     private Long totalPurchaseValue;
     @JsonProperty(value = "clientes")
@@ -36,9 +34,14 @@ public class ProductMap implements Serializable {
     private Integer totalOrderValue;
     @JsonProperty(value = "compras")
     private Set<ProductPurchaseMap> purchaseMaps;
-    @JsonProperty(value = "embalagens")
-    private Set<PackageTypeMap> packageTypeMaps;
+    @JsonProperty(value = "tipoEmbalagem")
+    private PackageTypeEnum packageType;
     private boolean changed;
+//    @JsonProperty(value = "totalDistribuido")
+//    private Map<PackageTypeEnum, Integer> totalDistributed = Map.of(PackageTypeEnum.DISPOSABLE, 0, PackageTypeEnum.RETURNABLE, 0);
+    @JsonProperty(value = "totalDistribuido")
+    private Integer totalDistributed = 0;
+    private String _rowVariant;
 
     public Integer getTotalOrderValue() {
 
@@ -56,6 +59,11 @@ public class ProductMap implements Serializable {
                 && customerMaps.stream().anyMatch(ProductCustomerMap::isChanged);
     }
 
+    public boolean hasCustomer(ProductCustomerMap customerMap) {
+        return CollectionUtils.isNotEmpty(customerMaps)
+                && customerMaps.contains(customerMap);
+    }
+
     public boolean isChangedOrhasCustomerChanged() {
         return isChanged() || hasCustomerChanged();
     }
@@ -67,7 +75,7 @@ public class ProductMap implements Serializable {
         }
 
         return getOrderMaps().stream()
-                .filter(p -> p.getCustomer().equals(customerMap.getId()))
+                .filter(p -> p.getCustomer().equals(customerMap.getId()) )
                 .collect(Collectors.toList());
     }
 }
