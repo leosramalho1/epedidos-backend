@@ -43,15 +43,15 @@ public class UserService extends BaseService<UserPortal> {
 
 	public List<UserPortalDto> getSuggestions(String query) {
 		List<UserPortal> dataList = UserPortal.list(
-				"systemId = ?1 and upper(name) like ?2 and role in (?3) and deletedOn is null",
-				tokenService.getSystemId(), query.toUpperCase() + "%", List.of(RoleEnum.BUYER, RoleEnum.ADMIN));
+				"systemId = ?1 and upper(name) like ?2 and isBuyer in (?3) and deletedOn is null",
+				tokenService.getSystemId(), query.toUpperCase() + "%",  Boolean.TRUE);
 
 		return mapper.toDto(dataList);
 	}
 
 	public List<OptionDto> getListAllOptions() {
-		List<UserPortal> dataList = UserPortal.list("systemId = ?1 and role in (?2) and deletedOn is null order by name",
-				tokenService.getSystemId(), List.of(RoleEnum.BUYER, RoleEnum.ADMIN));
+		List<UserPortal> dataList = UserPortal.list("systemId = ?1 and isBuyer in (?2) and deletedOn is null order by name",
+				tokenService.getSystemId(), Boolean.TRUE);
 
 		return dataList.stream().map(item -> new OptionDto(item.getId(), item.getName())).collect(Collectors.toList());
 	}

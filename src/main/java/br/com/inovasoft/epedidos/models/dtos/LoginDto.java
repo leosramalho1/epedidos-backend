@@ -11,5 +11,7 @@ public class LoginDto {
     private String password;
     private String rememberme;
     private String token;
+    private Boolean isAdmin;
+    private Boolean isBuyer;
 
 }

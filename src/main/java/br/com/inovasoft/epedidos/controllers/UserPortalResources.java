@@ -156,6 +156,8 @@ public class UserPortalResources {
         }
 
         Company company = system.getCompany();
+        user.setIsAdmin(existingUser.getIsAdmin());
+        user.setIsBuyer(existingUser.getIsBuyer());
         user.setToken(tokenService.generateBackofficeToken(existingUser.getEmail(), existingUser.getName(),
                 company.getId(), system.getSystemKey()));
 
