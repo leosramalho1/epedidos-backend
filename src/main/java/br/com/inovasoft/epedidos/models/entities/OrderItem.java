@@ -6,7 +6,6 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
-import javax.validation.ValidationException;
 import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.util.Objects;
@@ -57,10 +56,7 @@ public class OrderItem extends BaseEntity {
     public void prePersist() {
         if(Objects.isNull(billedQuantity)) {
             addBilledQuantity(0);
-        } else if(billedQuantity > Optional.ofNullable(realizedAmount).orElse(quantity)){
-            throw new ValidationException("A quantidade faturada não pode ser maior que a quantidade pedida.");
         }
-
     }
 
     public boolean hasQuantityToBilled() {

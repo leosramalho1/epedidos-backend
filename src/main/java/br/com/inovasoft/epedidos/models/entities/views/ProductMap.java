@@ -7,6 +7,7 @@ import lombok.Data;
 import org.apache.commons.collections.CollectionUtils;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -37,10 +38,10 @@ public class ProductMap implements Serializable {
     @JsonProperty(value = "tipoEmbalagem")
     private PackageTypeEnum packageType;
     private boolean changed;
-//    @JsonProperty(value = "totalDistribuido")
-//    private Map<PackageTypeEnum, Integer> totalDistributed = Map.of(PackageTypeEnum.DISPOSABLE, 0, PackageTypeEnum.RETURNABLE, 0);
     @JsonProperty(value = "totalDistribuido")
     private Integer totalDistributed = 0;
+    @JsonProperty(value = "peso")
+    private BigDecimal weidth;
     private String _rowVariant;
 
     public Integer getTotalOrderValue() {

@@ -15,7 +15,9 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 import javax.validation.constraints.NotNull;
-import java.util.*;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -71,51 +73,28 @@ public class OrderMapService extends BaseService<OrderDistributionMap> {
     @Transactional
     public void update(List<ProductMap> productsMap) {
 
-        Map<Long, List<ProductCustomerMap>> customersByProducts = productsMap.stream()
-                .collect(Collectors.groupingBy(ProductMap::getId, Collectors.mapping(ProductMap::getCustomerMaps, Collectors.toList())))
-                .entrySet().stream()//.filter(e -> e.getValue().size() > 1)
-                .flatMap(e -> e.getValue().stream().flatMap(Collection::stream)
-                        .map(v -> new AbstractMap.SimpleEntry<>(e.getKey(), v)))
-                .collect(Collectors.groupingBy(Map.Entry::getKey, Collectors.mapping(AbstractMap.SimpleEntry::getValue, Collectors.toList())));
-
         productsMap
                 .forEach(productMap -> productMap.getCustomerMaps()
                         .forEach(customer -> {
 
-                            Integer totalDistributed = customersByProducts.get(productMap.getId())
-                                    .stream()
-                                    .filter(c -> c.getId().equals(customer.getId()))
-                                    .map(ProductCustomerMap::getTotalDistributed)
-                                    .reduce(0, Integer::sum);
+                            List<ProductOrderItemCustomerMap> orderItemsCustomer = productMap.pedidosByCliente(customer);
+                            ProductOrderItemCustomerMap orderMap = orderItemsCustomer.remove(0);
+                            // Adiciona o valor atualizado no primeiro pedido e zera os valores nos demais pedidos
+                            OrderItem orderItemMaster = changeOrderItem(orderMap.getId(), customer.getTotalDistributed());
+                            // Zera os valores realizados nos demais pedidos
+                            orderItemsCustomer.forEach(orderItem -> OrderItem.deleteById(orderItem.getId()));
 
-                            Integer totalQuantity = customersByProducts.get(productMap.getId())
-                                    .stream()
-                                    .filter(c -> c.getId().equals(customer.getId()))
-                                    .findFirst().orElse(new ProductCustomerMap())
-                                    .getTotalQuantity();
+                            if (!Objects.isNull(orderItemMaster)) {
+                                productMap.getPurchaseMaps()
+                                        .forEach(purchase -> registryPurchaseDistribution(productMap, orderItemMaster, purchase));
 
-                            if(totalDistributed > totalQuantity) {
-                                log.warn("Produto: {}, Cliente: {}", productMap.getName(), customer.getName());
-                            } else {
-
-                                List<ProductOrderItemCustomerMap> orderItemsCustomer = productMap.pedidosByCliente(customer);
-                                ProductOrderItemCustomerMap orderMap = orderItemsCustomer.remove(0);
-                                // Adiciona o valor atualizado no primeiro pedido e zera os valores nos demais pedidos
-                                OrderItem orderItemMaster = changeOrderItem(orderMap.getId(), customer.getTotalDistributed());
-                                // Zera os valores realizados nos demais pedidos
-                                orderItemsCustomer.forEach(orderItem -> OrderItem.deleteById(orderItem.getId()));
-
-                                if(!Objects.isNull(orderItemMaster)) {
-                                    productMap.getPurchaseMaps()
-                                            .forEach(purchase -> registryPurchaseDistribution(productMap, orderItemMaster, purchase));
-
-                                    Order order = orderItemMaster.getOrder();
-                                    if (!orderItemMaster.hasQuantityToBilled()) {
-                                        order.setStatus(OrderEnum.DISTRIBUTED);
-                                        order.persistAndFlush();
-                                    }
+                                Order order = orderItemMaster.getOrder();
+                                if (!orderItemMaster.hasQuantityToBilled()) {
+                                    order.setStatus(OrderEnum.DISTRIBUTED);
+                                    order.persistAndFlush();
                                 }
                             }
+
                         }));
 
     }
@@ -176,9 +155,9 @@ public class OrderMapService extends BaseService<OrderDistributionMap> {
     }
 
     public OrderItem changeOrderItem(Long id, Integer realizedAmount) {
-        OrderItem orderItem = OrderItem.find("id = ?1 and (billedQuantity is null or quantity > billedQuantity)", id).firstResult();
+        OrderItem orderItem = OrderItem.find("id = ?1", id).firstResult();
         if(!Objects.isNull(orderItem)) {
-            orderItem.setRealizedAmount(realizedAmount);
+            orderItem.addRealizedAmount(realizedAmount);
             orderItem.persist();
         }
 
