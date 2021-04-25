@@ -69,6 +69,11 @@ public class SupplierService extends BaseService<Supplier> {
         throw new WebApplicationException(Response.status(400)
                 .entity("Atenção, já existe um fornecedor cadastrado com o CPF/CNPJ, favor informar outro.").build());
 
+        if (Supplier.count("email=?1 and deletedOn is null", dto.getEmail()) > 0)
+            throw new WebApplicationException(Response.status(400)
+                    .entity("Atenção, já existe um fornecedor cadastrado com o e-mail, favor informar outro.").build());
+
+
 
         entity.setSystemId(tokenService.getSystemId());
 
