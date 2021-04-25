@@ -89,10 +89,9 @@ public class OrderMapService extends BaseService<OrderDistributionMap> {
                                         .forEach(purchase -> registryPurchaseDistribution(productMap, orderItemMaster, purchase));
 
                                 Order order = orderItemMaster.getOrder();
-                                if (!orderItemMaster.hasQuantityToBilled()) {
-                                    order.setStatus(OrderEnum.DISTRIBUTED);
-                                    order.persistAndFlush();
-                                }
+                                order.setStatus(OrderEnum.DISTRIBUTED);
+                                order.persistAndFlush();
+
                             }
 
                         }));

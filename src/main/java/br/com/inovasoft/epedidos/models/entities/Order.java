@@ -46,14 +46,6 @@ public class Order extends BaseEntity {
     @OneToMany(targetEntity = OrderItem.class, mappedBy = "order", orphanRemoval = true)
     private List<OrderItem> orderItems;
 
-    @PreUpdate
-    @PrePersist
-    public void prePersist() {
-        if(CollectionUtils.isNotEmpty(orderItems)
-                && !hasQuantityToBilled()) {
-            status = OrderEnum.FINISHED;
-        }
-    }
 
     public boolean hasQuantityToBilled() {
         if(CollectionUtils.isNotEmpty(orderItems)) {
