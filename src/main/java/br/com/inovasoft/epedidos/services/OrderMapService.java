@@ -104,9 +104,10 @@ public class OrderMapService extends BaseService<OrderDistributionMap> {
             PurchaseItem purchaseItem = PurchaseItem
                     .find("purchase.id = ?1 and product.id = ?2 " +
                                     "and (distributedQuantity is null or distributedQuantity < quantity) " +
-                            "and packageType = ?3 "
+                                "and packageType = ?3 and weight = ?4"
                             ,
-                            productPurchase.getId(), productMap.getId(), productMap.getPackageType())
+                            productPurchase.getId(), productMap.getId(),
+                            productMap.getPackageType(), productMap.getWeidth())
                     .firstResult();
 
             // Verifica se existe compra disponível para o produto atual.

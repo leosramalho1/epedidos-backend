@@ -70,7 +70,6 @@ public class PurchaseItem extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private PackageTypeEnum packageType;
 
-
     @Column(name = "peso", scale = 4)
     private BigDecimal weight;
 
