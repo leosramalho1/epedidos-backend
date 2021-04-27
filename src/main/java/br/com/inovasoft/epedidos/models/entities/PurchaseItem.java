@@ -26,13 +26,15 @@ public class PurchaseItem extends BaseEntity {
 
     private static final long serialVersionUID = 1998008985093338252L;
 
-    public PurchaseItem(Long product, Long quantity, BigDecimal totalValue, BigDecimal unitValue, BigDecimal sumValueCharged) {
+    public PurchaseItem(Long product, Long quantity, BigDecimal totalValue, BigDecimal unitValue,
+                        BigDecimal sumValueCharged, BigDecimal weight) {
         this.product = Product.findById(product);
         this.quantity = Optional.ofNullable(quantity).orElse(0L).intValue();
         this.unitValue = Objects.nonNull(unitValue) ? unitValue.setScale(4, RoundingMode.UP) : null;
         this.averageValue = totalValue.divide(BigDecimal.valueOf(NumberUtils.max(1, quantity)), 4, RoundingMode.UP);
         this.valueCharged = sumValueCharged.divide(BigDecimal.valueOf(NumberUtils.max(1, quantity)), 4, RoundingMode.UP);
         this.totalValue = valueCharged.multiply(BigDecimal.valueOf(this.quantity)).setScale(4, RoundingMode.UP);
+        this.weight = weight;
     }
 
     @Id

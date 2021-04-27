@@ -78,7 +78,8 @@ public class PurchaseService extends BaseService<Purchase> {
         String select = "select new PurchaseItem(pr.id, sum(pi.quantity), " +
                 "sum(pi.unitValue * pi.quantity), " +
                 "sum(pi.unitValue * pi.quantity) / sum(pi.quantity) as avgUnitValue, " +
-                "sum(COALESCE(pi.valueCharged, pi.unitValue) * pi.quantity) as sumValueCharged) %s";
+                "sum(COALESCE(pi.valueCharged, pi.unitValue) * pi.quantity) as sumValueCharged," +
+                "pi.weight) %s";
         String where = "from PurchaseItem pi join pi.purchase p join pi.product pr " +
                 "where p.systemId = :systemId " +
                 "and p.status in (:status) " +
@@ -98,7 +99,7 @@ public class PurchaseService extends BaseService<Purchase> {
             parameters.and("nameProduct", "%" + nameProduct.toUpperCase() + "%");
         }
 
-        PanacheQuery<PurchaseItem> list = PurchaseItem.find(String.format(select, where + "group by pr.id "), Sort.by("pr.name"), parameters);
+        PanacheQuery<PurchaseItem> list = PurchaseItem.find(String.format(select, where + "group by pr.id, pi.weight "), Sort.by("pr.name"), parameters);
 
         List<PurchaseItem> dataList = list.page(Page.of(page - 1, LIMIT_PER_PAGE)).list();
 
@@ -111,8 +112,10 @@ public class PurchaseService extends BaseService<Purchase> {
 
         purchaseItemDtos.forEach(purchaseItemDto -> {
             Long idProduct = purchaseItemDto.getIdProduct();
-            List<PurchaseItem> purchaseItems = PurchaseItem.list("product.id = ?1 and purchase.systemId = ?2 and purchase.status in (?3) ",
-                    idProduct, tokenService.getSystemId(), List.of(PurchaseEnum.OPEN, PurchaseEnum.DISTRIBUTED));
+            BigDecimal weight = purchaseItemDto.getWeight();
+            List<PurchaseItem> purchaseItems = PurchaseItem.list("product.id = ?1 " +
+                            "and purchase.systemId = ?2 and purchase.status in (?3) and weight = ?4",
+                    idProduct, tokenService.getSystemId(), List.of(PurchaseEnum.DISTRIBUTED), weight);
 
             purchaseItems.forEach(purchaseItem -> {
                 purchaseItem.setValueCharged(purchaseItemDto.getValueCharged());
