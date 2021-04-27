@@ -86,7 +86,7 @@ public class PurchaseService extends BaseService<Purchase> {
                 "and pr.deletedOn is null ";
 
         Parameters parameters = Parameters.with("systemId", tokenService.getSystemId());
-        parameters.and("status", List.of(PurchaseEnum.OPEN, PurchaseEnum.DISTRIBUTED));
+        parameters.and("status", List.of(PurchaseEnum.DISTRIBUTED));
 
         if (supplier != null) {
             where += " and p.supplier.id = :supplier ";
