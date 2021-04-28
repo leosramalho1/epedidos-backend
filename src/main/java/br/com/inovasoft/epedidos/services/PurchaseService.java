@@ -69,7 +69,7 @@ public class PurchaseService extends BaseService<Purchase> {
 
         List<Purchase> dataList = listPurchases.page(Page.of(page - 1, LIMIT_PER_PAGE)).list();
 
-        return new PaginationDataResponse<>(mapper.toDto(dataList), LIMIT_PER_PAGE * 2,
+        return new PaginationDataResponse<>(mapper.toDto(dataList), LIMIT_PER_PAGE,
                 (int) Purchase.count(query, parameters));
     }
 
@@ -99,12 +99,15 @@ public class PurchaseService extends BaseService<Purchase> {
             parameters.and("nameProduct", "%" + nameProduct.toUpperCase() + "%");
         }
 
-        PanacheQuery<PurchaseItem> list = PurchaseItem.find(String.format(select, where + "group by pr.id, pi.weight "), Sort.by("pr.name"), parameters);
+        PanacheQuery<PurchaseItem> list = PurchaseItem.find(
+                String.format(select, where + " group by pr.id, pi.weight "),
+                Sort.by("pr.name"), parameters
+        );
 
         List<PurchaseItem> dataList = list.page(Page.of(page - 1, LIMIT_PER_PAGE)).list();
 
         return new PaginationDataResponse<>(purchaseItemMapper.toDto(dataList), LIMIT_PER_PAGE,
-                dataList.size() > 0 ? (int) PurchaseItem.count(where, parameters) : 0);
+                dataList.size() > 0 ? list.list().size() : 0);
     }
 
     @Transactional
