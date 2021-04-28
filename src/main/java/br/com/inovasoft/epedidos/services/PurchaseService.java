@@ -69,7 +69,7 @@ public class PurchaseService extends BaseService<Purchase> {
 
         List<Purchase> dataList = listPurchases.page(Page.of(page - 1, LIMIT_PER_PAGE)).list();
 
-        return new PaginationDataResponse<>(mapper.toDto(dataList), LIMIT_PER_PAGE,
+        return new PaginationDataResponse<>(mapper.toDto(dataList), LIMIT_PER_PAGE * 2,
                 (int) Purchase.count(query, parameters));
     }
 
