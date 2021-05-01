@@ -44,7 +44,7 @@ public class PurchaseDistributionResources {
     @PUT
     @RolesAllowed(JwtRoles.USER_BACKOFFICE)
     public Response changeValueCharged(List<PurchaseDistributionDto> purchaseDistributions) {
-        service.update(purchaseDistributions);
+        service.updateValueCharged(purchaseDistributions);
         return Response.status(Response.Status.OK).build();
     }
 

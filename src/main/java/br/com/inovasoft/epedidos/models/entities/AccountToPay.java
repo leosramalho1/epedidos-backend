@@ -1,5 +1,6 @@
 package br.com.inovasoft.epedidos.models.entities;
 
+import br.com.inovasoft.epedidos.configuration.AppConstants;
 import br.com.inovasoft.epedidos.models.BaseEntity;
 import br.com.inovasoft.epedidos.models.entities.references.PaymentMethod;
 import br.com.inovasoft.epedidos.models.enums.PayStatusEnum;
@@ -41,10 +42,10 @@ public class AccountToPay extends BaseEntity implements Billing {
     private Supplier supplier;
 
     @NotNull
-    @Column(name = "valor", scale = 2)
+    @Column(name = "valor", scale = AppConstants.DEFAULT_SCALE)
     private BigDecimal originalValue;
 
-    @Column(name = "tax", scale = 2)
+    @Column(name = "tax", scale = AppConstants.DEFAULT_SCALE)
     private BigDecimal taxValue;
 
     @NotNull
@@ -52,7 +53,7 @@ public class AccountToPay extends BaseEntity implements Billing {
     private LocalDate dueDate;
 
     @NotNull
-    @Column(name = "valor_pago", scale = 2)
+    @Column(name = "valor_pago", scale = AppConstants.DEFAULT_SCALE)
     private BigDecimal paidOutValue;
 
     @Column(name = "data_pagamento")

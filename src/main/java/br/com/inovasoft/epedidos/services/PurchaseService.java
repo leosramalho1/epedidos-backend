@@ -87,7 +87,7 @@ public class PurchaseService extends BaseService<Purchase> {
                 "and pr.deletedOn is null ";
 
         Parameters parameters = Parameters.with("systemId", tokenService.getSystemId());
-        parameters.and("status", List.of(PurchaseEnum.DISTRIBUTED));
+        parameters.and("status", List.of(PurchaseEnum.OPEN));
 
         if (supplier != null) {
             where += " and p.supplier.id = :supplier ";
@@ -118,7 +118,7 @@ public class PurchaseService extends BaseService<Purchase> {
             BigDecimal weight = purchaseItemDto.getWeight();
             List<PurchaseItem> purchaseItems = PurchaseItem.list("product.id = ?1 " +
                             "and purchase.systemId = ?2 and purchase.status in (?3) and weight = ?4",
-                    idProduct, tokenService.getSystemId(), List.of(PurchaseEnum.DISTRIBUTED), weight);
+                    idProduct, tokenService.getSystemId(), List.of(PurchaseEnum.OPEN), weight);
 
             purchaseItems.forEach(purchaseItem -> {
                 purchaseItem.setValueCharged(purchaseItemDto.getValueCharged());

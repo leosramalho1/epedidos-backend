@@ -1,5 +1,6 @@
 package br.com.inovasoft.epedidos.models.entities;
 
+import br.com.inovasoft.epedidos.configuration.AppConstants;
 import br.com.inovasoft.epedidos.models.BaseEntity;
 import br.com.inovasoft.epedidos.models.enums.CustomerPayTypeEnum;
 import br.com.inovasoft.epedidos.models.enums.PackageTypeEnum;
@@ -17,7 +18,11 @@ import java.util.Objects;
 @AllArgsConstructor
 @Builder(toBuilder = true)
 @EqualsAndHashCode(callSuper = false)
-@Table(name = "compra_distribuicao")
+@Table(name = "compra_distribuicao", indexes = {
+        @Index(name = "compra_distribuicao_index_pedido_item", columnList = "pedido_item_id"),
+        @Index(name = "compra_distribuicao_index_produto", columnList = "produto_id"),
+        @Index(name = "compra_item_distribuicao_index_compra_item", columnList = "compra_item_id"),
+        @Index(name = "compra_distribuicao_index_cliente", columnList = "cliente_id") })
 public class PurchaseDistribution extends BaseEntity {
 
     private static final long serialVersionUID = 7699908322410433370L;
@@ -59,7 +64,7 @@ public class PurchaseDistribution extends BaseEntity {
     private Integer quantity;
 
     @NotNull
-    @Column(name = "valor_unitario", scale = 4)
+    @Column(name = "valor_unitario", scale = AppConstants.MONEY_SCALE)
     private BigDecimal valueCharged;
 
     @NotNull
@@ -75,6 +80,11 @@ public class PurchaseDistribution extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private PackageTypeEnum packageType;
 
+    @NotNull
+    @JoinColumn(name = "produto_id")
+    @ManyToOne(targetEntity = Product.class)
+    private Product product;
+
     @PreUpdate
     @PrePersist
     public void prePersist() {
@@ -86,7 +96,7 @@ public class PurchaseDistribution extends BaseEntity {
     public BigDecimal calculateTotalValue() {
 
         if(quantity > 0) {
-            return valueCharged.multiply(BigDecimal.valueOf(quantity)).setScale(4, RoundingMode.UP);
+            return valueCharged.multiply(BigDecimal.valueOf(quantity)).setScale(AppConstants.MONEY_SCALE, RoundingMode.UP);
         }
 
         return BigDecimal.ZERO;

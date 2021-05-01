@@ -14,5 +14,6 @@ public interface PurchaseDistributionMapper extends BaseMapper<PurchaseDistribut
     @Mapping(source = "purchaseItem.unitValue", target = "unitValue")
     @Mapping(source = "purchaseItem.purchase.id", target = "idPurchase")
     @Mapping(source = "orderItem.order.id", target = "idOrder")
+    @Mapping(source = "customer.id", target = "idCustomer")
     PurchaseDistributionDto toDto(PurchaseDistribution entity);
 }

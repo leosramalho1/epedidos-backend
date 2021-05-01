@@ -97,9 +97,9 @@ public class OrderResources {
     @GET
     @Path("/closing")
     @RolesAllowed(JwtRoles.USER_BACKOFFICE)
-    public Response getClosing(@QueryParam("page") int page) {
+    public Response getClosing(@QueryParam("page") int page, @QueryParam("customer") Long idCustomer) {
         return Response.status(Response.Status.OK)
-                .entity(purchaseDistributionService.buildAllByCustomer(page, null, OrderEnum.DISTRIBUTED)).build();
+                .entity(purchaseDistributionService.buildAllByCustomer(page, idCustomer, OrderEnum.DISTRIBUTED)).build();
     }
 
     @POST

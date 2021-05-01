@@ -1,5 +1,6 @@
 package br.com.inovasoft.epedidos.models.entities;
 
+import br.com.inovasoft.epedidos.configuration.AppConstants;
 import br.com.inovasoft.epedidos.models.BaseEntity;
 import br.com.inovasoft.epedidos.models.enums.PackageTypeEnum;
 import lombok.Data;
@@ -30,10 +31,10 @@ public class PurchaseItem extends BaseEntity {
                         BigDecimal sumValueCharged, BigDecimal weight) {
         this.product = Product.findById(product);
         this.quantity = Optional.ofNullable(quantity).orElse(0L).intValue();
-        this.unitValue = Objects.nonNull(unitValue) ? unitValue.setScale(4, RoundingMode.UP) : null;
-        this.averageValue = totalValue.divide(BigDecimal.valueOf(NumberUtils.max(1, quantity)), 4, RoundingMode.UP);
-        this.valueCharged = sumValueCharged.divide(BigDecimal.valueOf(NumberUtils.max(1, quantity)), 4, RoundingMode.UP);
-        this.totalValue = valueCharged.multiply(BigDecimal.valueOf(this.quantity)).setScale(4, RoundingMode.UP);
+        this.unitValue = Objects.nonNull(unitValue) ? unitValue.setScale(AppConstants.MONEY_SCALE, RoundingMode.UP) : null;
+        this.averageValue = totalValue.divide(BigDecimal.valueOf(NumberUtils.max(1, quantity)), AppConstants.MONEY_SCALE, RoundingMode.UP);
+        this.valueCharged = sumValueCharged.divide(BigDecimal.valueOf(NumberUtils.max(1, quantity)), AppConstants.MONEY_SCALE, RoundingMode.UP);
+        this.totalValue = valueCharged.multiply(BigDecimal.valueOf(this.quantity)).setScale(AppConstants.MONEY_SCALE, RoundingMode.UP);
         this.weight = weight;
     }
 
@@ -57,11 +58,11 @@ public class PurchaseItem extends BaseEntity {
     private Integer quantity;
 
     @NotNull(message = "Valor unitario do item não pode ser nulo")
-    @Column(name = "valor_unitario", scale = 4)
+    @Column(name = "valor_unitario", scale = AppConstants.MONEY_SCALE)
     private BigDecimal unitValue;
 
     @NotNull(message = "Valor unitario do item não pode ser nulo")
-    @Column(name = "valor_cobrado", scale = 4)
+    @Column(name = "valor_cobrado", scale = AppConstants.MONEY_SCALE)
     private BigDecimal valueCharged;
 
     @NotNull
@@ -72,7 +73,7 @@ public class PurchaseItem extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private PackageTypeEnum packageType;
 
-    @Column(name = "peso", scale = 4)
+    @Column(name = "peso")
     private BigDecimal weight;
 
     @Transient
@@ -103,7 +104,7 @@ public class PurchaseItem extends BaseEntity {
 
     public BigDecimal calculateTotalValue() {
         return Optional.ofNullable(valueCharged).orElse(unitValue).multiply(BigDecimal.valueOf(quantity))
-                .setScale(2, RoundingMode.UP);
+                .setScale(AppConstants.DEFAULT_SCALE, RoundingMode.UP);
     }
 
     public BigDecimal calculateAverageValue() {
@@ -111,7 +112,7 @@ public class PurchaseItem extends BaseEntity {
         if(totalValue.intValue() > 0){
             Integer quantity = Optional.ofNullable(this.quantity).orElse(1);
             return totalValue
-                    .divide(BigDecimal.valueOf(quantity > 0 ? quantity : 1), 2, RoundingMode.UP);
+                    .divide(BigDecimal.valueOf(quantity > 0 ? quantity : 1), AppConstants.DEFAULT_SCALE, RoundingMode.UP);
         }
 
         return BigDecimal.ZERO;

@@ -1,5 +1,6 @@
 package br.com.inovasoft.epedidos.models.dtos;
 
+import br.com.inovasoft.epedidos.models.enums.PackageTypeEnum;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -24,6 +25,8 @@ public class PurchaseDistributionDto {
     private BigDecimal valueCharged;
     private BigDecimal totalValue;
     private BigDecimal unitShippingCost;
+    private Long idCustomer;
+    private PackageTypeEnum packageType;
 
     public BigDecimal getTotalValue() {
         if(Objects.isNull(valueCharged) || Objects.isNull(quantity)) {

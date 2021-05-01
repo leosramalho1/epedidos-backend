@@ -10,6 +10,7 @@ import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import io.quarkus.panache.common.Page;
 import io.quarkus.panache.common.Sort;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -47,27 +48,9 @@ public class OrderMapService extends BaseService<OrderDistributionMap> {
                 .map(OrderDistributionMap::getProductMap)
                 .collect(Collectors.toList());
 
-        return new PaginationDataResponse<>(productMapList, limitPerPage, (int) OrderDistributionMap.count("systemId", systemId));
-    }
-
-
-    public void update2(List<ProductMap> productsMap) {
-
-        productsMap
-                .forEach(productMap -> {
-                    productMap.getCustomerMaps()
-                            .forEach(customer -> {
-
-                                List<ProductOrderItemCustomerMap> orderItemsCustomer = productMap.pedidosByCliente(customer);
-                                ProductOrderItemCustomerMap productOrderMap = orderItemsCustomer.remove(0);
-                                // Adiciona o valor atualizado no primeiro pedido e zera os valores nos demais pedidos
-                                changeOrderItem(productOrderMap.getId(), customer.getTotalDistributed());
-                                // Zera os valores realizados nos demais pedidos
-                                orderItemsCustomer.forEach(orderItem -> OrderItem.deleteById(orderItem.getId()));
-
-                            });
-                });
-
+        return new PaginationDataResponse<>(productMapList, limitPerPage,
+                (int) OrderDistributionMap.count("systemId", systemId)
+        );
     }
 
     @Transactional
@@ -80,7 +63,7 @@ public class OrderMapService extends BaseService<OrderDistributionMap> {
                             List<ProductOrderItemCustomerMap> orderItemsCustomer = productMap.pedidosByCliente(customer);
                             ProductOrderItemCustomerMap orderMap = orderItemsCustomer.remove(0);
                             // Adiciona o valor atualizado no primeiro pedido e zera os valores nos demais pedidos
-                            OrderItem orderItemMaster = changeOrderItem(orderMap.getId(), customer.getTotalDistributed());
+                            OrderItem orderItemMaster = changeOrderItem(orderMap.getId(), customer.getTotalDistributed(), orderItemsCustomer);
                             // Zera os valores realizados nos demais pedidos
                             orderItemsCustomer.forEach(orderItem -> OrderItem.deleteById(orderItem.getId()));
 
@@ -137,6 +120,7 @@ public class OrderMapService extends BaseService<OrderDistributionMap> {
                         .unitCustomerCost(customer.getPayValue())
                         .customerPayType(customer.getPayType())
                         .packageType(purchaseItem.getPackageType())
+                        .product(orderItemMaster.getProduct())
                         .build();
 
                 Purchase purchase = purchaseItem.getPurchase();
@@ -154,9 +138,15 @@ public class OrderMapService extends BaseService<OrderDistributionMap> {
         }
     }
 
-    public OrderItem changeOrderItem(Long id, Integer realizedAmount) {
+    public OrderItem changeOrderItem(Long id, Integer realizedAmount,  List<ProductOrderItemCustomerMap> items) {
         OrderItem orderItem = OrderItem.find("id = ?1", id).firstResult();
         if(!Objects.isNull(orderItem)) {
+            if(CollectionUtils.isNotEmpty(items)) {
+                // Unifica os pedidos do cliente na base de acordo com o produto
+                List<Long> ids = items.stream().map(ProductOrderItemCustomerMap::getId).collect(Collectors.toList());
+                List<OrderItem> orders = OrderItem.list("id in (?1)", ids);
+                orderItem.setQuantity(orders.stream().map(OrderItem::getQuantity).reduce(0, Integer::sum));
+            }
             orderItem.addRealizedAmount(realizedAmount);
             orderItem.persist();
         }

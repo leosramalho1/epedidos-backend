@@ -1,5 +1,6 @@
 package br.com.inovasoft.epedidos.models.entities;
 
+import br.com.inovasoft.epedidos.configuration.AppConstants;
 import br.com.inovasoft.epedidos.models.BaseEntity;
 import br.com.inovasoft.epedidos.models.entities.references.PaymentMethod;
 import br.com.inovasoft.epedidos.models.enums.PurchaseEnum;
@@ -60,7 +61,7 @@ public class Purchase extends BaseEntity {
 
     @Min(value = 1, message = "O valor total deve ser maior que 0")
     @NotNull
-    @Column(name = "valor_total", scale = 4)
+    @Column(name = "valor_total", scale = AppConstants.MONEY_SCALE)
     private BigDecimal totalValue;
 
     @Min(value = 1, message = "A quantidade total deve ser maior que 0")
@@ -126,7 +127,7 @@ public class Purchase extends BaseEntity {
             BigDecimal totalValue = getTotalValue();
             Integer quantity = calculateQuantity(purchaseItems, 1);
             return Optional.ofNullable(totalValue).orElse(calculateTotalValue(purchaseItems, BigDecimal.ZERO))
-                    .divide(BigDecimal.valueOf(quantity), 2, RoundingMode.UP);
+                    .divide(BigDecimal.valueOf(quantity), AppConstants.DEFAULT_SCALE, RoundingMode.UP);
         }
 
         return BigDecimal.ZERO;

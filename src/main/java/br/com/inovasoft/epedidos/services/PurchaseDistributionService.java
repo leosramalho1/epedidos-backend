@@ -1,5 +1,6 @@
 package br.com.inovasoft.epedidos.services;
 
+import br.com.inovasoft.epedidos.configuration.AppConstants;
 import br.com.inovasoft.epedidos.exceptions.IllegalCustomerPayTypeException;
 import br.com.inovasoft.epedidos.mappers.CustomerMapper;
 import br.com.inovasoft.epedidos.mappers.PurchaseDistributionMapper;
@@ -13,7 +14,6 @@ import br.com.inovasoft.epedidos.models.enums.OrderEnum;
 import br.com.inovasoft.epedidos.models.enums.PurchaseEnum;
 import br.com.inovasoft.epedidos.security.TokenService;
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
-import io.quarkus.panache.common.Page;
 import io.quarkus.panache.common.Parameters;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -41,8 +41,6 @@ public class PurchaseDistributionService extends BaseService<PurchaseDistributio
     @Inject
     CustomerMapper customerMapper;
 
-    @Inject
-    PackageLoanService packageLoanService;
 
     public PaginationDataResponse<CustomerBillingDto> buildAllByCustomer(int page, Long idCustomer, OrderEnum orderEnum) {
 
@@ -66,7 +64,7 @@ public class PurchaseDistributionService extends BaseService<PurchaseDistributio
 
         PanacheQuery<PurchaseDistribution> list = PurchaseDistribution.find(select + where, parameters);
 
-        List<PurchaseDistribution> dataList = list.page(Page.of(page - 1, LIMIT_PER_PAGE)).list();
+        List<PurchaseDistribution> dataList = list.list();
 
         Map<Customer, List<PurchaseDistribution>> ordersByCustomer = dataList.stream()
                 .collect(Collectors.groupingBy(PurchaseDistribution::getCustomer));
@@ -82,7 +80,7 @@ public class PurchaseDistributionService extends BaseService<PurchaseDistributio
                     Integer quantity = sumTotalQuantity(purchaseDistributionList);
                     BigDecimal shippingCost = sumShippingCost(purchaseDistributionList);
 
-                    List<PurchaseDistributionDto> purchaseDistributions = mapPurchasesDistributionsByProduct(purchaseDistributionList);
+                        List<PurchaseDistributionDto> purchaseDistributions = mapPurchasesDistributionsByProduct(purchaseDistributionList);
 
                     return customerBillingDto.toBuilder()
                             .customerValue(calculateTotalValueProducts(purchaseDistributionList, customer).subtract(totalValue))
@@ -96,7 +94,11 @@ public class PurchaseDistributionService extends BaseService<PurchaseDistributio
                 .sorted(Comparator.comparing(CustomerBillingDto::getName))
                 .collect(Collectors.toList());
 
-        return new PaginationDataResponse<>(collect, LIMIT_PER_PAGE, (int) Customer.count(where, parameters));
+        List<CustomerBillingDto> response = collect.stream()
+                .skip((page - 1) * LIMIT_PER_PAGE)
+                .limit(LIMIT_PER_PAGE).collect(Collectors.toList());
+
+        return new PaginationDataResponse<>(response, LIMIT_PER_PAGE, collect.size());
     }
 
     private List<PurchaseDistributionDto> mapPurchasesDistributionsByProduct(List<PurchaseDistribution> purchaseDistributionList) {
@@ -109,24 +111,20 @@ public class PurchaseDistributionService extends BaseService<PurchaseDistributio
 
                     BigDecimal totalValue = sumTotalValue(value);
                     Integer quantity = sumTotalQuantity(value);
-                    BigDecimal totalValueCharged = sumTotalValueCharged(value);
 
-                    List<BigDecimal> valueChargeds = value.stream()
-                            .map(PurchaseDistribution::getValueCharged)
-                            .collect(Collectors.toList());
                     PurchaseDistributionDto purchaseDistributionDto = mapper.toDto(value.get(0));
 
                     return purchaseDistributionDto.toBuilder()
                             .quantity(quantity)
                             .totalValue(totalValue)
                             .unitShippingCost(null)
-                            .valueCharged(totalValueCharged
-                                    .divide(BigDecimal.valueOf(valueChargeds.size()), 4, RoundingMode.UP))
+                            .valueCharged(totalValue
+                                    .divide(BigDecimal.valueOf(quantity), AppConstants.MONEY_SCALE, RoundingMode.UP))
                             .build();
 
                 })
                 .sorted(Comparator.comparing(PurchaseDistributionDto::getIdOrder)
-                .thenComparing(PurchaseDistributionDto::getNameProduct))
+                    .thenComparing(PurchaseDistributionDto::getNameProduct))
                 .collect(Collectors.toList());
     }
 
@@ -211,44 +209,40 @@ public class PurchaseDistributionService extends BaseService<PurchaseDistributio
 
 
     @Transactional
-    public List<PurchaseDistribution> update(List<PurchaseDistributionDto> purchaseDistributions) {
-
-        List<PurchaseDistribution> entities = new ArrayList<>();
+    public void updateValueCharged(List<PurchaseDistributionDto> purchaseDistributions) {
         purchaseDistributions.forEach(purchaseDistributionDto -> {
-            PurchaseDistribution purchaseDistribution = PurchaseDistribution.findById(purchaseDistributionDto.getId());
-            mapper.updateEntityIgnoringNull(mapper.toEntity(purchaseDistributionDto), purchaseDistribution);
-            Order order = purchaseDistribution.getOrderItem().getOrder();
+            PurchaseDistribution.update("update PurchaseDistribution p set p.valueCharged = ?1 " +
+                            "where product.id = ?2 and customer.id = ?3 " +
+                            "and systemId = ?4 and accountToReceive is null ",
+                    purchaseDistributionDto.getValueCharged(),
+                    purchaseDistributionDto.getIdProduct(), purchaseDistributionDto.getIdCustomer(),
+                    tokenService.getSystemId());
 
-            purchaseDistribution.persist();
-            entities.add(purchaseDistribution);
         });
-
-        return entities;
     }
 
 
     public BigDecimal calculateTotalValueProducts(List<PurchaseDistribution> purchaseDistributions, Customer customer) {
         BigDecimal totalValueProductsRealized;
 
-        if(customer.getPayType() == CustomerPayTypeEnum.V){
+        if (customer.getPayType() == CustomerPayTypeEnum.V) {
             totalValueProductsRealized = purchaseDistributions.stream()
                     .map(pd -> pd.getValueCharged()
                             .add(customer.getPayValue()).multiply(BigDecimal.valueOf(pd.getQuantity()))
-                    )
-                    .reduce(BigDecimal.ZERO, BigDecimal::add);
-        } else if(customer.getPayType() == CustomerPayTypeEnum.P){
+                    ).reduce(BigDecimal.ZERO, BigDecimal::add);
+        } else if (customer.getPayType() == CustomerPayTypeEnum.P) {
             BigDecimal payValue = customer.getPayValue()
-                    .divide(ONE_HUNDRED, 4, RoundingMode.UP).add(BigDecimal.ONE);
+                    .divide(ONE_HUNDRED, AppConstants.MONEY_SCALE, RoundingMode.UP).add(BigDecimal.ONE);
             totalValueProductsRealized = purchaseDistributions.stream()
-                    .map(pd -> pd.getValueCharged().multiply(BigDecimal.valueOf(pd.getQuantity()))
+                    .map(pd -> pd.getValueCharged()
+                            .multiply(BigDecimal.valueOf(pd.getQuantity()))
                             .multiply(payValue)
-                    )
-                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+                    ).reduce(BigDecimal.ZERO, BigDecimal::add);
         } else {
             throw new IllegalCustomerPayTypeException();
         }
 
-        return totalValueProductsRealized.setScale(2, RoundingMode.UP);
+        return totalValueProductsRealized.setScale(AppConstants.DEFAULT_SCALE, RoundingMode.UP);
     }
 
 }
