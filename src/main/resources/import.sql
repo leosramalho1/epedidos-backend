@@ -20,10 +20,11 @@ AS SELECT uuid_in(md5(random()::text || clock_timestamp()::text)::cstring) AS id
           WHERE compra_item.produto_id = ci.produto_id AND compra_item.tipo_embalagem::text = ci.tipo_embalagem::text AND compra_item.peso = ci.peso
           GROUP BY ci.produto_id), 'compras', json_agg(DISTINCT jsonb_build_object('id', co.id)), 'pedidos', json_agg(DISTINCT jsonb_build_object('id', pi.id, 'cliente', ( SELECT pedido.cliente_id
            FROM pedido
-          WHERE pedido.id = pi.pedido_id))), 'categorias', json_agg(DISTINCT jsonb_build_object('id', pc.categoria_id, 'nome', cat.nome)), 'clientes', jsonb_agg(DISTINCT jsonb_build_object('id', c.id, 'nome', c.nome, 'totalPedido', ( SELECT COALESCE(sum(it.quantidade_adiquirida), sum(it.quantidade)) AS sum
+          WHERE pedido.id = pi.pedido_id))), 'categorias', json_agg(DISTINCT jsonb_build_object('id', pc.categoria_id, 'nome', cat.nome)), 'clientes',
+          jsonb_agg(DISTINCT jsonb_build_object('id', c.id, 'nome', c.nome, 'totalPedido', ( SELECT COALESCE(sum(it.quantidade_adiquirida), sum(it.quantidade)) AS sum
            FROM pedido_item it
              JOIN pedido ped ON ped.id = it.pedido_id
-          WHERE it.produto_id = p.id AND ped.cliente_id = pe.cliente_id)))) AS mapa
+          WHERE it.produto_id = p.id AND ped.cliente_id = pe.cliente_id  AND ped.situacao::text = 'PURCHASE'::text)))) AS mapa
    FROM produto p
      JOIN compra_item ci ON ci.produto_id = p.id
      JOIN compra co ON ci.compra_id = co.id AND co.situacao::text = 'OPEN'::text
@@ -32,7 +33,7 @@ AS SELECT uuid_in(md5(random()::text || clock_timestamp()::text)::cstring) AS id
      JOIN cliente c ON c.id = pe.cliente_id
      LEFT JOIN produto_categoria pc ON pc.produto_id = p.id
      LEFT JOIN categoria cat ON cat.id = pc.categoria_id
-  WHERE p.deletedon IS null and co.deletedon is null
+  WHERE p.deletedon IS NULL AND co.deletedon IS NULL
   GROUP BY ci.produto_id, ci.tipo_embalagem, ci.peso, p.id
   ORDER BY p.nome;
 
