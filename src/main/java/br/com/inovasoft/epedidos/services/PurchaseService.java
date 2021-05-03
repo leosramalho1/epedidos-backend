@@ -104,10 +104,16 @@ public class PurchaseService extends BaseService<Purchase> {
                 Sort.by("pr.name"), parameters
         );
 
-        List<PurchaseItem> dataList = list.page(Page.of(page - 1, LIMIT_PER_PAGE)).list();
+        List<PurchaseItem> dataList = list.list();
 
-        return new PaginationDataResponse<>(purchaseItemMapper.toDto(dataList), LIMIT_PER_PAGE,
-                dataList.size() > 0 ? list.list().size() : 0);
+        int limitPerPage = 50;
+
+        List<PurchaseItem> response = dataList.stream()
+                .skip((page - 1) * limitPerPage)
+                .limit(limitPerPage)
+                .collect(Collectors.toList());
+
+        return new PaginationDataResponse<>(purchaseItemMapper.toDto(response), limitPerPage,  Math.max(dataList.size(), 0));
     }
 
     @Transactional

@@ -96,7 +96,8 @@ public class PurchaseDistributionService extends BaseService<PurchaseDistributio
 
         List<CustomerBillingDto> response = collect.stream()
                 .skip((page - 1) * LIMIT_PER_PAGE)
-                .limit(LIMIT_PER_PAGE).collect(Collectors.toList());
+                .limit(LIMIT_PER_PAGE)
+                .collect(Collectors.toList());
 
         return new PaginationDataResponse<>(response, LIMIT_PER_PAGE, collect.size());
     }
