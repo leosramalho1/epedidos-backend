@@ -16,6 +16,7 @@ import java.math.BigDecimal;
 @EqualsAndHashCode(callSuper = false)
 @Table(name = "municipio")
 @Immutable
+@Cacheable
 public class City extends BaseEntity {
 
     private static final long serialVersionUID = -2266661318852020226L;

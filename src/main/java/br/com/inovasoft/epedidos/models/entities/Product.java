@@ -20,6 +20,7 @@ import java.util.List;
 @ToString(of = {"id", "name"})
 @EqualsAndHashCode(callSuper = false)
 @Table(name = "produto", indexes = {@Index(name = "produto_index_system", columnList = "sistema_id")})
+@Cacheable
 public class Product extends BaseEntity {
 
     private static final long serialVersionUID = 7561993588630057369L;

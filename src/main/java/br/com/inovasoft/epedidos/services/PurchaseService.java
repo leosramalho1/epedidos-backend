@@ -106,14 +106,7 @@ public class PurchaseService extends BaseService<Purchase> {
 
         List<PurchaseItem> dataList = list.list();
 
-        int limitPerPage = 50;
-
-        List<PurchaseItem> response = dataList.stream()
-                .skip((page - 1) * limitPerPage)
-                .limit(limitPerPage)
-                .collect(Collectors.toList());
-
-        return new PaginationDataResponse<>(purchaseItemMapper.toDto(response), limitPerPage,  Math.max(dataList.size(), 0));
+        return new PaginationDataResponse<>(purchaseItemMapper.toDto(dataList), dataList.size(),  dataList.size());
     }
 
     @Transactional

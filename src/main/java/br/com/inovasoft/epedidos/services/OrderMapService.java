@@ -28,7 +28,7 @@ public class OrderMapService extends BaseService<OrderDistributionMap> {
     @Inject
     TokenService tokenService;
 
-    protected int limitPerPage = 50;
+    protected int limitPerPage = 500;
 
     public PaginationDataResponse<ProductMap> listAllDistributions(Integer page, @NotNull Optional<Long> category) {
 
