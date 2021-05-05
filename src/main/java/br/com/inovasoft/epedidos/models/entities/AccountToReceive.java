@@ -74,7 +74,7 @@ public class AccountToReceive extends BaseEntity implements Billing {
     @NotAudited
     @ToString.Exclude
     @OneToMany(targetEntity = PurchaseDistribution.class, mappedBy = "accountToReceive", fetch = FetchType.EAGER)
-    private List<PurchaseDistribution> accountToReceives;
+    private List<PurchaseDistribution> purchaseDistributions;
 
     @PrePersist
     @PreUpdate

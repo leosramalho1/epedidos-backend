@@ -83,7 +83,7 @@ public class PurchaseDistributionService extends BaseService<PurchaseDistributio
                     List<PurchaseDistributionDto> purchaseDistributions = mapPurchasesDistributionsByProduct(purchaseDistributionList);
 
                     return customerBillingDto.toBuilder()
-                            .customerValue(calculateTotalValueProducts(purchaseDistributionList, customer).subtract(totalValue))
+                            .customerValue(calculateTotalValueProducts(purchaseDistributionList, customer))
                             .productsValue(totalValue)
                             .shippingCost(shippingCost)
                             .quantity(quantity)
@@ -228,22 +228,17 @@ public class PurchaseDistributionService extends BaseService<PurchaseDistributio
 
         if (customer.getPayType() == CustomerPayTypeEnum.V) {
             totalValueProductsRealized = purchaseDistributions.stream()
-                    .map(pd -> pd.getValueCharged()
-                            .add(customer.getPayValue()).multiply(BigDecimal.valueOf(pd.getQuantity()))
-                    ).reduce(BigDecimal.ZERO, BigDecimal::add);
+                    .map(PurchaseDistribution::calculateCustomerValue)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
         } else if (customer.getPayType() == CustomerPayTypeEnum.P) {
-            BigDecimal payValue = customer.getPayValue()
-                    .divide(ONE_HUNDRED, AppConstants.MONEY_SCALE, RoundingMode.UP).add(BigDecimal.ONE);
             totalValueProductsRealized = purchaseDistributions.stream()
-                    .map(pd -> pd.getValueCharged()
-                            .multiply(BigDecimal.valueOf(pd.getQuantity()))
-                            .multiply(payValue)
-                    ).reduce(BigDecimal.ZERO, BigDecimal::add);
+                    .map(PurchaseDistribution::calculateCustomerValue)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
         } else {
             throw new IllegalCustomerPayTypeException();
         }
 
-        return totalValueProductsRealized.setScale(AppConstants.DEFAULT_SCALE, RoundingMode.UP);
+        return totalValueProductsRealized;
     }
 
 }

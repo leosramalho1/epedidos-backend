@@ -1,6 +1,7 @@
 package br.com.inovasoft.epedidos.models.entities;
 
 import br.com.inovasoft.epedidos.configuration.AppConstants;
+import br.com.inovasoft.epedidos.exceptions.IllegalCustomerPayTypeException;
 import br.com.inovasoft.epedidos.models.BaseEntity;
 import br.com.inovasoft.epedidos.models.enums.CustomerPayTypeEnum;
 import br.com.inovasoft.epedidos.models.enums.PackageTypeEnum;
@@ -100,6 +101,34 @@ public class PurchaseDistribution extends BaseEntity {
         }
 
         return BigDecimal.ZERO;
+    }
+
+    public BigDecimal calculateCustomerTotalValue() {
+        BigDecimal customerValue;
+        CustomerPayTypeEnum customerPayType = customer.getPayType();
+        BigDecimal customerPayValue = customer.getPayValue();
+
+        if (customerPayType == CustomerPayTypeEnum.V) {
+            customerValue = getValueCharged()
+                    .add(customerPayValue)
+                    .multiply(BigDecimal.valueOf(getQuantity()));
+        } else if (customerPayType == CustomerPayTypeEnum.P) {
+            BigDecimal payValue = customerPayValue
+                    .divide(BigDecimal.valueOf(100), AppConstants.MONEY_SCALE, RoundingMode.UP)
+                    .add(BigDecimal.ONE);
+
+            customerValue = getValueCharged()
+                    .multiply(BigDecimal.valueOf(getQuantity()))
+                    .multiply(payValue);
+        } else {
+            throw new IllegalCustomerPayTypeException();
+        }
+
+        return customerValue.setScale(AppConstants.DEFAULT_SCALE, RoundingMode.UP);
+    }
+
+    public BigDecimal calculateCustomerValue() {
+        return calculateCustomerTotalValue().subtract(calculateTotalValue());
     }
 
 }
