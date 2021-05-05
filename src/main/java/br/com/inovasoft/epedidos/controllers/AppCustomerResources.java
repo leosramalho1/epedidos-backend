@@ -162,7 +162,7 @@ public class AppCustomerResources {
         Company company = system.getCompany();
         login.setPassword(null);
         login.setUserName(existingUser.getName());
-        login.setToken(tokenService.generateAppCustomerToken(existingUser.getCpfCnpj(), existingUser.getName(),
+        login.setToken(tokenService.generateAppCustomerToken(existingUser.getCustomer().getCpfCnpj(), existingUser.getName(),
                 company.getId(), system.getSystemKey()));
 
         return login;
