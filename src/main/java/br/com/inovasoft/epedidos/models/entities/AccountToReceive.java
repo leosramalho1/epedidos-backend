@@ -5,11 +5,13 @@ import br.com.inovasoft.epedidos.models.BaseEntity;
 import br.com.inovasoft.epedidos.models.enums.PayStatusEnum;
 import lombok.*;
 import org.hibernate.envers.Audited;
+import org.hibernate.envers.NotAudited;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Objects;
 
 import static org.hibernate.envers.RelationTargetAuditMode.NOT_AUDITED;
@@ -68,6 +70,11 @@ public class AccountToReceive extends BaseEntity implements Billing {
     @Getter(AccessLevel.NONE)
     @Enumerated(EnumType.STRING)
     private PayStatusEnum status;
+
+    @NotAudited
+    @ToString.Exclude
+    @OneToMany(targetEntity = PurchaseDistribution.class, mappedBy = "accountToReceive", fetch = FetchType.EAGER)
+    private List<PurchaseDistribution> accountToReceives;
 
     @PrePersist
     @PreUpdate

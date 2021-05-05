@@ -4,7 +4,7 @@ import br.com.inovasoft.epedidos.models.dtos.AccountToReceiveDto;
 import br.com.inovasoft.epedidos.models.entities.AccountToReceive;
 import org.mapstruct.Mapper;
 
-@Mapper(componentModel = "cdi", uses = { CustomerMapper.class })
+@Mapper(componentModel = "cdi", uses = { CustomerMapper.class, PurchaseDistributionMapper.class })
 public interface AccountToReceiveMapper extends BaseMapper<AccountToReceive, AccountToReceiveDto> {
 
 

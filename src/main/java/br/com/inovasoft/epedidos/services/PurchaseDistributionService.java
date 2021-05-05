@@ -80,7 +80,7 @@ public class PurchaseDistributionService extends BaseService<PurchaseDistributio
                     Integer quantity = sumTotalQuantity(purchaseDistributionList);
                     BigDecimal shippingCost = sumShippingCost(purchaseDistributionList);
 
-                        List<PurchaseDistributionDto> purchaseDistributions = mapPurchasesDistributionsByProduct(purchaseDistributionList);
+                    List<PurchaseDistributionDto> purchaseDistributions = mapPurchasesDistributionsByProduct(purchaseDistributionList);
 
                     return customerBillingDto.toBuilder()
                             .customerValue(calculateTotalValueProducts(purchaseDistributionList, customer).subtract(totalValue))

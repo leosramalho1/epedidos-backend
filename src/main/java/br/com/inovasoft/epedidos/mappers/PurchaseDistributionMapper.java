@@ -15,5 +15,7 @@ public interface PurchaseDistributionMapper extends BaseMapper<PurchaseDistribut
     @Mapping(source = "purchaseItem.purchase.id", target = "idPurchase")
     @Mapping(source = "orderItem.order.id", target = "idOrder")
     @Mapping(source = "customer.id", target = "idCustomer")
+    @Mapping(source = "orderItem.order.createdOn", target = "orderDate", dateFormat = "dd/MM/yyyy HH:mm")
+    @Mapping(source = "createdOn", target = "distributionDate", dateFormat = "dd/MM/yyyy HH:mm")
     PurchaseDistributionDto toDto(PurchaseDistribution entity);
 }

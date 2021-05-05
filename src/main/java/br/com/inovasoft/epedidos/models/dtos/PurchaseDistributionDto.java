@@ -27,6 +27,8 @@ public class PurchaseDistributionDto {
     private BigDecimal unitShippingCost;
     private Long idCustomer;
     private PackageTypeEnum packageType;
+    private String orderDate;
+    private String distributionDate;
 
     public BigDecimal getTotalValue() {
         if(Objects.isNull(valueCharged) || Objects.isNull(quantity)) {

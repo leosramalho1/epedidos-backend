@@ -48,6 +48,7 @@ public class AccountToReceiveResources {
     @GET
     @Path("/{id}")
     @RolesAllowed(JwtRoles.USER_BACKOFFICE)
+    @Transactional
     public Response getById(@PathParam("id") Long accountToReceiveId) {
         return Response.status(Response.Status.OK).entity(service.findDtoById(accountToReceiveId)).build();
     }
