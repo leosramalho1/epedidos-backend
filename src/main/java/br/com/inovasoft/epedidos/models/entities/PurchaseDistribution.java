@@ -73,6 +73,10 @@ public class PurchaseDistribution extends BaseEntity {
     private BigDecimal unitCustomerCost;
 
     @NotNull
+    @Column(name = "valor_frete")
+    private BigDecimal unitShippingCost;
+
+    @NotNull
     @Enumerated(EnumType.STRING)
     @Column(name = "tipo_cobranca_cliente")
     private CustomerPayTypeEnum customerPayType;
@@ -105,15 +109,13 @@ public class PurchaseDistribution extends BaseEntity {
 
     public BigDecimal calculateCustomerTotalValue() {
         BigDecimal customerValue;
-        CustomerPayTypeEnum customerPayType = customer.getPayType();
-        BigDecimal customerPayValue = customer.getPayValue();
 
-        if (customerPayType == CustomerPayTypeEnum.V) {
+        if (getCustomerPayType() == CustomerPayTypeEnum.V) {
             customerValue = getValueCharged()
-                    .add(customerPayValue)
+                    .add(getUnitCustomerCost())
                     .multiply(BigDecimal.valueOf(getQuantity()));
-        } else if (customerPayType == CustomerPayTypeEnum.P) {
-            BigDecimal payValue = customerPayValue
+        } else if (getCustomerPayType() == CustomerPayTypeEnum.P) {
+            BigDecimal payValue = getUnitCustomerCost()
                     .divide(BigDecimal.valueOf(100), AppConstants.MONEY_SCALE, RoundingMode.UP)
                     .add(BigDecimal.ONE);
 

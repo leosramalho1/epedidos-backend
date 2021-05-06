@@ -83,9 +83,9 @@ public class PurchaseDistributionService extends BaseService<PurchaseDistributio
                     List<PurchaseDistributionDto> purchaseDistributions = mapPurchasesDistributionsByProduct(purchaseDistributionList);
 
                     return customerBillingDto.toBuilder()
-                            .customerValue(calculateTotalValueProducts(purchaseDistributionList, customer))
+                            .totalCustomerCost(calculateTotalValueProducts(purchaseDistributionList, customer))
                             .productsValue(totalValue)
-                            .shippingCost(shippingCost)
+                            .totalShippingCost(shippingCost)
                             .quantity(quantity)
                             .purchaseDistributions(purchaseDistributions)
                             .build();
@@ -112,13 +112,15 @@ public class PurchaseDistributionService extends BaseService<PurchaseDistributio
 
                     BigDecimal totalValue = sumTotalValue(value);
                     Integer quantity = sumTotalQuantity(value);
-
-                    PurchaseDistributionDto purchaseDistributionDto = mapper.toDto(value.get(0));
+                    BigDecimal shippingCost = sumShippingCost(value);
+                    PurchaseDistribution entity = value.get(0);
+                    PurchaseDistributionDto purchaseDistributionDto = mapper.toDto(entity);
 
                     return purchaseDistributionDto.toBuilder()
                             .quantity(quantity)
                             .totalValue(totalValue)
-                            .unitShippingCost(null)
+                            .totalCustomerCost(calculateTotalValueProducts(value, entity.getCustomer()))
+                            .unitShippingCost(shippingCost)
                             .valueCharged(totalValue
                                     .divide(BigDecimal.valueOf(quantity), AppConstants.MONEY_SCALE, RoundingMode.UP))
                             .build();

@@ -21,13 +21,13 @@ public class CustomerBillingDto {
     private CustomerPayTypeEnum payType;
     private BigDecimal payValue;
     private BigDecimal totalValue;
-    private BigDecimal customerValue;
-    private BigDecimal shippingCost;
+    private BigDecimal totalShippingCost;
+    private BigDecimal totalCustomerCost;
     private BigDecimal productsValue;
     private Integer quantity;
     private List<PurchaseDistributionDto> purchaseDistributions = new ArrayList<>();
 
     public BigDecimal getTotalValue() {
-        return customerValue.add(shippingCost).add(productsValue);
+        return totalCustomerCost.add(totalShippingCost).add(productsValue);
     }
 }

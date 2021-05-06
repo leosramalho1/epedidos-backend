@@ -110,6 +110,7 @@ public class OrderMapService extends BaseService<OrderDistributionMap> {
                 }
 
                 Customer customer = orderItemMaster.getOrder().getCustomer();
+                Product product = orderItemMaster.getProduct();
                 PurchaseDistribution purchaseDistribution = PurchaseDistribution.builder()
                         .systemId(tokenService.getSystemId())
                         .purchaseItem(purchaseItem)
@@ -120,7 +121,8 @@ public class OrderMapService extends BaseService<OrderDistributionMap> {
                         .unitCustomerCost(customer.getPayValue())
                         .customerPayType(customer.getPayType())
                         .packageType(purchaseItem.getPackageType())
-                        .product(orderItemMaster.getProduct())
+                        .product(product)
+                        .unitShippingCost(product.getShippingCost())
                         .build();
 
                 Purchase purchase = purchaseItem.getPurchase();
