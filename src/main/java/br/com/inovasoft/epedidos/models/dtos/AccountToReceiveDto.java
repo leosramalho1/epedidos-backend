@@ -32,5 +32,6 @@ public class AccountToReceiveDto implements BillingDto {
     private List<AccountToReceiveDto> history = new ArrayList<>();
     private BigDecimal amountPaid;
     private List<PurchaseDistributionDto> purchaseDistributions;
+    private BigDecimal totalValue;
 
 }

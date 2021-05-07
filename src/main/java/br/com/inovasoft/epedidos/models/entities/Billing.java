@@ -21,7 +21,7 @@ public interface Billing {
 
     LocalDateTime getDeletedOn();
 
-    default BigDecimal totalValue() {
+    default BigDecimal getTotalValue() {
 
         BigDecimal originalValue = Optional.ofNullable(getOriginalValue())
                 .orElse(BigDecimal.ZERO);
@@ -33,12 +33,12 @@ public interface Billing {
 
     default boolean isPaid() {
         return Optional.ofNullable(getPaidOutValue()).orElse(BigDecimal.ZERO)
-                .compareTo(totalValue()) >= 0 && getPaidOutDate() != null;
+                .compareTo(getTotalValue()) >= 0 && getPaidOutDate() != null;
     }
 
     default boolean isPartiallyPaid() {
         return Optional.ofNullable(getPaidOutValue()).orElse(BigDecimal.ZERO)
-                .compareTo(totalValue()) < 0 && !isOverdueNotPaid();
+                .compareTo(getTotalValue()) < 0 && !isOverdueNotPaid();
     }
 
     default boolean isAwaitingPaid() {
