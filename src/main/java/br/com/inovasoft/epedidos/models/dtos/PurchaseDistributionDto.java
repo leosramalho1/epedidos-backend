@@ -36,8 +36,13 @@ public class PurchaseDistributionDto {
     private BigDecimal totalShippingCost;
     private BigDecimal totalCustomerCost;
     private CustomerPayTypeEnum customerPayType;
+    private BigDecimal valuePurchaseItem;
 
     public BigDecimal getTotalValue() {
+        if(!Objects.isNull(totalValue)) {
+            return totalValue;
+        }
+
         if(Objects.isNull(valueCharged) || Objects.isNull(quantity)) {
             return BigDecimal.ZERO;
         }

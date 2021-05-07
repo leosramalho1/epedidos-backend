@@ -105,11 +105,12 @@ public class PurchaseDistributionService extends BaseService<PurchaseDistributio
     private List<PurchaseDistributionDto> mapPurchasesDistributionsByProduct(List<PurchaseDistribution> purchaseDistributionList) {
 
         Map<Long, List<PurchaseDistribution>> distributionsByProduct = purchaseDistributionList.stream()
-                .collect(Collectors.groupingBy(pd -> pd.getOrderItem().getProduct().getId()));
+                .collect(Collectors.groupingBy(pd -> pd.getOrderItem().getOrder().getId()));
 
         return distributionsByProduct.values()
                         .stream().map(value -> {
 
+                    BigDecimal unitValue = sumUnitValue(value);
                     BigDecimal totalValue = sumTotalValue(value);
                     Integer quantity = sumTotalQuantity(value);
                     BigDecimal shippingCost = sumShippingCost(value);
@@ -121,6 +122,7 @@ public class PurchaseDistributionService extends BaseService<PurchaseDistributio
                             .totalValue(totalValue)
                             .totalCustomerCost(calculateTotalValueProducts(value, entity.getCustomer()))
                             .unitShippingCost(shippingCost)
+                            .unitValue(unitValue)
                             .valueCharged(totalValue
                                     .divide(BigDecimal.valueOf(quantity), AppConstants.MONEY_SCALE, RoundingMode.UP))
                             .build();
@@ -147,6 +149,13 @@ public class PurchaseDistributionService extends BaseService<PurchaseDistributio
     private BigDecimal sumTotalValue(List<PurchaseDistribution> purchaseDistributionList) {
         return purchaseDistributionList.stream()
                 .map(PurchaseDistribution::calculateTotalValue)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    private BigDecimal sumUnitValue(List<PurchaseDistribution> purchaseDistributionList) {
+        return purchaseDistributionList.stream()
+                .map(p -> p.getPurchaseItem().getUnitValue()
+                        .multiply(BigDecimal.valueOf(p.getQuantity())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 

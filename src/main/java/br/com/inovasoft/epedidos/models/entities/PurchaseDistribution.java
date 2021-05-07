@@ -126,7 +126,7 @@ public class PurchaseDistribution extends BaseEntity {
             throw new IllegalCustomerPayTypeException();
         }
 
-        return customerValue.setScale(AppConstants.DEFAULT_SCALE, RoundingMode.UP);
+        return customerValue.setScale(AppConstants.MONEY_SCALE, RoundingMode.UP);
     }
 
     public BigDecimal calculateCustomerValue() {
