@@ -99,7 +99,7 @@ public class OrderResources {
     @RolesAllowed(JwtRoles.USER_BACKOFFICE)
     public Response getClosing(@QueryParam("page") int page, @QueryParam("customer") Long idCustomer) {
         return Response.status(Response.Status.OK)
-                .entity(purchaseDistributionService.buildAllByCustomer(page, idCustomer, OrderEnum.DISTRIBUTED)).build();
+                .entity(purchaseDistributionService.buildAllByCustomer(page, idCustomer, OrderEnum.DISTRIBUTED, PurchaseDistributionService.GROUP_BY_PRODUCT)).build();
     }
 
     @POST

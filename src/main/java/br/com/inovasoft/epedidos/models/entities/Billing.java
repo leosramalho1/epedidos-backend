@@ -17,9 +17,18 @@ public interface Billing {
 
     BigDecimal getPaidOutValue();
 
+    void setPaidOutValue(BigDecimal paidOutValue);
+
     LocalDate getPaidOutDate();
 
     LocalDateTime getDeletedOn();
+
+    default void addPaidOutValue(BigDecimal paidOutValue) {
+        BigDecimal newPaidOutValue = Optional.ofNullable(getPaidOutValue()).orElse(BigDecimal.ZERO)
+                .add(Optional.ofNullable(paidOutValue).orElse(BigDecimal.ZERO));
+
+        setPaidOutValue(newPaidOutValue);
+    }
 
     default BigDecimal getTotalValue() {
 
@@ -29,6 +38,13 @@ public interface Billing {
                 .orElse(BigDecimal.ZERO);
 
         return originalValue.add(taxValue) ;
+    }
+
+    default BigDecimal getRemainingValue() {
+
+        BigDecimal paidOutValue = Optional.ofNullable(getPaidOutValue()).orElse(BigDecimal.ZERO);
+
+        return getTotalValue().subtract(paidOutValue) ;
     }
 
     default boolean isPaid() {

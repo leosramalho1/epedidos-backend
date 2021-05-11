@@ -18,4 +18,9 @@ public interface BillingDto {
     void setAmountPaid(BigDecimal amountPaid);
 
     BigDecimal getTotalValue();
+
+    BigDecimal getRemainingValue();
+
+    BigDecimal getPayValue();
+
 }

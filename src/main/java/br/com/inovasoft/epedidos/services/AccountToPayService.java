@@ -71,6 +71,7 @@ public class AccountToPayService extends BillingService<AccountToPay, AccountToP
         entity.setSupplier(Supplier.findById(dto.getSupplier().getId()));
 
         mapper.updateEntityFromDto(dto, entity);
+        entity.addPaidOutValue(dto.getPayValue());
 
         entity.persist();
 
@@ -81,6 +82,7 @@ public class AccountToPayService extends BillingService<AccountToPay, AccountToP
 
         AccountToPay entity = findById(id);
         mapper.updateEntityFromDto(dto, entity);
+        entity.addPaidOutValue(dto.getPayValue());
         entity.setSupplier(Supplier.findById(dto.getSupplier().getId()));
         entity.setSystemId(tokenService.getSystemId());
         entity.persist();

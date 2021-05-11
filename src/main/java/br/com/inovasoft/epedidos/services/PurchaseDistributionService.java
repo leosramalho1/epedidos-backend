@@ -13,7 +13,6 @@ import br.com.inovasoft.epedidos.models.enums.CustomerPayTypeEnum;
 import br.com.inovasoft.epedidos.models.enums.OrderEnum;
 import br.com.inovasoft.epedidos.models.enums.PurchaseEnum;
 import br.com.inovasoft.epedidos.security.TokenService;
-import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import io.quarkus.panache.common.Parameters;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -31,6 +30,8 @@ import java.util.stream.Collectors;
 public class PurchaseDistributionService extends BaseService<PurchaseDistribution> {
 
     private static final BigDecimal ONE_HUNDRED = BigDecimal.valueOf(100);
+    public static final String GROUP_BY_ORDER = "ORDER";
+    public static final String GROUP_BY_PRODUCT = "PRODUCT";
 
     @Inject
     PurchaseDistributionMapper mapper;
@@ -42,34 +43,14 @@ public class PurchaseDistributionService extends BaseService<PurchaseDistributio
     CustomerMapper customerMapper;
 
 
-    public PaginationDataResponse<CustomerBillingDto> buildAllByCustomer(int page, Long idCustomer, OrderEnum orderEnum) {
+    public PaginationDataResponse<CustomerBillingDto> buildAllByCustomer(int page, Long idCustomer, OrderEnum orderEnum, String groupBy) {
 
-        String select = "select pd ";
-        String where = "from PurchaseDistribution pd " +
-                "inner join pd.orderItem oi " +
-                "inner join oi.order ord " +
-                "where ord.deletedOn is null " +
-                "and pd.customer.deletedOn is null " +
-                "and pd.accountToReceive is null " +
-                "and pd.systemId = :systemId " +
-                "and ord.status = :status";
-
-        Parameters parameters = Parameters.with("systemId", tokenService.getSystemId());
-        parameters.and("status", orderEnum);
-
-        if(idCustomer != null) {
-            where += " and pd.customer.id = :idCustomer";
-            parameters.and("idCustomer", idCustomer);
-        }
-
-        PanacheQuery<PurchaseDistribution> list = PurchaseDistribution.find(select + where, parameters);
-
-        List<PurchaseDistribution> dataList = list.list();
+        List<PurchaseDistribution> dataList = listAllUninvoiced(idCustomer, orderEnum);
 
         Map<Customer, List<PurchaseDistribution>> ordersByCustomer = dataList.stream()
                 .collect(Collectors.groupingBy(PurchaseDistribution::getCustomer));
 
-        List<CustomerBillingDto> collect = ordersByCustomer.entrySet().stream()
+        List<CustomerBillingDto> collect = ordersByCustomer.entrySet().parallelStream()
                 .map(i -> {
                     Customer customer = i.getKey();
                     List<PurchaseDistribution> purchaseDistributionList = i.getValue();
@@ -79,8 +60,17 @@ public class PurchaseDistributionService extends BaseService<PurchaseDistributio
                     BigDecimal totalValue = sumTotalValue(purchaseDistributionList);
                     Integer quantity = sumTotalQuantity(purchaseDistributionList);
                     BigDecimal shippingCost = sumShippingCost(purchaseDistributionList);
+                    Map<Long, List<PurchaseDistribution>> distributions;
 
-                    List<PurchaseDistributionDto> purchaseDistributions = mapPurchasesDistributionsByProduct(purchaseDistributionList);
+                    if(GROUP_BY_ORDER.equals(groupBy)) {
+                        distributions = purchaseDistributionList.stream()
+                                .collect(Collectors.groupingBy(pd -> pd.getOrderItem().getOrder().getId()));
+                    } else {
+                        distributions = purchaseDistributionList.stream()
+                                .collect(Collectors.groupingBy(pd -> pd.getOrderItem().getProduct().getId()));
+                    }
+
+                    List<PurchaseDistributionDto> purchaseDistributions = mapPurchasesDistributions(distributions, groupBy);
 
                     return customerBillingDto.toBuilder()
                             .totalCustomerCost(calculateTotalValueProducts(purchaseDistributionList, customer))
@@ -102,20 +92,48 @@ public class PurchaseDistributionService extends BaseService<PurchaseDistributio
         return new PaginationDataResponse<>(response, LIMIT_PER_PAGE, collect.size());
     }
 
-    private List<PurchaseDistributionDto> mapPurchasesDistributionsByProduct(List<PurchaseDistribution> purchaseDistributionList) {
+    private List<PurchaseDistribution> listAllUninvoiced(Long idCustomer, OrderEnum orderEnum) {
 
-        Map<Long, List<PurchaseDistribution>> distributionsByProduct = purchaseDistributionList.stream()
-                .collect(Collectors.groupingBy(pd -> pd.getOrderItem().getOrder().getId()));
+        String select = "select pd ";
+        String where = "from PurchaseDistribution pd " +
+                "inner join pd.orderItem oi " +
+                "inner join oi.order ord " +
+                "where ord.deletedOn is null " +
+                "and pd.customer.deletedOn is null " +
+                "and pd.accountToReceive is null " +
+                "and pd.systemId = :systemId " +
+                "and ord.status = :status"
+                ;
 
-        return distributionsByProduct.values()
-                        .stream().map(value -> {
+        Parameters parameters = Parameters.with("systemId", tokenService.getSystemId());
+        parameters.and("status", orderEnum);
 
-                    BigDecimal unitValue = sumUnitValue(value);
+        if(idCustomer != null) {
+            where += " and pd.customer.id = :idCustomer";
+            parameters.and("idCustomer", idCustomer);
+        }
+
+        return PurchaseDistribution.find(select + where, parameters).list();
+    }
+
+    private List<PurchaseDistributionDto> mapPurchasesDistributions(Map<Long, List<PurchaseDistribution>> distributions, String groupBy) {
+
+        return distributions.values()
+                .parallelStream().map(value -> {
+
                     BigDecimal totalValue = sumTotalValue(value);
                     Integer quantity = sumTotalQuantity(value);
                     BigDecimal shippingCost = sumShippingCost(value);
                     PurchaseDistribution entity = value.get(0);
                     PurchaseDistributionDto purchaseDistributionDto = mapper.toDto(entity);
+                    BigDecimal unitValue;
+
+                    if (GROUP_BY_ORDER.equals(groupBy)) {
+                        unitValue = sumUnitValue(value);
+                    } else {
+                        unitValue = sumUnitValue(value)
+                                .divide(BigDecimal.valueOf(quantity), AppConstants.MONEY_SCALE, RoundingMode.UP);
+                    }
 
                     return purchaseDistributionDto.toBuilder()
                             .quantity(quantity)
@@ -127,9 +145,8 @@ public class PurchaseDistributionService extends BaseService<PurchaseDistributio
                                     .divide(BigDecimal.valueOf(quantity), AppConstants.MONEY_SCALE, RoundingMode.UP))
                             .build();
 
-                })
-                .sorted(Comparator.comparing(PurchaseDistributionDto::getIdOrder)
-                    .thenComparing(PurchaseDistributionDto::getNameProduct))
+                }).sorted(Comparator.comparing(PurchaseDistributionDto::getIdOrder)
+                        .thenComparing(PurchaseDistributionDto::getNameProduct))
                 .collect(Collectors.toList());
     }
 
@@ -176,17 +193,14 @@ public class PurchaseDistributionService extends BaseService<PurchaseDistributio
             accountToReceive.setOriginalValue(customerBillingDto.getTotalValue());
             accountToReceive.setDueDate(billingClosing.getDueDate());
             accountToReceive.setSystemId(tokenService.getSystemId());
-            accountToReceive.persistAndFlush();
+            accountToReceive.persist();
 
             List<PurchaseDistributionDto> purchaseDistributionsDto = customerBillingDto.getPurchaseDistributions();
 
             purchaseDistributionsDto.forEach(dto -> {
-                List<PurchaseDistribution> purchaseDistributions = PurchaseDistribution.list("select pd " +
-                                "from PurchaseDistribution pd " +
-                                "join pd.purchaseItem pi " +
-                                "where pi.product.id = ?1 and pd.customer.id = ?2 " +
-                                "and pd.accountToReceive.id is null",
-                                dto.getIdProduct(), customerBillingDto.getId());
+
+                List<PurchaseDistribution> purchaseDistributions = listAllUninvoiced(customerBillingDto.getId(),
+                        OrderEnum.FINISHED);
 
                 purchaseDistributions.forEach(entity -> {
 
@@ -206,7 +220,7 @@ public class PurchaseDistributionService extends BaseService<PurchaseDistributio
                     }
 
                     entity.setAccountToReceive(accountToReceive);
-                    entity.persist();
+                    entity.persistAndFlush();
 
                 });
             });

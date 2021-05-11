@@ -33,5 +33,7 @@ public class AccountToReceiveDto implements BillingDto {
     private BigDecimal amountPaid;
     private List<PurchaseDistributionDto> purchaseDistributions;
     private BigDecimal totalValue;
+    private BigDecimal remainingValue;
+    private BigDecimal payValue = BigDecimal.ZERO;
 
 }

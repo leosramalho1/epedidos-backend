@@ -29,5 +29,7 @@ public class AccountToPayDto implements BillingDto {
     private Long purchaseId;
     private BigDecimal amountPaid;
     private BigDecimal totalValue;
+    private BigDecimal remainingValue;
+    private BigDecimal payValue = BigDecimal.ZERO;
 
 }

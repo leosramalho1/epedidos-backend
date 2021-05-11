@@ -38,7 +38,7 @@ public class PurchaseDistributionResources {
     @RolesAllowed(JwtRoles.USER_BACKOFFICE)
     public Response listAll(@QueryParam("page") int page, @QueryParam("customer") Long idCustomer,
                             @QueryParam("createdOnMin") String createdOnMin, @QueryParam("createdOnMax") String createdOnMax) {
-        return Response.status(Response.Status.OK).entity(service.buildAllByCustomer(page, idCustomer, OrderEnum.FINISHED)).build();
+        return Response.status(Response.Status.OK).entity(service.buildAllByCustomer(page, idCustomer, OrderEnum.FINISHED, PurchaseDistributionService.GROUP_BY_ORDER)).build();
     }
 
     @PUT

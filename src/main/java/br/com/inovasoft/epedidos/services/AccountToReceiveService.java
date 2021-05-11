@@ -74,6 +74,7 @@ public class AccountToReceiveService extends BillingService<AccountToReceive, Ac
         AccountToReceive entity = findById(id);
         entity.setCustomer(Customer.findById(dto.getCustomer().getId()));
         mapper.updateEntityFromDto(dto, entity);
+        entity.addPaidOutValue(dto.getPayValue());
 
         entity.persist();
 
@@ -84,6 +85,7 @@ public class AccountToReceiveService extends BillingService<AccountToReceive, Ac
 
         AccountToReceive entity = findById(id);
         mapper.updateEntityFromDto(dto, entity);
+        entity.addPaidOutValue(dto.getPayValue());
         entity.setCustomer(Customer.findById(dto.getCustomer().getId()));
         entity.setSystemId(tokenService.getSystemId());
         entity.persist();
