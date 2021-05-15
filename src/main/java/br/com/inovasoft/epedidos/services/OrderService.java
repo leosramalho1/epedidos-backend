@@ -79,8 +79,9 @@ public class OrderService extends BaseService<Order> {
 
         OrderDto order = mapper.toDto(entity);
         order.setIdCustomer(entity.getCustomer().getId());
-
-        order.setItens(orderItemMapper.toDto(OrderItem.list("order.id = ?1 order by product.name", order.getId())));
+        List<OrderItem> listOrdem = OrderItem.list("order.id = ?1 order by product.name", order.getId());
+        if (listOrdem != null && !listOrdem.isEmpty())
+            order.setItens(orderItemMapper.toDto(listOrdem));
 
         return order;
     }
