@@ -3,6 +3,7 @@ package br.com.inovasoft.epedidos.services;
 import br.com.inovasoft.epedidos.models.dtos.PaginationDataResponse;
 import br.com.inovasoft.epedidos.models.entities.*;
 import br.com.inovasoft.epedidos.models.entities.views.*;
+import br.com.inovasoft.epedidos.models.enums.CustomerPayTypeEnum;
 import br.com.inovasoft.epedidos.models.enums.OrderEnum;
 import br.com.inovasoft.epedidos.models.enums.PurchaseEnum;
 import br.com.inovasoft.epedidos.security.TokenService;
@@ -16,6 +17,7 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 import javax.validation.constraints.NotNull;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -111,6 +113,14 @@ public class OrderMapService extends BaseService<OrderDistributionMap> {
 
                 Customer customer = orderItemMaster.getOrder().getCustomer();
                 Product product = orderItemMaster.getProduct();
+
+                BigDecimal unitCustomerCost = customer.getPayValue();
+                CustomerPayTypeEnum payType = customer.getPayType();
+
+                if(payType == CustomerPayTypeEnum.V && Objects.nonNull(product.getPayValue())) {
+                    unitCustomerCost = product.getPayValue();
+                }
+
                 PurchaseDistribution purchaseDistribution = PurchaseDistribution.builder()
                         .systemId(tokenService.getSystemId())
                         .purchaseItem(purchaseItem)
@@ -118,8 +128,8 @@ public class OrderMapService extends BaseService<OrderDistributionMap> {
                         .customer(customer)
                         .quantity(distributedQuantity)
                         .valueCharged(purchaseItem.getValueCharged())
-                        .unitCustomerCost(customer.getPayValue())
-                        .customerPayType(customer.getPayType())
+                        .unitCustomerCost(unitCustomerCost)
+                        .customerPayType(payType)
                         .packageType(purchaseItem.getPackageType())
                         .product(product)
                         .unitShippingCost(product.getShippingCost())

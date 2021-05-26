@@ -59,4 +59,10 @@ public class Product extends BaseEntity {
     @Column(name = "valor_frete")
     private BigDecimal shippingCost;
 
+    @Column(name = "cobranca_valor")
+    private BigDecimal payValue;
+
+    @Column(name = "margem_lucro")
+    private BigDecimal profitMargin;
+
 }

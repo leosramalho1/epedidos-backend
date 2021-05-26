@@ -20,5 +20,7 @@ public class ProductDto {
     private StatusEnum status;
     private List<CategoryDto> categories = new ArrayList<>();
     private BigDecimal shippingCost;
+    private BigDecimal payValue;
+    private BigDecimal profitMargin;
 
 }
