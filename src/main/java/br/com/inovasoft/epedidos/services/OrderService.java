@@ -183,10 +183,7 @@ public class OrderService extends BaseService<Order> {
         OrderItem.delete("order.id = ?1", id);
         List<OrderItem> orderItems = orderItemMapper.toEntity(dto.getItens());
         saveOrderItems(entity, orderItems);
-        LocalDateTime createdOn = entity.getCreatedOn();
-        mapper.updateEntityFromDto(dto, entity);
-        entity.setCreatedOn(createdOn);
-        entity.setStatus(dto.getStatus());
+        entity.setUpdatedOn(LocalDateTime.now());
         entity.persist();
         return mapper.toDto(entity);
     }
