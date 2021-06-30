@@ -97,22 +97,21 @@ public class OrderService extends BaseService<Order> {
         OrderDto order = mapper.toDto(entity);
         order.setIdCustomer(entity.getCustomer().getId());
 
-        List<OrderItemDto> orderItemGlobal = productService.listProductsToGrid(); 
+        List<OrderItemDto> orderItemGlobal = productService.listProductsToGrid();
         order.setItens(orderItemGlobal);
 
         List<OrderItem> listOrdem = OrderItem.list("order.id = ?1 order by product.name", order.getId());
-        if (listOrdem != null && !listOrdem.isEmpty()){
+        if (listOrdem != null && !listOrdem.isEmpty()) {
             List<OrderItemDto> existingOrderItem = orderItemMapper.toDto(listOrdem);
-           
-            order.getItens().forEach(item -> { 
-                Optional<OrderItemDto> itemOptional= existingOrderItem.stream().filter(itemExisting -> itemExisting.getIdProduct()==item.getIdProduct()).findFirst();
-                itemOptional.ifPresent(itemOptionalExisting -> {item.setQuantity(itemOptionalExisting.getQuantity());});});
+
+            order.getItens().forEach(item -> {
+                Optional<OrderItemDto> itemOptional = existingOrderItem.stream()
+                        .filter(itemExisting -> itemExisting.getIdProduct() == item.getIdProduct()).findFirst();
+                itemOptional.ifPresent(itemOptionalExisting -> {
+                    item.setQuantity(itemOptionalExisting.getQuantity());
+                });
+            });
         }
-
-
-        
-        
-        idProduct
 
         return order;
     }
