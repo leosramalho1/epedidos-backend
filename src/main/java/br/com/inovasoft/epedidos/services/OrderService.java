@@ -116,6 +116,26 @@ public class OrderService extends BaseService<Order> {
         return order;
     }
 
+    public void prepareOrderItemByStatusOrderApp(OrderEnum status, List<OrderItemDto> orderItemGlobal) {
+        String cpfCnpj = tokenService.getJsonWebToken().getSubject();
+        Customer customer = Customer.find("cpfCnpj", cpfCnpj).firstResult();
+
+        List<OrderItem> listOrdem = OrderItem.list("order.customer.id = ?1 and order.status = ?2 order by product.name",
+                customer.getId(), status);
+
+        if (listOrdem != null && !listOrdem.isEmpty()) {
+            List<OrderItemDto> existingOrderItem = orderItemMapper.toDto(listOrdem);
+
+            orderItemGlobal.forEach(item -> {
+                Optional<OrderItemDto> itemOptional = existingOrderItem.stream()
+                        .filter(itemExisting -> itemExisting.getIdProduct() == item.getIdProduct()).findFirst();
+                itemOptional.ifPresent(itemOptionalExisting -> {
+                    item.setQuantity(itemOptionalExisting.getQuantity());
+                });
+            });
+        }
+    }
+
     @Transactional
     public OrderDto saveDto(OrderDto dto) {
         Order entity = mapper.toEntity(dto);

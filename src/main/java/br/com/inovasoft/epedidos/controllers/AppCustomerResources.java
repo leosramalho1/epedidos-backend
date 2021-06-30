@@ -2,11 +2,13 @@ package br.com.inovasoft.epedidos.controllers;
 
 import br.com.inovasoft.epedidos.models.dtos.LoginDto;
 import br.com.inovasoft.epedidos.models.dtos.OrderDto;
+import br.com.inovasoft.epedidos.models.dtos.OrderItemDto;
 import br.com.inovasoft.epedidos.models.entities.Company;
 import br.com.inovasoft.epedidos.models.entities.CompanySystem;
 import br.com.inovasoft.epedidos.models.entities.Customer;
 import br.com.inovasoft.epedidos.models.entities.CustomerUser;
 import br.com.inovasoft.epedidos.models.entities.UserPortal;
+import br.com.inovasoft.epedidos.models.enums.OrderEnum;
 import br.com.inovasoft.epedidos.models.enums.StatusEnum;
 import br.com.inovasoft.epedidos.security.TokenService;
 import br.com.inovasoft.epedidos.security.jwt.JwtRoles;
@@ -26,6 +28,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.lang.reflect.InvocationTargetException;
+import java.util.List;
 
 @Path("/app/customer")
 @Consumes(MediaType.APPLICATION_JSON)
@@ -115,7 +118,10 @@ public class AppCustomerResources {
     @RolesAllowed(JwtRoles.USER_APP_CUSTOMER)
     @Path("/products")
     public Response listToGrid() {
-        return Response.status(Response.Status.OK).entity(productService.listProductsToGrid()).build();
+
+        List<OrderItemDto> orderItemList = productService.listProductsToGrid();
+        orderService.prepareOrderItemByStatusOrderApp(OrderEnum.OPEN, orderItemList);
+        return Response.status(Response.Status.OK).entity(orderItemList).build();
     }
 
     @GET
