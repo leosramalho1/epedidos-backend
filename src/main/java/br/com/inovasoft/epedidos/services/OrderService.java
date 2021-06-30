@@ -152,18 +152,29 @@ public class OrderService extends BaseService<Order> {
 
     @Transactional
     public OrderDto saveDtoFromApp(OrderDto dto) {
+
         String cpfCnpj = tokenService.getJsonWebToken().getSubject();
         Customer customer = Customer.find("cpfCnpj", cpfCnpj).firstResult();
 
-        Order entity = mapper.toEntity(dto);
-        entity.setCustomer(customer);
-        entity.setSystemId(tokenService.getSystemId());
-        entity.persist();
+        // Verifico se já existe um pedido aberto para o cliente, se sim apenas atualizo
+        // ela, senão crio um novo pedido
+        Order ordemAbertaExistente = Order.find("customer.id = ?1 and status = ?2", customer.getId(), OrderEnum.OPEN)
+                .firstResult();
 
-        List<OrderItem> orderItems = orderItemMapper.toEntity(dto.getItens());
-        saveOrderItems(entity, orderItems);
+        if (ordemAbertaExistente != null) {
+            return update(ordemAbertaExistente.getId(), dto);
 
-        return mapper.toDto(entity);
+        } else {
+            Order entity = mapper.toEntity(dto);
+            entity.setCustomer(customer);
+            entity.setSystemId(tokenService.getSystemId());
+            entity.persist();
+
+            List<OrderItem> orderItems = orderItemMapper.toEntity(dto.getItens());
+            saveOrderItems(entity, orderItems);
+
+            return mapper.toDto(entity);
+        }
     }
 
     @Transactional
