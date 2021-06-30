@@ -41,7 +41,7 @@ public class AppCustomerResources {
 
     @Inject
     OrderService orderService;
-    
+
     @Inject
     ProductService productService;
 
@@ -87,12 +87,11 @@ public class AppCustomerResources {
         return Response.status(Response.Status.OK).entity(orderService.listAllByCustomer()).build();
     }
 
-
     @GET
     @Path("/orders/{id}")
     @RolesAllowed(JwtRoles.USER_APP_CUSTOMER)
     public Response getOrderById(@PathParam("id") Long id) {
-        return Response.status(Response.Status.OK).entity(orderService.findDtoById(id)).build();
+        return Response.status(Response.Status.OK).entity(orderService.findDtoByIdApp(id)).build();
     }
 
     @POST
@@ -130,9 +129,9 @@ public class AppCustomerResources {
     @RolesAllowed(JwtRoles.USER_APP_CUSTOMER)
     @Path("/billings/{id}/orders")
     public Response listToGrid(@PathParam("id") Long idAccountToReceive) {
-        return Response.status(Response.Status.OK).entity(orderService.listAllByCustomerAndAccounttoReceive(idAccountToReceive)).build();
+        return Response.status(Response.Status.OK)
+                .entity(orderService.listAllByCustomerAndAccounttoReceive(idAccountToReceive)).build();
     }
-
 
     @POST
     @Path("/login")
@@ -147,7 +146,7 @@ public class AppCustomerResources {
         if (!existingUser.getPassword().equals(login.getPassword())) {
             throw new WebApplicationException(Response.status(403).entity("Usuário ou senha inválido!").build());
         }
-        if(existingUser.getDeletedOn()  != null){
+        if (existingUser.getDeletedOn() != null) {
             throw new WebApplicationException(Response.status(403).entity("Usuário ou senha inválido!").build());
         }
 
@@ -162,8 +161,8 @@ public class AppCustomerResources {
         Company company = system.getCompany();
         login.setPassword(null);
         login.setUserName(existingUser.getName());
-        login.setToken(tokenService.generateAppCustomerToken(existingUser.getCustomer().getCpfCnpj(), existingUser.getName(),
-                company.getId(), system.getSystemKey()));
+        login.setToken(tokenService.generateAppCustomerToken(existingUser.getCustomer().getCpfCnpj(),
+                existingUser.getName(), company.getId(), system.getSystemKey()));
 
         return login;
     }

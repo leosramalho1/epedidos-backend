@@ -4,6 +4,7 @@ import br.com.inovasoft.epedidos.mappers.OrderItemMapper;
 import br.com.inovasoft.epedidos.mappers.OrderMapper;
 import br.com.inovasoft.epedidos.models.dtos.CustomerBillingDto;
 import br.com.inovasoft.epedidos.models.dtos.OrderDto;
+import br.com.inovasoft.epedidos.models.dtos.OrderItemDto;
 import br.com.inovasoft.epedidos.models.dtos.PaginationDataResponse;
 import br.com.inovasoft.epedidos.models.entities.Customer;
 import br.com.inovasoft.epedidos.models.entities.Order;
@@ -31,6 +32,7 @@ import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 @Slf4j
 @ApplicationScoped
@@ -50,6 +52,9 @@ public class OrderService extends BaseService<Order> {
 
     @Inject
     PackageLoanService packageLoanService;
+
+    @Inject
+    ProductService productService;
 
     final CronParser unixParser = new CronParser(CronDefinitionBuilder.instanceDefinitionFor(CronType.UNIX));
 
@@ -82,6 +87,32 @@ public class OrderService extends BaseService<Order> {
         List<OrderItem> listOrdem = OrderItem.list("order.id = ?1 order by product.name", order.getId());
         if (listOrdem != null && !listOrdem.isEmpty())
             order.setItens(orderItemMapper.toDto(listOrdem));
+
+        return order;
+    }
+
+    public OrderDto findDtoByIdApp(Long id) {
+        Order entity = findById(id);
+
+        OrderDto order = mapper.toDto(entity);
+        order.setIdCustomer(entity.getCustomer().getId());
+
+        List<OrderItemDto> orderItemGlobal = productService.listProductsToGrid(); 
+        order.setItens(orderItemGlobal);
+
+        List<OrderItem> listOrdem = OrderItem.list("order.id = ?1 order by product.name", order.getId());
+        if (listOrdem != null && !listOrdem.isEmpty()){
+            List<OrderItemDto> existingOrderItem = orderItemMapper.toDto(listOrdem);
+           
+            order.getItens().forEach(item -> { 
+                Optional<OrderItemDto> itemOptional= existingOrderItem.stream().filter(itemExisting -> itemExisting.getIdProduct()==item.getIdProduct()).findFirst();
+                itemOptional.ifPresent(itemOptionalExisting -> {item.setQuantity(itemOptionalExisting.getQuantity());});});
+        }
+
+
+        
+        
+        idProduct
 
         return order;
     }
