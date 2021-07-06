@@ -6,10 +6,12 @@ import br.com.inovasoft.epedidos.services.OrderService;
 import io.quarkus.runtime.StartupEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
+import org.json.simple.parser.JSONParser;
 import org.quartz.SchedulerException;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
+import javax.enterprise.inject.Produces;
 import javax.inject.Inject;
 import java.util.List;
 
@@ -36,6 +38,11 @@ public class ApplicationConfig {
                 }
             });
         }
+    }
+
+    @Produces
+    public JSONParser jsonParser(){
+        return new JSONParser();
     }
 
 }

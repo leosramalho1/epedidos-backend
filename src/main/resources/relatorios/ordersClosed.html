@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+	<head>
+	</head>
+	<body>
+		<div class="tabela">
+			<table cellpadding=1 cellspacing=0 class="t0">
+				<tr>
+					<td class="tr1 td-topo" colspan="7" style="width: max-content"><table cellpadding=2><tr><td><p class="p2 ft1">{{customer.name}}</p></td></tr></table></td>
+
+					<td class="tr1 td-topo" colspan="7" style="width: max-content"><p class="p2 ft1">{{dateReport}}</p></td>
+				</tr>
+				<tr>
+					<td class="tr3 td-itens"><p class="p2 ft6">Itens</p></td>
+					<td class="tr3 td-quantidade"><p class="p2 ft6">Qua</p></td>
+					<td class="tr3 td-preco-unitario"><p class="p2 ft6">Preço unit.</p></td>
+					<td class="tr3 td-preco-total"><p class="p2 ft6">Preço Total</p></td>
+					<td class="tr3 td-peso"><p class="p2 ft6">Pes</p></td>
+					<td class="tr3 td-custo"><p class="p2 ft6">Custo</p></td>
+					<td class="tr3 td-preco-venda"><p class="p2 ft6">Venda</p></td>
+					<td class="tr3 td-itens"><p class="p2 ft6">Itens</p></td>
+					<td class="tr3 td-quantidade"><p class="p2 ft6">Qua</p></td>
+					<td class="tr3 td-preco-unitario"><p class="p2 ft6">Preço unit.</p></td>
+					<td class="tr3 td-preco-total"><p class="p2 ft6">Preço Total</p></td>
+					<td class="tr3 td-peso"><p class="p2 ft6">Pes</p></td>
+					<td class="tr3 td-custo"><p class="p2 ft6">Custo</p></td>
+					<td class="tr3 td-preco-venda"><p class="p2 ft6">Venda</p></td>
+				</tr>
+				{{#products}}
+				<tr>
+					<td class="td-itens p2 ft12"><div style="padding: 2px">{{first.name}}</div></td>
+					<td class="td-quantidade"><p class="p2 ft12">{{first.quantity}}</p></td>
+					<td class="td-preco-unitario"><p class="p2 ft12">{{first.unitValue}}</p></td>
+					<td class="td-preco-total"><p class="p2 ft12">{{first.totalValue}}</p></td>
+					<td class="td-peso"><p class="p2 ft12">{{first.weight}}</p></td>
+					<td class="td-custo"><p class="p2 ft12">{{first.cost}}</p></td>
+					<td class="td-preco-venda"><p class="p2 ft12">{{first.priceSale}}</p></td>
+					<td class="td-itens p2 ft12"><div>{{second.name}}</div></td>
+					<td class="td-quantidade"><p class="p2 ft12">{{second.quantity}}</p></td>
+					<td class="td-preco-unitario"><p class="p2 ft12">{{second.unitValue}}</p></td>
+					<td class="td-preco-total"><p class="p2 ft12">{{second.totalValue}}</p></td>
+					<td class="td-peso"><p class="p2 ft12">{{second.weight}}</p></td>
+					<td class="td-custo"><p class="p2 ft12">{{second.cost}}</p></td>
+					<td class="td-preco-venda"><p class="p2 ft12">{{second.priceSale}}</p></td>
+				</tr>
+				{{/products}}
+				<tr>
+					<td class="tr1 td-itens" colspan="7" style="width: max-content"><table cellpadding=2><tr><td><p class="p2 ft1">Empréstimos de embalagens: {{totalPackageLoan}}</p></td></tr></table></td>
+					<td class="tr1 td-itens" colspan="7" style="width: max-content"><p class="p2 ft1">Total: {{totalValue}}</p></td>
+				</tr>
+			</table>
+		</div>
+	</body>
+</html>
